@@ -1,0 +1,27 @@
+{
+  "name": "@sakowicz/actual-ai",
+  "version": "1.0.0",
+  "description": "Transaction AI classification for Actual Budget app.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev-docker": "../node_modules/.bin/nodemon --exec \"npm run lint && node ./app.js\"",
+    "dev": "nodemon --exec \"npm run lint && npm run start\"",
+    "lint": "eslint --fix **/*.js"
+  },
+  "keywords": [],
+  "author": "Szymon Sakowicz <info@sakowi.cz>",
+  "license": "MIT",
+  "dependencies": {
+    "@actual-app/api": "^6.8.1",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3",
+    "openai": "^4.49.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "nodemon": "^2.0.15"
+  }
+}

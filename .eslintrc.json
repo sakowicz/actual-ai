@@ -1,0 +1,12 @@
+{
+  "extends": "airbnb-base",
+  "rules": {
+    "no-plusplus": "off",
+    "no-console": "off",
+    "no-continue": "off",
+    "no-await-in-loop": "off"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020
+  }
+}
