@@ -88,10 +88,6 @@ async function processTransactions() {
       category: guessCategory.id,
       notes: `${transaction.notes} ${NOTES_GUESSED}`,
     });
-
-    if (i >= 0) {
-      break;
-    }
   }
 }
 module.exports = {
