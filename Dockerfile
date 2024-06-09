@@ -1,9 +1,7 @@
-FROM node:20.14-alpine
+FROM node:18.20-alpine3.20
 
 ARG NODE_ENV=production
 ENV NODE_ENV $NODE_ENV
-
-RUN npm i npm@10.7 -g
 
 USER node
 
