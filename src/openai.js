@@ -7,7 +7,6 @@ async function askOpenai(prompt) {
     model: 'gpt-3.5-turbo-instruct',
     prompt,
     temperature: 0.1,
-    max_tokens: 30,
   });
 
   let guess = response.choices[0].text;

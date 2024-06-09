@@ -19,8 +19,6 @@ services:
   actual-ai:
     image: docker.io/sakowicz/actual-ai:latest
     restart: unless-stopped
-    volumes:
-      - ./actual-ai-cache:/tmp/actual-ai/
     environment:
       - OPENAI_API_KEY=your_openai_api_key
       - ACTUAL_SERVER_URL=http://actual_server:5006

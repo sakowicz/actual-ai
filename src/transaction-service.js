@@ -3,8 +3,8 @@ const { askOpenai } = require('./openai');
 const { syncAccountsBeforeClassify } = require('./config');
 const { suppressConsoleLogsAsync } = require('./utils');
 
-const NOTES_NOT_GUESSED = ' | OpenAI could not guess the category';
-const NOTES_GUESSED = ' | OpenAI guessed the category';
+const NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
+const NOTES_GUESSED = 'actual-ai guessed this category';
 
 function generatePrompt(categoryGroups, transaction, payees) {
   let prompt = 'Given I want to categorize the bank transactions in following categories:\n';
@@ -76,17 +76,15 @@ async function processTransactions() {
     if (!guessCategory) {
       console.warn(`\`${i + 1}/${uncategorizedTransactions.length} OpenAI could not classify the transaction. OpenAIs guess: ${guess}`);
       await actualApi.updateTransaction(transaction.id, {
-        notes: `${transaction.notes} ${NOTES_NOT_GUESSED}`,
+        notes: `${transaction.notes} | ${NOTES_NOT_GUESSED}`,
       });
       continue;
     }
     console.log(`${i + 1}/${uncategorizedTransactions.length} Guess: ${guessCategory.name}`);
-    transaction.notes = `${transaction.notes} ${NOTES_GUESSED}`;
-    transaction.category_id = guessCategory.id;
 
     await actualApi.updateTransaction(transaction.id, {
       category: guessCategory.id,
-      notes: `${transaction.notes} ${NOTES_GUESSED}`,
+      notes: `${transaction.notes} | ${NOTES_GUESSED}`,
     });
   }
 }
