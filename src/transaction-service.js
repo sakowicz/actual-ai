@@ -42,7 +42,7 @@ function findUUIDInString(str) {
 async function syncAccounts() {
   console.log('Syncing bank accounts');
   try {
-    await suppressConsoleLogsAsync(async () => await actualApi.runBankSync());
+    await suppressConsoleLogsAsync(async () => actualApi.runBankSync());
     console.log('Bank accounts synced');
   } catch (error) {
     console.error('Error syncing bank accounts:', error);
