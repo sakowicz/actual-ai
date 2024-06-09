@@ -46,7 +46,7 @@ async function processTransactions() {
     const guessCategory = categories.find((category) => category.id === guessUUID);
 
     if (!guessCategory) {
-      console.warn(`\`${i + 1}/${uncategorizedTransactions.length} OpenAI could not classify the transaction. OpenAIs guess: ${guess}`);
+      console.warn(`${i + 1}/${uncategorizedTransactions.length} OpenAI could not classify the transaction. OpenAIs guess: ${guess}`);
       await actualApi.updateTransaction(transaction.id, {
         notes: `${transaction.notes} | ${NOTES_NOT_GUESSED}`,
       });
