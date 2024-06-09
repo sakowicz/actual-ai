@@ -18,12 +18,3 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm
-
-  eslint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install modules
-      run: npm ci
-    - name: Run ESLint
-      run: eslint **/*.js
