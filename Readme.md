@@ -1,21 +1,22 @@
-# actual-ai
+# 🤖 Actual AI
 
-This is a project allowing you to categorise uncategorised transactions for [Actual Budget](https://actualbudget.org/) using OpenAI.
+This is a project that allows you to categorize uncategorized transactions for [Actual Budget](https://actualbudget.org/) using [OpenAI](https://openai.com/api/pricing/).
 
-## Features
+## 🌟 Features
 
-#### Classify transactions using OpenAI
+#### 📊 Classify transactions using OpenAI
 
-The app sends request to OpenAI API to classify transactions based on their description, amount and notes.
+The app sends requests to the OpenAI API to classify transactions based on their description, amount, and notes.
 
-#### Sync accounts before classification
+#### 🔄 Sync accounts before classification
 
-#### Classify transactions on cron schedule
+#### 🕒 Classify transactions on a cron schedule
 
-#### When transaction could not be classified, it is marked in Notes as "not quessed" and it won't be classified again.
+#### ❌ When a transaction cannot be classified, it is marked in Notes as "not guessed," and it will not be classified again.
 
+#### ✅ Every guessed transaction is marked as guessed in notes, so you can review the classification.
 
-## Usage
+## 🚀 Usage
 
 Sample `docker-compose.yml` file:
 
@@ -43,7 +44,7 @@ services:
 #      - ACTUAL_E2E_PASSWORD= # optional. required if you have E2E encryption
 ```
 
-### Notes from the author
+### 📝 Notes from the author
 
 I'm not a Node developer.
 I have no experience with AI or GitHub actions.
