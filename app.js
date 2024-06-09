@@ -10,20 +10,21 @@ if (!cron.validate(cronSchedule)) {
 
 async function classify() {
   console.log('Starting classification process');
-  await initializeApi();
-  await processTransactions();
-  await shutdownApi();
-}
-
-cron.schedule(cronSchedule, async () => {
   try {
-    await classify();
+    await initializeApi();
+    await processTransactions();
+    await shutdownApi();
   } catch (error) {
     console.error('An error occurred:', error);
   }
+}
+
+cron.schedule(cronSchedule, async () => {
+  await classify();
 });
+
+console.log('Application started');
 if (classifyOnStartup === true) {
-  console.log('Application started');
   (async () => {
     await classify();
   })();
