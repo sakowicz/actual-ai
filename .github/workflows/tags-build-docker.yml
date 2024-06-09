@@ -1,7 +1,8 @@
 name: Build and Push Docker Images
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "*.*.*"
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -27,4 +28,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
-          tags: sakowicz/actual-ai:latest
+          tags: sakowicz/actual-ai:${{ github.ref }}
