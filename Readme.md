@@ -2,7 +2,20 @@
 
 This is a project allowing you to categorise uncategorised transactions for [Actual Budget](https://actualbudget.org/) using OpenAI.
 
-### Usage
+## Features
+
+#### Classify transactions using OpenAI
+
+The app sends request to OpenAI API to classify transactions based on their description, amount and notes.
+
+#### Sync accounts before classification
+
+#### Classify transactions on cron schedule
+
+#### When transaction could not be classified, it is marked in Notes as "not quessed" and it won't be classified again.
+
+
+## Usage
 
 Sample `docker-compose.yml` file:
 
