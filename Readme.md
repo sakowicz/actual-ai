@@ -40,7 +40,7 @@ services:
       - ACTUAL_BUDGET_ID=your_actual_budget_id # This is the ID from Settings → Show advanced settings → Sync ID
       - CLASSIFICATION_SCHEDULE_CRON=0 */4 * * * # How often to run classification.
       - CLASSIFY_ON_STARTUP=true # Whether to classify transactions on startup (don't wait for cron schedule)
-      - SYNC_ACCOUNTS_BEFORE_CLASSIFY=true # Whether to sync accounts before classification
+      - SYNC_ACCOUNTS_BEFORE_CLASSIFY=false # Whether to sync accounts before classification
 #      - ACTUAL_E2E_PASSWORD= # optional. required if you have E2E encryption
 ```
 
