@@ -1,6 +1,6 @@
 # actual-ai
 
-This is a project allowing you to categorize uncategorized transaction for [Actual Budget](https://actualbudget.org/) using OpenAI.
+This is a project allowing you to categorise uncategorised transactions for [Actual Budget](https://actualbudget.org/) using OpenAI.
 
 ### Usage
 
