@@ -27,4 +27,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
           push: true
-          tags: sakowicz/actual-ai:latest
+          tags: sakowicz/actual-ai:latest,sakowicz/actual-ai:${{ github.ref_name }}
