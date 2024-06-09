@@ -34,5 +34,5 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          repository: peterevans/dockerhub-description
+          repository: sakowicz/actual-ai
           short-description: ${{ github.event.repository.description }}
