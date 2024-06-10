@@ -8,4 +8,5 @@ module.exports = {
   cronSchedule: process.env.CLASSIFICATION_SCHEDULE_CRON,
   classifyOnStartup: process.env.CLASSIFY_ON_STARTUP === 'true',
   syncAccountsBeforeClassify: process.env.SYNC_ACCOUNTS_BEFORE_CLASSIFY === 'true',
+  model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo-instruct',
 };

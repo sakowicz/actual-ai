@@ -1,6 +1,7 @@
 # 🤖 Actual AI
 
-This is a project that allows you to categorize uncategorized transactions for [Actual Budget](https://actualbudget.org/) using [OpenAI](https://openai.com/api/pricing/).
+This is a project that allows you to categorize uncategorized transactions for [Actual Budget](https://actualbudget.org/)
+using [OpenAI](https://openai.com/api/pricing/) or OpenAI specification compatible API.
 
 ## 🌟 Features
 
@@ -34,13 +35,15 @@ services:
     image: docker.io/sakowicz/actual-ai:latest
     restart: unless-stopped
     environment:
-      - OPENAI_API_KEY=your_openai_api_key
       - ACTUAL_SERVER_URL=http://actual_server:5006
       - ACTUAL_PASSWORD=your_actual_password
       - ACTUAL_BUDGET_ID=your_actual_budget_id # This is the ID from Settings → Show advanced settings → Sync ID
       - CLASSIFICATION_SCHEDULE_CRON=0 */4 * * * # How often to run classification.
       - CLASSIFY_ON_STARTUP=true # Whether to classify transactions on startup (don't wait for cron schedule)
       - SYNC_ACCOUNTS_BEFORE_CLASSIFY=false # Whether to sync accounts before classification
+      - OPENAI_API_KEY=your_openai_api_key
+#      - OPENAI_MODEL_ID= # optional. required if you want to use a specific model, default is "gpt-3.5-turbo-instruct"
+#      - OPENAI_BASE_URL= # optional. required if you don't want to use the OpenAI API but OpenAI compatible API
 #      - ACTUAL_E2E_PASSWORD= # optional. required if you have E2E encryption
 ```
 

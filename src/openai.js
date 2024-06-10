@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const { model } = require('./config');
 
 const openai = new OpenAI({});
 
@@ -30,7 +31,7 @@ function generatePrompt(categoryGroups, transaction, payees) {
 
 async function callOpenAI(prompt) {
   const response = await openai.completions.create({
-    model: 'gpt-3.5-turbo-instruct',
+    model,
     prompt,
     temperature: 0.1,
     max_tokens: 50,
