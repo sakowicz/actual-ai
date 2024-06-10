@@ -42,7 +42,7 @@ services:
       - CLASSIFY_ON_STARTUP=true # Whether to classify transactions on startup (don't wait for cron schedule)
       - SYNC_ACCOUNTS_BEFORE_CLASSIFY=false # Whether to sync accounts before classification
       - OPENAI_API_KEY=your_openai_api_key
-#      - OPENAI_MODEL_ID= # optional. required if you want to use a specific model, default is "gpt-3.5-turbo-instruct"
+#      - OPENAI_MODEL= # optional. required if you want to use a specific model, default is "gpt-3.5-turbo-instruct"
 #      - OPENAI_BASE_URL= # optional. required if you don't want to use the OpenAI API but OpenAI compatible API
 #      - ACTUAL_E2E_PASSWORD= # optional. required if you have E2E encryption
 ```
