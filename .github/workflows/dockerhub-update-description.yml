@@ -1,0 +1,16 @@
+name: Build and Push Docker Images
+on:
+  push:
+    branches:
+      - master
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: sakowicz/actual-ai
+          short-description: ${{ github.event.repository.description }}
