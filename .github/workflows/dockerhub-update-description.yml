@@ -1,4 +1,4 @@
-name: Build and Push Docker Images
+name: Update DockerHub Description
 on:
   push:
     branches:
@@ -7,6 +7,9 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
         with:
