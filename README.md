@@ -1,4 +1,12 @@
 # 🤖 Actual AI
+<p>
+    <a href="https://github.com/sakowicz/actual-ai">
+        <img alt="GitHub Release" src="https://img.shields.io/github/v/release/sakowicz/actual-ai?label=GitHub">
+    </a>
+    <a href="https://hub.docker.com/r/sakowicz/actual-ai">
+        <img alt="Docker Image Version" src="https://img.shields.io/docker/v/sakowicz/actual-ai?label=Docker%20Hub">
+    </a>
+</p>
 
 This is a project that allows you to categorize uncategorized transactions for [Actual Budget](https://actualbudget.org/)
 using [OpenAI](https://openai.com/api/pricing/) or OpenAI specification compatible API.
