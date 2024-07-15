@@ -16,7 +16,7 @@
     "@actual-app/api": "^6.8.1",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3",
-    "openai": "^4.51.0"
+    "openai": "^4.52.7"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
