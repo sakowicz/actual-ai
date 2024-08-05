@@ -13,7 +13,7 @@
   "author": "Szymon Sakowicz <info@sakowi.cz>",
   "license": "MIT",
   "dependencies": {
-    "@actual-app/api": "^6.8.1",
+    "@actual-app/api": "^6.9.0",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3",
     "openai": "^4.51.0"
