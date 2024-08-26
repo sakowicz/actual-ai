@@ -9,7 +9,7 @@
 </p>
 
 This is a project that allows you to categorize uncategorized transactions for [Actual Budget](https://actualbudget.org/)
-using [OpenAI](https://openai.com/api/pricing/) or OpenAI specification compatible API.
+using [OpenAI](https://openai.com/api/pricing/) or OpenAI specification compatible API, like a self-hosted [Ollama](https://github.com/ollama/ollama) server.
 
 ## 🌟 Features
 
