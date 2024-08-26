@@ -2,8 +2,8 @@ const OpenAI = require('openai');
 const { model, baseURL, apiKey } = require('./config');
 
 const openai = new OpenAI({
-   baseURL: baseURL,
-   apiKey: apiKey,
+  baseURL,
+  apiKey,
 });
 
 function generatePrompt(categoryGroups, transaction, payees) {
