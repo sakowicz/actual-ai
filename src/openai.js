@@ -4,7 +4,7 @@ const { model } = require('./config');
 const openai = new OpenAI({});
 
 function generatePrompt(categoryGroups, transaction, payees) {
-  let prompt = 'Given I want to categorize the bank transactions in following categories:\n';
+  let prompt = 'I want to categorize the given bank transactions into the following categories:\n';
   categoryGroups.forEach((categoryGroup) => {
     categoryGroup.categories.forEach((category) => {
       prompt += `* ${category.name} (${categoryGroup.name}) (ID: "${category.id}") \n`;
@@ -24,7 +24,7 @@ function generatePrompt(categoryGroups, transaction, payees) {
     prompt += `* Payee: ${transaction.imported_payee}\n`;
   }
 
-  prompt += 'ANSWER BY A CATEGORY ID.DO NOT WRITE THE WHOLE SENTENCE. Do not guess, if you don\'t know answer: "idk".';
+  prompt += 'ANSWER BY A CATEGORY ID. DO NOT WRITE THE WHOLE SENTENCE. Do not guess, if you don\'t know the answer, return "idk".';
 
   return prompt;
 }
