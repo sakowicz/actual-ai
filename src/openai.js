@@ -1,7 +1,10 @@
 const OpenAI = require('openai');
-const { model } = require('./config');
+const { model, baseURL, apiKey } = require('./config');
 
-const openai = new OpenAI({});
+const openai = new OpenAI({
+   baseURL: baseURL,
+   apiKey: apiKey,
+});
 
 function generatePrompt(categoryGroups, transaction, payees) {
   let prompt = 'I want to categorize the given bank transactions into the following categories:\n';
