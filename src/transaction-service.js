@@ -37,8 +37,8 @@ async function processTransactions() {
           && transaction.starting_balance_flag !== true
           && transaction.imported_payee !== null
           && transaction.imported_payee !== ''
-          && (transaction.notes !== null
-              || transaction.notes.includes(NOTES_NOT_GUESSED) === false),
+          && (transaction.notes === null
+              || (transaction.notes !== null && !transaction.notes.includes(NOTES_NOT_GUESSED))),
   );
 
   for (let i = 0; i < uncategorizedTransactions.length; i++) {
