@@ -53,6 +53,7 @@ services:
 #      - OPENAI_MODEL= # optional. required if you want to use a specific model, default is "gpt-3.5-turbo-instruct"
 #      - OPENAI_BASE_URL= # optional. required if you don't want to use the OpenAI API but OpenAI compatible API
 #      - ACTUAL_E2E_PASSWORD= # optional. required if you have E2E encryption
+#      - NODE_TLS_REJECT_UNAUTHORIZED=0 # optional. required if you have trouble connecting to Actual server 
 ```
 
 ### 📝 Notes from the author
