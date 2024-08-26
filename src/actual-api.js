@@ -11,15 +11,20 @@ async function initializeApi() {
     fs.mkdirSync(dataDir);
   }
   await actualApi.init({ dataDir, serverURL, password });
-  if (e2ePassword) {
-    await actualApi.downloadBudget(budgetId, {
-      password: e2ePassword,
-    });
-  } else {
-    await actualApi.downloadBudget(budgetId);
+  try {
+    if (e2ePassword) {
+      await actualApi.downloadBudget(budgetId, {
+        password: e2ePassword,
+      });
+    } else {
+      await actualApi.downloadBudget(budgetId);
+    }
+    console.log('Budget downloaded');
+  } catch (error) {
+    console.error('Failed to download budget:', error.message);
+    throw new Error('Budget download failed');
   }
 }
-
 async function shutdownApi() {
   await actualApi.shutdown();
 }
