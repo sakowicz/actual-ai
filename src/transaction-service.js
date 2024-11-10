@@ -1,5 +1,5 @@
 const { actualApi } = require('./actual-api');
-const { ask } = require('./openai');
+const { ask } = require('./llm-generator');
 const { syncAccountsBeforeClassify } = require('./config');
 const { suppressConsoleLogsAsync } = require('./utils');
 
@@ -49,7 +49,7 @@ async function processTransactions() {
     const guessCategory = categories.find((category) => category.id === guessUUID);
 
     if (!guessCategory) {
-      console.warn(`${i + 1}/${uncategorizedTransactions.length} OpenAI could not classify the transaction. OpenAIs guess: ${guess}`);
+      console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM could not classify the transaction. LLM guess: ${guess}`);
       await actualApi.updateTransaction(transaction.id, {
         notes: `${transaction.notes} | ${NOTES_NOT_GUESSED}`,
       });
