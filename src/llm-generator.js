@@ -38,9 +38,9 @@ async function callModel(model, prompt) {
   return text.replace(/(\r\n|\n|\r|"|')/gm, '');
 }
 
-async function ask(categoryGroups, transaction, payees, provider) {
+async function ask(categoryGroups, transaction, payees) {
   const prompt = await generatePrompt(categoryGroups, transaction, payees);
-  const model = createModel(provider);
+  const model = createModel();
 
   return callModel(model, prompt);
 }
