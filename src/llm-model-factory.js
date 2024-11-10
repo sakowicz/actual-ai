@@ -24,7 +24,7 @@ const create = () => {
       return openai(openaiModel, { baseURL: openaiBaseURL, apiKey: openaiApiKey });
     case 'anthropic':
       return anthropic(anthropicModel, { baseURL: anthropicBaseURL, apiKey: anthropicApiKey });
-    case 'google':
+    case 'google-generative-ai':
       return google(googleModel, { baseURL: googleBaseURL, apiKey: googleApiKey });
     case 'ollama':
       return ollama(ollamaModel, { baseURL: ollamaBaseURL });
