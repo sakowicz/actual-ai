@@ -1,12 +1,7 @@
-const OpenAI = require('openai');
-const { model, baseURL, apiKey } = require('./config');
+const { generateText } = require('ai');
+const { create: createModel } = require('./llm-model-factory');
 
-const openai = new OpenAI({
-  baseURL,
-  apiKey,
-});
-
-function generatePrompt(categoryGroups, transaction, payees) {
+async function generatePrompt(categoryGroups, transaction, payees) {
   let prompt = 'I want to categorize the given bank transactions into the following categories:\n';
   categoryGroups.forEach((categoryGroup) => {
     categoryGroup.categories.forEach((category) => {
@@ -32,24 +27,22 @@ function generatePrompt(categoryGroups, transaction, payees) {
   return prompt;
 }
 
-async function callOpenAI(prompt) {
-  const response = await openai.completions.create({
+async function callModel(model, prompt) {
+  const { text } = await generateText({
     model,
     prompt,
     temperature: 0.1,
     max_tokens: 50,
   });
 
-  let guess = response.choices[0].text;
-  guess = guess.replace(/(\r\n|\n|\r)/gm, '');
-
-  return guess;
+  return text.replace(/(\r\n|\n|\r|"|')/gm, '');
 }
 
 async function ask(categoryGroups, transaction, payees) {
-  const prompt = generatePrompt(categoryGroups, transaction, payees);
+  const prompt = await generatePrompt(categoryGroups, transaction, payees);
+  const model = createModel();
 
-  return callOpenAI(prompt);
+  return callModel(model, prompt);
 }
 
 module.exports = {

@@ -14,9 +14,13 @@
   "license": "MIT",
   "dependencies": {
     "@actual-app/api": "^24.11.0",
+    "@ai-sdk/anthropic": "^0.0.56",
+    "@ai-sdk/google": "^0.0.55",
+    "@ai-sdk/openai": "^0.0.72",
+    "ai": "^3.4.33",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3",
-    "openai": "^4.70.2"
+    "ollama-ai-provider": "^0.16.1"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
