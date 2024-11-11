@@ -20,4 +20,5 @@ module.exports = {
   googleApiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
   ollamaBaseURL: process.env.OLLAMA_BASE_URL,
   ollamaModel: process.env.OLLAMA_MODEL || 'phi3.5',
+  dataDir: '/tmp/actual-ai/',
 };
