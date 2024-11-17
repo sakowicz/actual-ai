@@ -1,26 +1,56 @@
-const { syncAccountsBeforeClassify } = require('./config');
-const { suppressConsoleLogsAsync } = require('./utils');
-const { LlmGenerator } = require('./llm-generator');
+const { syncAccountsBeforeClassify } = require('./config.ts');
+const { suppressConsoleLogsAsync } = require('./utils.ts');
+const { LlmGenerator } = require('./llm-generator.ts');
 
 const NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const NOTES_GUESSED = 'actual-ai guessed this category';
 
+interface ActualApi {
+  runBankSync(): Promise<void>;
+  getCategoryGroups(): Promise<any[]>;
+  getCategories(): Promise<any[]>;
+  getPayees(): Promise<any[]>;
+  getTransactions(): Promise<any[]>;
+  // eslint-disable-next-line no-unused-vars
+  updateTransaction(id: string, data: any): Promise<void>;
+}
+
+interface LlmModelFactory {
+  create(): any;
+}
+
+interface Ai {
+  // eslint-disable-next-line no-unused-vars
+  generateText(options: { model: any; prompt: string; temperature: number; max_tokens: number })
+    : Promise<{ text: string }>;
+}
+
+interface TransactionServiceParams {
+  actualApi: ActualApi;
+  llmModelFactory: LlmModelFactory;
+  ai: Ai;
+}
+
 class TransactionService {
-  constructor({
-    actualApi, llmModelFactory, ai,
-  }) {
+  private actualApi: ActualApi;
+
+  private ai: Ai;
+
+  private model: any;
+
+  constructor({ actualApi, llmModelFactory, ai }: TransactionServiceParams) {
     this.actualApi = actualApi;
     this.ai = ai;
     this.model = llmModelFactory.create();
   }
 
-  static findUUIDInString(str) {
+  static findUUIDInString(str: string): string | null {
     const regex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/g;
     const matchResult = str.match(regex);
     return matchResult ? matchResult[0] : null;
   }
 
-  async syncAccounts() {
+  async syncAccounts(): Promise<void> {
     console.log('Syncing bank accounts');
     try {
       await suppressConsoleLogsAsync(async () => this.actualApi.runBankSync());
@@ -30,7 +60,7 @@ class TransactionService {
     }
   }
 
-  async processTransactions() {
+  async processTransactions(): Promise<void> {
     if (syncAccountsBeforeClassify) {
       await this.syncAccounts();
     }
@@ -72,13 +102,13 @@ class TransactionService {
     }
   }
 
-  async ask(categoryGroups, transaction, payees) {
+  async ask(categoryGroups: any[], transaction: any, payees: any[]): Promise<string> {
     const prompt = await LlmGenerator.generatePrompt(categoryGroups, transaction, payees);
 
     return this.callModel(this.model, prompt);
   }
 
-  async callModel(model, prompt) {
+  async callModel(model: any, prompt: string): Promise<string> {
     const { text } = await this.ai.generateText({
       model,
       prompt,

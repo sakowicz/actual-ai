@@ -7,6 +7,10 @@
     "no-await-in-loop": "off"
   },
   "parserOptions": {
-    "ecmaVersion": 2020
-  }
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"]
 }

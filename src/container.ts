@@ -5,9 +5,9 @@ const { openai } = require('@ai-sdk/openai');
 const { anthropic } = require('@ai-sdk/anthropic');
 const { google } = require('@ai-sdk/google');
 const { ollama } = require('ollama-ai-provider');
-const { ActualApiService } = require('./actual-api');
-const { TransactionService } = require('./transaction-service');
-const { LlmModelFactory } = require('./llm-model-factory');
+const { ActualApiService } = require('./actual-api.ts');
+const { TransactionService } = require('./transaction-service.ts');
+const { LlmModelFactory } = require('./llm-model-factory.ts');
 const {
   llmProvider,
   openaiApiKey,
@@ -26,8 +26,8 @@ const {
   password,
   budgetId,
   e2ePassword,
-} = require('./config');
-const { ActualAi } = require('./actual-ai');
+} = require('./config.ts');
+const { ActualAiService } = require('./actual-ai.ts');
 
 const llmModelFactory = new LlmModelFactory({
   openai,
@@ -60,6 +60,4 @@ const actualApiService = new ActualApiService({
   e2ePassword,
 });
 
-const actualAi = new ActualAi({ transactionService, actualApiService });
-
-exports.actualAi = actualAi;
+exports.actualAi = new ActualAiService({ transactionService, actualApiService });

@@ -1,4 +1,18 @@
 class ActualApiService {
+  private api: any;
+
+  private fs: any;
+
+  private dataDir: string;
+
+  private serverURL: string;
+
+  private password: string;
+
+  private budgetId: string;
+
+  private e2ePassword?: string;
+
   constructor({
     actualApi,
     fs,
@@ -7,6 +21,14 @@ class ActualApiService {
     password,
     budgetId,
     e2ePassword,
+  }: {
+    actualApi: any;
+    fs: any;
+    dataDir: string;
+    serverURL: string;
+    password: string;
+    budgetId: string;
+    e2ePassword?: string;
   }) {
     this.api = actualApi;
     this.fs = fs;
@@ -22,13 +44,12 @@ class ActualApiService {
       this.fs.mkdirSync(this.dataDir);
     }
 
-    await this.api.init(
-      {
-        dataDir: this.dataDir,
-        serverURL: this.serverURL,
-        password: this.password,
-      },
-    );
+    await this.api.init({
+      dataDir: this.dataDir,
+      serverURL: this.serverURL,
+      password: this.password,
+    });
+
     try {
       if (this.e2ePassword) {
         await this.api.downloadBudget(this.budgetId, {
@@ -38,7 +59,7 @@ class ActualApiService {
         await this.api.downloadBudget(this.budgetId);
       }
       console.log('Budget downloaded');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to download budget:', error.message);
       throw new Error('Budget download failed');
     }

@@ -4,10 +4,11 @@
   "description": "Transaction AI classification for Actual Budget app.",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev-docker": "../node_modules/.bin/nodemon --exec \"npm run lint && node ./app.js\"",
+    "build": "tsc",
+    "dev-docker": "../node_modules/.bin/nodemon --exec \"npm run lint && ts-node ./app.ts\"",
     "dev": "nodemon --exec \"npm run lint && npm run start\"",
-    "lint": "eslint --fix **/*.js"
+    "lint": "eslint --fix **/*.ts",
+    "prod": "node dits/app.js"
   },
   "keywords": [],
   "author": "Szymon Sakowicz <info@sakowi.cz>",
@@ -23,9 +24,14 @@
     "ollama-ai-provider": "^0.16.1"
   },
   "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.31.0",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
   }
 }

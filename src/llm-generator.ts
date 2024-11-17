@@ -1,5 +1,31 @@
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface CategoryGroup {
+  name: string;
+  categories: Category[];
+}
+
+interface Transaction {
+  amount: number;
+  notes: string;
+  payee_id: string;
+  imported_payee: string;
+}
+
+interface Payee {
+  id: string;
+  name: string;
+}
+
 class LlmGenerator {
-  static async generatePrompt(categoryGroups, transaction, payees) {
+  static async generatePrompt(
+    categoryGroups: CategoryGroup[],
+    transaction: Transaction,
+    payees: Payee[],
+  ): Promise<string> {
     let prompt = 'I want to categorize the given bank transactions into the following categories:\n';
     categoryGroups.forEach((categoryGroup) => {
       categoryGroup.categories.forEach((category) => {

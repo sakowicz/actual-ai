@@ -1,4 +1,55 @@
+interface LlmModelFactoryParams {
+  openai: any;
+  anthropic: any;
+  google: any;
+  ollama: any;
+  llmProvider: string;
+  openaiApiKey: string;
+  openaiModel: string;
+  openaiBaseURL: string;
+  anthropicBaseURL: string;
+  anthropicApiKey: string;
+  anthropicModel: string;
+  googleModel: string;
+  googleBaseURL: string;
+  googleApiKey: string;
+  ollamaModel: string;
+  ollamaBaseURL: string;
+}
+
 class LlmModelFactory {
+  private openai: any;
+
+  private anthropic: any;
+
+  private google: any;
+
+  private ollama: any;
+
+  private llmProvider: string;
+
+  private openaiApiKey: string;
+
+  private openaiModel: string;
+
+  private openaiBaseURL: string;
+
+  private anthropicBaseURL: string;
+
+  private anthropicApiKey: string;
+
+  private anthropicModel: string;
+
+  private googleModel: string;
+
+  private googleBaseURL: string;
+
+  private googleApiKey: string;
+
+  private ollamaModel: string;
+
+  private ollamaBaseURL: string;
+
   constructor({
     openai,
     anthropic,
@@ -16,7 +67,7 @@ class LlmModelFactory {
     googleApiKey,
     ollamaModel,
     ollamaBaseURL,
-  }) {
+  }: LlmModelFactoryParams) {
     this.openai = openai;
     this.anthropic = anthropic;
     this.google = google;
