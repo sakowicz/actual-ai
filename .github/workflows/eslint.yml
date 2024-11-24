@@ -8,4 +8,4 @@ jobs:
     - name: Install modules
       run: npm ci
     - name: Run ESLint
-      run: ./node_modules/.bin/eslint **/*.js
+      run: ./node_modules/.bin/eslint **/*.ts

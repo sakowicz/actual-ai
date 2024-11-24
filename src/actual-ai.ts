@@ -1,10 +1,19 @@
-class ActualAi {
-  constructor({ transactionService, actualApiService }) {
+import { ActualAiServiceI, ActualApiServiceI, TransactionServiceI } from './types';
+
+class ActualAiService implements ActualAiServiceI {
+  private transactionService: TransactionServiceI;
+
+  private actualApiService: ActualApiServiceI;
+
+  constructor(
+    transactionService: TransactionServiceI,
+    actualApiService: ActualApiServiceI,
+  ) {
     this.transactionService = transactionService;
     this.actualApiService = actualApiService;
   }
 
-  async classify() {
+  public async classify() {
     console.log('Starting classification process');
     try {
       await this.actualApiService.initializeApi();
@@ -16,4 +25,4 @@ class ActualAi {
   }
 }
 
-module.exports = { ActualAi };
+export default ActualAiService;

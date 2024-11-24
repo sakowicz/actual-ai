@@ -1,22 +1,57 @@
-class LlmModelFactory {
-  constructor({
-    openai,
-    anthropic,
-    google,
-    ollama,
-    llmProvider,
-    openaiApiKey,
-    openaiModel,
-    openaiBaseURL,
-    anthropicBaseURL,
-    anthropicApiKey,
-    anthropicModel,
-    googleModel,
-    googleBaseURL,
-    googleApiKey,
-    ollamaModel,
-    ollamaBaseURL,
-  }) {
+import { LanguageModel } from 'ai';
+import { LlmModelFactoryI } from './types';
+
+class LlmModelFactory implements LlmModelFactoryI {
+  private openai: any;
+
+  private anthropic: any;
+
+  private google: any;
+
+  private ollama: any;
+
+  private llmProvider: string;
+
+  private openaiApiKey: string;
+
+  private openaiModel: string;
+
+  private openaiBaseURL: string;
+
+  private anthropicBaseURL: string;
+
+  private anthropicApiKey: string;
+
+  private anthropicModel: string;
+
+  private googleModel: string;
+
+  private googleBaseURL: string;
+
+  private googleApiKey: string;
+
+  private ollamaModel: string;
+
+  private ollamaBaseURL: string;
+
+  constructor(
+    openai: any,
+    anthropic: any,
+    google: any,
+    ollama: any,
+    llmProvider: string,
+    openaiApiKey: string,
+    openaiModel: string,
+    openaiBaseURL: string,
+    anthropicBaseURL: string,
+    anthropicApiKey: string,
+    anthropicModel: string,
+    googleModel: string,
+    googleBaseURL: string,
+    googleApiKey: string,
+    ollamaModel: string,
+    ollamaBaseURL: string,
+  ) {
     this.openai = openai;
     this.anthropic = anthropic;
     this.google = google;
@@ -35,7 +70,7 @@ class LlmModelFactory {
     this.ollamaBaseURL = ollamaBaseURL;
   }
 
-  create() {
+  public create(): LanguageModel {
     console.debug(`Creating model for provider: ${this.llmProvider}`);
     switch (this.llmProvider) {
       case 'openai':
@@ -61,4 +96,4 @@ class LlmModelFactory {
   }
 }
 
-exports.LlmModelFactory = LlmModelFactory;
+export default LlmModelFactory;

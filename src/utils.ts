@@ -1,4 +1,4 @@
-async function suppressConsoleLogsAsync(callback) {
+async function suppressConsoleLogsAsync(callback: any) {
   const originalConsoleLog = console.log;
   // eslint-disable-next-line func-names
   console.log = function () {};
@@ -8,6 +8,4 @@ async function suppressConsoleLogsAsync(callback) {
   return result;
 }
 
-module.exports = {
-  suppressConsoleLogsAsync,
-};
+export default suppressConsoleLogsAsync;
