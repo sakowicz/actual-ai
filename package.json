@@ -8,7 +8,7 @@
     "dev-docker": "../node_modules/.bin/nodemon --exec \"npm run lint && ts-node ./app.ts\"",
     "dev": "nodemon --exec \"npm run lint && ts-node ./app.ts\"",
     "lint": "eslint --fix **/*.ts",
-    "prod": "node dits/app.js"
+    "prod": "node dist/app.js"
   },
   "keywords": [],
   "author": "Szymon Sakowicz <info@sakowi.cz>",
