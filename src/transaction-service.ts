@@ -1,4 +1,6 @@
 import { LanguageModel } from 'ai';
+import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
+import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import { syncAccountsBeforeClassify } from './config';
 import suppressConsoleLogsAsync from './utils';
 import LlmGenerator from './llm-generator';
@@ -85,7 +87,11 @@ class TransactionService implements TransactionServiceI {
     }
   }
 
-  async ask(categoryGroups: any[], transaction: any, payees: any[]): Promise<string> {
+  async ask(
+    categoryGroups: APICategoryGroupEntity[],
+    transaction: TransactionEntity,
+    payees: APIPayeeEntity[],
+  ): Promise<string> {
     const prompt = await LlmGenerator.generatePrompt(categoryGroups, transaction, payees);
 
     return this.callModel(this.model, prompt);
