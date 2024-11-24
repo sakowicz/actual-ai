@@ -19,7 +19,13 @@
         "ts": "never",
         "tsx": "never"
       }
-      ]
+      ],
+    "import/no-unresolved": [
+      "error",
+      {
+        "ignore": ["^@actual-app/api/@types/loot-core/.+"]
+      }
+    ]
   },
   "parserOptions": {
     "ecmaVersion": 2020,

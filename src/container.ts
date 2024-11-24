@@ -1,6 +1,6 @@
 import * as actualApiClient from '@actual-app/api';
 import fs from 'fs';
-import ai from 'ai';
+import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
@@ -29,7 +29,7 @@ import {
 } from './config';
 import ActualAiService from './actual-ai';
 
-const llmModelFactory = new LlmModelFactory({
+const llmModelFactory = new LlmModelFactory(
   openai,
   anthropic,
   google,
@@ -46,9 +46,9 @@ const llmModelFactory = new LlmModelFactory({
   googleApiKey,
   ollamaModel,
   ollamaBaseURL,
-});
+);
 
-const actualApiService = new ActualApiService({
+const actualApiService = new ActualApiService(
   actualApiClient,
   fs,
   dataDir,
@@ -56,11 +56,16 @@ const actualApiService = new ActualApiService({
   password,
   budgetId,
   e2ePassword,
-});
-const transactionService = new TransactionService({
-  actualApiClient, ai, llmModelFactory,
-});
+);
+const transactionService = new TransactionService(
+  actualApiClient,
+  generateText,
+  llmModelFactory,
+);
 
-const actualAi = new ActualAiService({ transactionService, actualApiService });
+const actualAi = new ActualAiService(
+  transactionService,
+  actualApiService,
+);
 
 export default actualAi;

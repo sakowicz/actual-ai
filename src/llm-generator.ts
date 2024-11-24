@@ -1,30 +1,11 @@
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface CategoryGroup {
-  name: string;
-  categories: Category[];
-}
-
-interface Transaction {
-  amount: number;
-  notes: string;
-  payee_id: string;
-  imported_payee: string;
-}
-
-interface Payee {
-  id: string;
-  name: string;
-}
+import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
+import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 
 class LlmGenerator {
   static async generatePrompt(
-    categoryGroups: CategoryGroup[],
-    transaction: Transaction,
-    payees: Payee[],
+    categoryGroups: APICategoryGroupEntity[],
+    transaction: TransactionEntity,
+    payees: APIPayeeEntity[],
   ): Promise<string> {
     let prompt = 'I want to categorize the given bank transactions into the following categories:\n';
     categoryGroups.forEach((categoryGroup) => {
@@ -33,7 +14,7 @@ class LlmGenerator {
       });
     });
 
-    const payeeName = payees.find((payee) => payee.id === transaction.payee_id)?.name;
+    const payeeName = payees.find((payee) => payee.id === transaction.payee)?.name;
 
     prompt += 'Please categorize the following transaction: \n';
     prompt += `* Amount: ${Math.abs(transaction.amount)}\n`;

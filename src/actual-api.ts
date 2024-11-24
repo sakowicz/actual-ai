@@ -1,14 +1,6 @@
-interface ActualApiServiceParams {
-  actualApiClient: typeof import('@actual-app/api');
-  fs: typeof import('fs');
-  dataDir: string;
-  serverURL: string;
-  password: string;
-  budgetId: string;
-  e2ePassword: string;
-}
+import { ActualApiServiceI } from './types';
 
-class ActualApiService {
+class ActualApiService implements ActualApiServiceI {
   private actualApiClient: typeof import('@actual-app/api');
 
   private fs: typeof import('fs');
@@ -23,17 +15,25 @@ class ActualApiService {
 
   private e2ePassword: string;
 
-  constructor(params: ActualApiServiceParams) {
-    this.actualApiClient = params.actualApiClient;
-    this.fs = params.fs;
-    this.dataDir = params.dataDir;
-    this.serverURL = params.serverURL;
-    this.password = params.password;
-    this.budgetId = params.budgetId;
-    this.e2ePassword = params.e2ePassword;
+  constructor(
+    actualApiClient: typeof import('@actual-app/api'),
+    fs: typeof import('fs'),
+    dataDir: string,
+    serverURL: string,
+    password: string,
+    budgetId: string,
+    e2ePassword: string,
+  ) {
+    this.actualApiClient = actualApiClient;
+    this.fs = fs;
+    this.dataDir = dataDir;
+    this.serverURL = serverURL;
+    this.password = password;
+    this.budgetId = budgetId;
+    this.e2ePassword = e2ePassword;
   }
 
-  async initializeApi() {
+  public async initializeApi() {
     if (!this.fs.existsSync(this.dataDir)) {
       this.fs.mkdirSync(this.dataDir);
     }
@@ -59,7 +59,7 @@ class ActualApiService {
     }
   }
 
-  async shutdownApi() {
+  public async shutdownApi() {
     await this.actualApiClient.shutdown();
   }
 }

@@ -1,34 +1,26 @@
-export interface LlmModelFactory {
-  create(): any;
+import { GenerateTextResult, CoreTool, LanguageModel } from 'ai';
+
+export interface LlmModelFactoryI {
+  create(): LanguageModel;
 }
 
-export interface Ai {
-  // eslint-disable-next-line no-unused-vars
-  generateText(options: { model: any; prompt: string; temperature: number; max_tokens: number })
-    : Promise<{ text: string }>;
+export interface ActualApiServiceI {
+  initializeApi(): Promise<void>;
+  shutdownApi(): Promise<void>;
 }
 
-export interface TransactionServiceParams {
-  actualApiClient: typeof import('@actual-app/api');
-  llmModelFactory: LlmModelFactory;
-  ai: Ai;
+export interface TransactionServiceI {
+  processTransactions(): Promise<void>;
 }
 
-export interface LlmModelFactoryParams {
-  openai: any;
-  anthropic: any;
-  google: any;
-  ollama: any;
-  llmProvider: string;
-  openaiApiKey: string;
-  openaiModel: string;
-  openaiBaseURL: string;
-  anthropicBaseURL: string;
-  anthropicApiKey: string;
-  anthropicModel: string;
-  googleModel: string;
-  googleBaseURL: string;
-  googleApiKey: string;
-  ollamaModel: string;
-  ollamaBaseURL: string;
+export interface ActualAiServiceI {
+  classify(): Promise<void>;
 }
+
+// eslint-disable-next-line no-unused-vars
+export type GenerateTextFunction = (options: {
+  model: LanguageModel;
+  prompt?: string;
+  temperature?: number;
+  max_tokens?: number;
+}) => Promise<GenerateTextResult<Record<string, CoreTool>>>;

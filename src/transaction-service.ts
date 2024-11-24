@@ -1,21 +1,26 @@
+import { LanguageModel } from 'ai';
 import { syncAccountsBeforeClassify } from './config';
 import suppressConsoleLogsAsync from './utils';
 import LlmGenerator from './llm-generator';
-import { Ai, TransactionServiceParams } from './types';
+import { LlmModelFactoryI, GenerateTextFunction, TransactionServiceI } from './types';
 
 const NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const NOTES_GUESSED = 'actual-ai guessed this category';
 
-class TransactionService {
+class TransactionService implements TransactionServiceI {
   private actualApiClient: typeof import('@actual-app/api');
 
-  private ai: Ai;
+  private generateText: GenerateTextFunction;
 
-  private model: any;
+  private model: LanguageModel;
 
-  constructor({ actualApiClient, llmModelFactory, ai }: TransactionServiceParams) {
+  constructor(
+    actualApiClient: typeof import('@actual-app/api'),
+    generateText: GenerateTextFunction,
+    llmModelFactory: LlmModelFactoryI,
+  ) {
     this.actualApiClient = actualApiClient;
-    this.ai = ai;
+    this.generateText = generateText;
     this.model = llmModelFactory.create();
   }
 
@@ -86,8 +91,8 @@ class TransactionService {
     return this.callModel(this.model, prompt);
   }
 
-  async callModel(model: any, prompt: string): Promise<string> {
-    const { text } = await this.ai.generateText({
+  async callModel(model: LanguageModel, prompt: string): Promise<string> {
+    const { text } = await this.generateText({
       model,
       prompt,
       temperature: 0.1,

@@ -1,26 +1,19 @@
-interface TransactionService {
-  processTransactions(): Promise<void>;
-}
+import { ActualAiServiceI, ActualApiServiceI, TransactionServiceI } from './types';
 
-interface ActualApiService {
-  initializeApi(): Promise<void>;
-  shutdownApi(): Promise<void>;
-}
+class ActualAiService implements ActualAiServiceI {
+  private transactionService: TransactionServiceI;
 
-class ActualAiService {
-  private transactionService: TransactionService;
-
-  private actualApiService: ActualApiService;
+  private actualApiService: ActualApiServiceI;
 
   constructor(
-    { transactionService, actualApiService }:
-      { transactionService: TransactionService; actualApiService: ActualApiService },
+    transactionService: TransactionServiceI,
+    actualApiService: ActualApiServiceI,
   ) {
     this.transactionService = transactionService;
     this.actualApiService = actualApiService;
   }
 
-  async classify() {
+  public async classify() {
     console.log('Starting classification process');
     try {
       await this.actualApiService.initializeApi();
