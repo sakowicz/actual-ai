@@ -1,7 +1,17 @@
-class ActualApiService {
-  private api: any;
+interface ActualApiServiceParams {
+  actualApiClient: typeof import('@actual-app/api');
+  fs: typeof import('fs');
+  dataDir: string;
+  serverURL: string;
+  password: string;
+  budgetId: string;
+  e2ePassword: string;
+}
 
-  private fs: any;
+class ActualApiService {
+  private actualApiClient: typeof import('@actual-app/api');
+
+  private fs: typeof import('fs');
 
   private dataDir: string;
 
@@ -11,32 +21,16 @@ class ActualApiService {
 
   private budgetId: string;
 
-  private e2ePassword?: string;
+  private e2ePassword: string;
 
-  constructor({
-    actualApi,
-    fs,
-    dataDir,
-    serverURL,
-    password,
-    budgetId,
-    e2ePassword,
-  }: {
-    actualApi: any;
-    fs: any;
-    dataDir: string;
-    serverURL: string;
-    password: string;
-    budgetId: string;
-    e2ePassword?: string;
-  }) {
-    this.api = actualApi;
-    this.fs = fs;
-    this.dataDir = dataDir;
-    this.serverURL = serverURL;
-    this.password = password;
-    this.budgetId = budgetId;
-    this.e2ePassword = e2ePassword;
+  constructor(params: ActualApiServiceParams) {
+    this.actualApiClient = params.actualApiClient;
+    this.fs = params.fs;
+    this.dataDir = params.dataDir;
+    this.serverURL = params.serverURL;
+    this.password = params.password;
+    this.budgetId = params.budgetId;
+    this.e2ePassword = params.e2ePassword;
   }
 
   async initializeApi() {
@@ -44,7 +38,7 @@ class ActualApiService {
       this.fs.mkdirSync(this.dataDir);
     }
 
-    await this.api.init({
+    await this.actualApiClient.init({
       dataDir: this.dataDir,
       serverURL: this.serverURL,
       password: this.password,
@@ -52,11 +46,11 @@ class ActualApiService {
 
     try {
       if (this.e2ePassword) {
-        await this.api.downloadBudget(this.budgetId, {
+        await this.actualApiClient.downloadBudget(this.budgetId, {
           password: this.e2ePassword,
         });
       } else {
-        await this.api.downloadBudget(this.budgetId);
+        await this.actualApiClient.downloadBudget(this.budgetId);
       }
       console.log('Budget downloaded');
     } catch (error: any) {
@@ -66,8 +60,8 @@ class ActualApiService {
   }
 
   async shutdownApi() {
-    await this.api.shutdown();
+    await this.actualApiClient.shutdown();
   }
 }
 
-module.exports = { ActualApiService };
+export default ActualApiService;

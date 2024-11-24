@@ -32,4 +32,4 @@ class ActualAiService {
   }
 }
 
-module.exports = { ActualAiService };
+export default ActualAiService;

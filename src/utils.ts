@@ -8,6 +8,4 @@ async function suppressConsoleLogsAsync(callback: any) {
   return result;
 }
 
-module.exports = {
-  suppressConsoleLogsAsync,
-};
+export default suppressConsoleLogsAsync;

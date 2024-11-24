@@ -52,4 +52,4 @@ class LlmGenerator {
   }
 }
 
-exports.LlmGenerator = LlmGenerator;
+export default LlmGenerator;

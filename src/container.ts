@@ -1,14 +1,14 @@
-const actualApi = require('@actual-app/api');
-const fs = require('fs');
-const ai = require('ai');
-const { openai } = require('@ai-sdk/openai');
-const { anthropic } = require('@ai-sdk/anthropic');
-const { google } = require('@ai-sdk/google');
-const { ollama } = require('ollama-ai-provider');
-const { ActualApiService } = require('./actual-api.ts');
-const { TransactionService } = require('./transaction-service.ts');
-const { LlmModelFactory } = require('./llm-model-factory.ts');
-const {
+import * as actualApiClient from '@actual-app/api';
+import fs from 'fs';
+import ai from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { google } from '@ai-sdk/google';
+import { ollama } from 'ollama-ai-provider';
+import ActualApiService from './actual-api';
+import TransactionService from './transaction-service';
+import LlmModelFactory from './llm-model-factory';
+import {
   llmProvider,
   openaiApiKey,
   openaiModel,
@@ -26,8 +26,8 @@ const {
   password,
   budgetId,
   e2ePassword,
-} = require('./config.ts');
-const { ActualAiService } = require('./actual-ai.ts');
+} from './config';
+import ActualAiService from './actual-ai';
 
 const llmModelFactory = new LlmModelFactory({
   openai,
@@ -47,11 +47,9 @@ const llmModelFactory = new LlmModelFactory({
   ollamaModel,
   ollamaBaseURL,
 });
-const transactionService = new TransactionService({
-  actualApi, ai, llmModelFactory,
-});
+
 const actualApiService = new ActualApiService({
-  actualApi,
+  actualApiClient,
   fs,
   dataDir,
   serverURL,
@@ -59,5 +57,10 @@ const actualApiService = new ActualApiService({
   budgetId,
   e2ePassword,
 });
+const transactionService = new TransactionService({
+  actualApiClient, ai, llmModelFactory,
+});
 
-exports.actualAi = new ActualAiService({ transactionService, actualApiService });
+const actualAi = new ActualAiService({ transactionService, actualApiService });
+
+export default actualAi;

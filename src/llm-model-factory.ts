@@ -1,21 +1,4 @@
-interface LlmModelFactoryParams {
-  openai: any;
-  anthropic: any;
-  google: any;
-  ollama: any;
-  llmProvider: string;
-  openaiApiKey: string;
-  openaiModel: string;
-  openaiBaseURL: string;
-  anthropicBaseURL: string;
-  anthropicApiKey: string;
-  anthropicModel: string;
-  googleModel: string;
-  googleBaseURL: string;
-  googleApiKey: string;
-  ollamaModel: string;
-  ollamaBaseURL: string;
-}
+import { LlmModelFactoryParams } from './types';
 
 class LlmModelFactory {
   private openai: any;
@@ -112,4 +95,4 @@ class LlmModelFactory {
   }
 }
 
-exports.LlmModelFactory = LlmModelFactory;
+export default LlmModelFactory;

@@ -1,45 +1,20 @@
-const { syncAccountsBeforeClassify } = require('./config.ts');
-const { suppressConsoleLogsAsync } = require('./utils.ts');
-const { LlmGenerator } = require('./llm-generator.ts');
+import { syncAccountsBeforeClassify } from './config';
+import suppressConsoleLogsAsync from './utils';
+import LlmGenerator from './llm-generator';
+import { Ai, TransactionServiceParams } from './types';
 
 const NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const NOTES_GUESSED = 'actual-ai guessed this category';
 
-interface ActualApi {
-  runBankSync(): Promise<void>;
-  getCategoryGroups(): Promise<any[]>;
-  getCategories(): Promise<any[]>;
-  getPayees(): Promise<any[]>;
-  getTransactions(): Promise<any[]>;
-  // eslint-disable-next-line no-unused-vars
-  updateTransaction(id: string, data: any): Promise<void>;
-}
-
-interface LlmModelFactory {
-  create(): any;
-}
-
-interface Ai {
-  // eslint-disable-next-line no-unused-vars
-  generateText(options: { model: any; prompt: string; temperature: number; max_tokens: number })
-    : Promise<{ text: string }>;
-}
-
-interface TransactionServiceParams {
-  actualApi: ActualApi;
-  llmModelFactory: LlmModelFactory;
-  ai: Ai;
-}
-
 class TransactionService {
-  private actualApi: ActualApi;
+  private actualApiClient: typeof import('@actual-app/api');
 
   private ai: Ai;
 
   private model: any;
 
-  constructor({ actualApi, llmModelFactory, ai }: TransactionServiceParams) {
-    this.actualApi = actualApi;
+  constructor({ actualApiClient, llmModelFactory, ai }: TransactionServiceParams) {
+    this.actualApiClient = actualApiClient;
     this.ai = ai;
     this.model = llmModelFactory.create();
   }
@@ -53,7 +28,7 @@ class TransactionService {
   async syncAccounts(): Promise<void> {
     console.log('Syncing bank accounts');
     try {
-      await suppressConsoleLogsAsync(async () => this.actualApi.runBankSync());
+      await suppressConsoleLogsAsync(async () => this.actualApiClient.runBankSync());
       console.log('Bank accounts synced');
     } catch (error) {
       console.error('Error syncing bank accounts:', error);
@@ -65,18 +40,21 @@ class TransactionService {
       await this.syncAccounts();
     }
 
-    const categoryGroups = await this.actualApi.getCategoryGroups();
-    const categories = await this.actualApi.getCategories();
-    const payees = await this.actualApi.getPayees();
-    const transactions = await this.actualApi.getTransactions();
+    const categoryGroups = await this.actualApiClient.getCategoryGroups();
+    const categories = await this.actualApiClient.getCategories();
+    const payees = await this.actualApiClient.getPayees();
+    const transactions = await this.actualApiClient.getTransactions(
+      undefined,
+      undefined,
+      undefined,
+    );
     const uncategorizedTransactions = transactions.filter(
       (transaction) => !transaction.category
             && transaction.transfer_id === null
             && transaction.starting_balance_flag !== true
             && transaction.imported_payee !== null
             && transaction.imported_payee !== ''
-            && (transaction.notes === null
-                || (transaction.notes !== null && !transaction.notes.includes(NOTES_NOT_GUESSED))),
+            && (transaction.notes === null || (!transaction.notes?.includes(NOTES_NOT_GUESSED))),
     );
 
     for (let i = 0; i < uncategorizedTransactions.length; i++) {
@@ -88,14 +66,14 @@ class TransactionService {
 
       if (!guessCategory) {
         console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM could not classify the transaction. LLM guess: ${guess}`);
-        await this.actualApi.updateTransaction(transaction.id, {
+        await this.actualApiClient.updateTransaction(transaction.id, {
           notes: `${transaction.notes} | ${NOTES_NOT_GUESSED}`,
         });
         continue;
       }
       console.log(`${i + 1}/${uncategorizedTransactions.length} Guess: ${guessCategory.name}`);
 
-      await this.actualApi.updateTransaction(transaction.id, {
+      await this.actualApiClient.updateTransaction(transaction.id, {
         category: guessCategory.id,
         notes: `${transaction.notes} | ${NOTES_GUESSED}`,
       });
@@ -120,4 +98,4 @@ class TransactionService {
   }
 }
 
-exports.TransactionService = TransactionService;
+export default TransactionService;

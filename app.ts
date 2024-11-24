@@ -1,6 +1,6 @@
-const cron = require('node-cron');
-const { cronSchedule, classifyOnStartup } = require('./src/config');
-const { actualAi } = require('./src/container');
+import cron from 'node-cron';
+import { cronSchedule, classifyOnStartup } from './src/config';
+import actualAi from './src/container';
 
 if (!cron.validate(cronSchedule)) {
   console.error('Invalid cron schedule:', cronSchedule);
@@ -12,7 +12,7 @@ cron.schedule(cronSchedule, async () => {
 });
 
 console.log('Application started');
-if (classifyOnStartup === true) {
+if (classifyOnStartup) {
   (async () => {
     await actualAi.classify();
   })();

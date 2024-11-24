@@ -1,10 +1,25 @@
 {
-  "extends": "airbnb-base",
+  "extends": [
+    "airbnb-base",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
+  ],
   "rules": {
     "no-plusplus": "off",
     "no-console": "off",
     "no-continue": "off",
-    "no-await-in-loop": "off"
+    "no-await-in-loop": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+      ]
   },
   "parserOptions": {
     "ecmaVersion": 2020,
