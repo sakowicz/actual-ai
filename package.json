@@ -17,7 +17,7 @@
     "@actual-app/api": "^24.11.0",
     "@ai-sdk/anthropic": "^0.0.56",
     "@ai-sdk/google": "^0.0.55",
-    "@ai-sdk/openai": "^0.0.72",
+    "@ai-sdk/openai": "^1.0.4",
     "ai": "^3.4.33",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3",
