@@ -21,7 +21,7 @@
     "ai": "^3.4.33",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3",
-    "ollama-ai-provider": "^0.16.1"
+    "ollama-ai-provider": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
