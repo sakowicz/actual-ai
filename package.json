@@ -15,13 +15,13 @@
   "license": "MIT",
   "dependencies": {
     "@actual-app/api": "^24.11.0",
-    "@ai-sdk/anthropic": "^0.0.56",
-    "@ai-sdk/google": "^0.0.55",
-    "@ai-sdk/openai": "^0.0.72",
-    "ai": "^3.4.33",
+    "@ai-sdk/anthropic": "^1.0.2",
+    "@ai-sdk/google": "^1.0.3",
+    "@ai-sdk/openai": "^1.0.4",
+    "ai": "^4.0.3",
     "dotenv": "^16.4.5",
     "node-cron": "^3.0.3",
-    "ollama-ai-provider": "^0.16.1"
+    "ollama-ai-provider": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
