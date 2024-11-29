@@ -27,6 +27,7 @@
     "typescript": "^5.7.2"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.9.0",
     "@types/node-cron": "^3.0.11",
