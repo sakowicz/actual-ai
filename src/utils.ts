@@ -1,7 +1,7 @@
-async function suppressConsoleLogsAsync(callback: any) {
+async function suppressConsoleLogsAsync(callback: () => Promise<void>) {
   const originalConsoleLog = console.log;
-  // eslint-disable-next-line func-names
-  console.log = function () {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  console.log = () => {}; // Empty arrow function
   const result = await callback();
   console.log = originalConsoleLog;
 

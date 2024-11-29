@@ -1,15 +1,11 @@
 import { LanguageModel } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOllama } from 'ollama-ai-provider';
 import { LlmModelFactoryI } from './types';
 
 class LlmModelFactory implements LlmModelFactoryI {
-  private openai: any;
-
-  private anthropic: any;
-
-  private google: any;
-
-  private ollama: any;
-
   private llmProvider: string;
 
   private openaiApiKey: string;
@@ -35,10 +31,6 @@ class LlmModelFactory implements LlmModelFactoryI {
   private ollamaBaseURL: string;
 
   constructor(
-    openai: any,
-    anthropic: any,
-    google: any,
-    ollama: any,
     llmProvider: string,
     openaiApiKey: string,
     openaiModel: string,
@@ -52,10 +44,6 @@ class LlmModelFactory implements LlmModelFactoryI {
     ollamaModel: string,
     ollamaBaseURL: string,
   ) {
-    this.openai = openai;
-    this.anthropic = anthropic;
-    this.google = google;
-    this.ollama = ollama;
     this.llmProvider = llmProvider;
     this.openaiApiKey = openaiApiKey;
     this.openaiModel = openaiModel;
@@ -73,23 +61,33 @@ class LlmModelFactory implements LlmModelFactoryI {
   public create(): LanguageModel {
     console.debug(`Creating model for provider: ${this.llmProvider}`);
     switch (this.llmProvider) {
-      case 'openai':
-        return this.openai(this.openaiModel, {
+      case 'openai': {
+        const openai = createOpenAI({
           baseURL: this.openaiBaseURL,
           apiKey: this.openaiApiKey,
         });
-      case 'anthropic':
-        return this.anthropic(this.anthropicModel, {
-          baseURL: this.anthropicBaseURL,
+        return openai(this.openaiModel);
+      }
+      case 'anthropic': {
+        const anthropic = createAnthropic({
           apiKey: this.anthropicApiKey,
+          baseURL: this.anthropicBaseURL,
         });
-      case 'google-generative-ai':
-        return this.google(this.googleModel, {
+        return anthropic(this.anthropicModel);
+      }
+      case 'google-generative-ai': {
+        const google = createGoogleGenerativeAI({
           baseURL: this.googleBaseURL,
           apiKey: this.googleApiKey,
         });
-      case 'ollama':
-        return this.ollama(this.ollamaModel, { baseURL: this.ollamaBaseURL });
+        return google(this.googleModel);
+      }
+      case 'ollama': {
+        const ollama = createOllama({
+          baseURL: this.ollamaBaseURL,
+        });
+        return ollama(this.ollamaModel);
+      }
       default:
         throw new Error(`Unknown provider: ${this.llmProvider}`);
     }

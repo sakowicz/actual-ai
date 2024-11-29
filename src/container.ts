@@ -1,10 +1,6 @@
 import * as actualApiClient from '@actual-app/api';
 import fs from 'fs';
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
-import { ollama } from 'ollama-ai-provider';
 import ActualApiService from './actual-api';
 import TransactionService from './transaction-service';
 import LlmModelFactory from './llm-model-factory';
@@ -30,10 +26,6 @@ import {
 import ActualAiService from './actual-ai';
 
 const llmModelFactory = new LlmModelFactory(
-  openai,
-  anthropic,
-  google,
-  ollama,
   llmProvider,
   openaiApiKey,
   openaiModel,

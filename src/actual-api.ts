@@ -53,8 +53,12 @@ class ActualApiService implements ActualApiServiceI {
         await this.actualApiClient.downloadBudget(this.budgetId);
       }
       console.log('Budget downloaded');
-    } catch (error: any) {
-      console.error('Failed to download budget:', error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Failed to download budget:', error.message);
+      } else {
+        console.error('Failed to download budget:', error);
+      }
       throw new Error('Budget download failed');
     }
   }
