@@ -2,11 +2,11 @@ import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/l
 import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 
 class LlmGenerator {
-  static async generatePrompt(
+  static generatePrompt(
     categoryGroups: APICategoryGroupEntity[],
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
-  ): Promise<string> {
+  ): string {
     let prompt = 'I want to categorize the given bank transactions into the following categories:\n';
     categoryGroups.forEach((categoryGroup) => {
       categoryGroup.categories.forEach((category) => {

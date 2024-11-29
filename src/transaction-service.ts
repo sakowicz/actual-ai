@@ -92,7 +92,7 @@ class TransactionService implements TransactionServiceI {
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
   ): Promise<string> {
-    const prompt = await LlmGenerator.generatePrompt(categoryGroups, transaction, payees);
+    const prompt = LlmGenerator.generatePrompt(categoryGroups, transaction, payees);
 
     return this.callModel(this.model, prompt);
   }
