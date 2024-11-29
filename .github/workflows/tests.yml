@@ -16,5 +16,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install modules
         run: npm ci
-      - name: Run ESLint
+      - name: Run Unit Tests (jest)
         run: npm run test
