@@ -36,5 +36,8 @@
     "project": "./tsconfig.json"
   },
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"]
+  "plugins": ["@typescript-eslint"],
+  "env": {
+    "jest": true
+  }
 }

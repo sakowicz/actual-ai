@@ -8,7 +8,8 @@
     "dev-docker": "../node_modules/.bin/nodemon --exec \"npm run lint && ts-node ./app.ts\"",
     "dev": "nodemon --exec \"npm run lint && ts-node ./app.ts\"",
     "lint": "eslint --fix **/*.ts",
-    "prod": "node dist/app.js"
+    "prod": "node dist/app.js",
+    "test": "jest"
   },
   "keywords": [],
   "author": "Szymon Sakowicz <info@sakowi.cz>",
@@ -26,6 +27,7 @@
     "typescript": "^5.7.2"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.9.0",
     "@types/node-cron": "^3.0.11",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
@@ -33,6 +35,8 @@
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.31.0",
-    "nodemon": "^3.1.7"
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.7",
+    "ts-jest": "^29.2.5"
   }
 }

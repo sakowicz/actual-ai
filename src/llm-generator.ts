@@ -19,8 +19,8 @@ class LlmGenerator {
     prompt += 'Please categorize the following transaction: \n';
     prompt += `* Amount: ${Math.abs(transaction.amount)}\n`;
     prompt += `* Type: ${transaction.amount > 0 ? 'Income' : 'Outcome'}\n`;
-    prompt += `* Description: ${transaction.notes}\n`;
-    if (payeeName) {
+    prompt += `* Description: ${transaction.notes ?? ''}\n`;
+    if (payeeName && payeeName !== transaction.imported_payee) {
       prompt += `* Payee: ${payeeName}\n`;
       prompt += `* Payee RAW: ${transaction.imported_payee}\n`;
     } else {
