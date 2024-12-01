@@ -1,7 +1,7 @@
 import * as actualApiClient from '@actual-app/api';
 import fs from 'fs';
 import { generateText } from 'ai';
-import ActualApiService from './actual-api';
+import ActualApiService from './actual-api-service';
 import TransactionService from './transaction-service';
 import LlmModelFactory from './llm-model-factory';
 import {
@@ -51,7 +51,7 @@ const actualApiService = new ActualApiService(
   e2ePassword,
 );
 const transactionService = new TransactionService(
-  actualApiClient,
+  actualApiService,
   generateText,
   llmModelFactory,
   new PromptGenerator(),

@@ -1,3 +1,9 @@
+import {
+  APICategoryEntity,
+  APICategoryGroupEntity,
+  APIPayeeEntity,
+} from '@actual-app/api/@types/loot-core/server/api-models';
+import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import { ActualApiServiceI } from './types';
 
 class ActualApiService implements ActualApiServiceI {
@@ -65,6 +71,38 @@ class ActualApiService implements ActualApiServiceI {
 
   public async shutdownApi() {
     await this.actualApiClient.shutdown();
+  }
+
+  public async getCategoryGroups(): Promise<APICategoryGroupEntity[]> {
+    return this.actualApiClient.getCategoryGroups();
+  }
+
+  public async getCategories(): Promise<(APICategoryEntity|APICategoryGroupEntity)[]> {
+    return this.actualApiClient.getCategories();
+  }
+
+  public async getPayees(): Promise<APIPayeeEntity[]> {
+    return this.actualApiClient.getPayees();
+  }
+
+  public async getTransactions(): Promise<TransactionEntity[]> {
+    return this.actualApiClient.getTransactions(undefined, undefined, undefined);
+  }
+
+  public async updateTransactionNotes(id: string, notes: string): Promise<void> {
+    await this.actualApiClient.updateTransaction(id, { notes });
+  }
+
+  public async updateTransactionNotesAndCategory(
+    id: string,
+    notes: string,
+    categoryId: string,
+  ): Promise<void> {
+    await this.actualApiClient.updateTransaction(id, { notes, category: categoryId });
+  }
+
+  public async runBankSync(): Promise<void> {
+    await this.actualApiClient.runBankSync();
   }
 }
 
