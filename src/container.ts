@@ -1,27 +1,26 @@
 import * as actualApiClient from '@actual-app/api';
 import fs from 'fs';
-import { generateText } from 'ai';
 import ActualApiService from './actual-api-service';
 import TransactionService from './transaction-service';
 import LlmModelFactory from './llm-model-factory';
 import {
-  llmProvider,
-  openaiApiKey,
-  openaiModel,
-  openaiBaseURL,
-  anthropicBaseURL,
   anthropicApiKey,
+  anthropicBaseURL,
   anthropicModel,
-  googleModel,
-  googleBaseURL,
-  googleApiKey,
-  ollamaModel,
-  ollamaBaseURL,
-  dataDir,
-  serverURL,
-  password,
   budgetId,
+  dataDir,
   e2ePassword,
+  googleApiKey,
+  googleBaseURL,
+  googleModel,
+  llmProvider,
+  ollamaBaseURL,
+  ollamaModel,
+  openaiApiKey,
+  openaiBaseURL,
+  openaiModel,
+  password,
+  serverURL,
   syncAccountsBeforeClassify,
 } from './config';
 import ActualAiService from './actual-ai';
@@ -54,7 +53,6 @@ const actualApiService = new ActualApiService(
 );
 
 const llmService = new LlmService(
-  generateText,
   llmModelFactory,
 );
 

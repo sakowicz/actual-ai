@@ -1,4 +1,4 @@
-import { CoreTool, GenerateTextResult, LanguageModel } from 'ai';
+import { LanguageModel } from 'ai';
 import {
   APICategoryEntity,
   APICategoryGroupEntity,
@@ -12,17 +12,25 @@ export interface LlmModelFactoryI {
 
 export interface ActualApiServiceI {
   initializeApi(): Promise<void>;
+
   shutdownApi(): Promise<void>;
+
   getCategoryGroups(): Promise<APICategoryGroupEntity[]>
+
   getCategories(): Promise<(APICategoryEntity | APICategoryGroupEntity)[]>
+
   getPayees(): Promise<APIPayeeEntity[]>
+
   getTransactions(): Promise<TransactionEntity[]>
+
   updateTransactionNotes(id: string, notes: string): Promise<void>
+
   updateTransactionNotesAndCategory(
     id: string,
     notes: string,
     categoryId: string,
   ): Promise<void>
+
   runBankSync(): Promise<void>
 }
 
@@ -45,11 +53,3 @@ export interface PromptGeneratorI {
     payees: APIPayeeEntity[],
   ): string
 }
-
-// eslint-disable-next-line no-unused-vars
-export type GenerateTextFunction = (options: {
-  model: LanguageModel;
-  prompt?: string;
-  temperature?: number;
-  max_tokens?: number;
-}) => Promise<GenerateTextResult<Record<string, CoreTool>>>;
