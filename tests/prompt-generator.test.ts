@@ -1,19 +1,16 @@
-import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
 import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import PromptGenerator from '../src/prompt-generator';
+import GivenActualData from './test-doubles/given/given-actual-data';
 
 describe('LlmGenerator', () => {
   const promptSet: [TransactionEntity, string][] = [
     [
-      {
-        id: '1',
-        starting_balance_flag: false,
-        imported_payee: 'Airbnb * XXXX1234567',
-        amount: -34169,
-        account: '1',
-        date: '2021-01-01',
-        notes: 'AIRBNB * XXXX1234567 822-307-2000',
-      },
+      GivenActualData.createTransaction(
+        '1',
+        -34169,
+        'Airbnb * XXXX1234567',
+        'AIRBNB * XXXX1234567 822-307-2000',
+      ),
       'I want to categorize the given bank transactions into the following categories:\n'
       + '* Groceries (Usual Expenses) (ID: "ff7be77b-40f4-4e9d-aea4-be6b8c431281") \n'
       + '* Travel (Usual Expenses) (ID: "541836f1-e756-4473-a5d0-6c1d3f06c7fa") \n'
@@ -25,15 +22,13 @@ describe('LlmGenerator', () => {
       + '* Payee: Airbnb * XXXX1234567\n'
       + 'ANSWER BY A CATEGORY ID. DO NOT WRITE THE WHOLE SENTENCE. Do not guess, if you don\'t know the answer, return "idk".',
     ], [
-      {
-        id: '1',
-        starting_balance_flag: false,
-        imported_payee: 'Carrefour 2137',
-        amount: -1000,
-        account: '1',
-        date: '2021-01-01',
-        payee: '2',
-      },
+      GivenActualData.createTransaction(
+        '1',
+        -1000,
+        'Carrefour 2137',
+        '',
+        '2',
+      ),
       'I want to categorize the given bank transactions into the following categories:\n'
       + '* Groceries (Usual Expenses) (ID: "ff7be77b-40f4-4e9d-aea4-be6b8c431281") \n'
       + '* Travel (Usual Expenses) (ID: "541836f1-e756-4473-a5d0-6c1d3f06c7fa") \n'
@@ -46,15 +41,13 @@ describe('LlmGenerator', () => {
       + '* Payee RAW: Carrefour 2137\n'
       + 'ANSWER BY A CATEGORY ID. DO NOT WRITE THE WHOLE SENTENCE. Do not guess, if you don\'t know the answer, return "idk".',
     ], [
-      {
-        id: '1',
-        starting_balance_flag: false,
-        imported_payee: 'Google',
-        amount: 2137420,
-        account: '1',
-        date: '2021-01-01',
-        payee: '3',
-      },
+      GivenActualData.createTransaction(
+        '1',
+        2137420,
+        'Google',
+        '',
+        '3',
+      ),
       'I want to categorize the given bank transactions into the following categories:\n'
       + '* Groceries (Usual Expenses) (ID: "ff7be77b-40f4-4e9d-aea4-be6b8c431281") \n'
       + '* Travel (Usual Expenses) (ID: "541836f1-e756-4473-a5d0-6c1d3f06c7fa") \n'
@@ -72,27 +65,9 @@ describe('LlmGenerator', () => {
     transaction: TransactionEntity,
     expectedPrompt: string,
   ) => {
-    const categoryGroups: APICategoryGroupEntity[] = [
-      {
-        id: '1',
-        name: 'Usual Expenses',
-        categories: [
-          { id: 'ff7be77b-40f4-4e9d-aea4-be6b8c431281', name: 'Groceries' },
-          { id: '541836f1-e756-4473-a5d0-6c1d3f06c7fa', name: 'Travel' },
-        ],
-      }, {
-        id: '2',
-        name: 'Income',
-        categories: [
-          { id: '123836f1-e756-4473-a5d0-6c1d3f06c7fa', name: 'Salary' },
-        ],
-      },
-    ];
+    const categoryGroups = GivenActualData.createSampleCategoryGroups();
 
-    const payees: APIPayeeEntity[] = [
-      { id: '1', name: 'Airbnb * XXXX1234567' },
-      { id: '2', name: 'Carrefour' },
-    ];
+    const payees = GivenActualData.createSamplePayees();
     const promptGenerator = new PromptGenerator();
     const prompt = promptGenerator.generate(categoryGroups, transaction, payees);
 

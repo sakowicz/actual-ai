@@ -22,6 +22,7 @@ import {
   password,
   budgetId,
   e2ePassword,
+  syncAccountsBeforeClassify,
 } from './config';
 import ActualAiService from './actual-ai';
 import PromptGenerator from './prompt-generator';
@@ -61,6 +62,7 @@ const transactionService = new TransactionService(
   actualApiService,
   llmService,
   new PromptGenerator(),
+  syncAccountsBeforeClassify,
 );
 
 const actualAi = new ActualAiService(

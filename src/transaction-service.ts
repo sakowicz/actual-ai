@@ -1,4 +1,3 @@
-import { syncAccountsBeforeClassify } from './config';
 import suppressConsoleLogsAsync from './utils';
 import {
   TransactionServiceI, PromptGeneratorI, ActualApiServiceI, LlmServiceI,
@@ -14,14 +13,18 @@ class TransactionService implements TransactionServiceI {
 
   private promptGenerator: PromptGeneratorI;
 
+  private syncAccountsBeforeClassify: boolean;
+
   constructor(
     actualApiClient: ActualApiServiceI,
     llmService: LlmServiceI,
     promptGenerator: PromptGeneratorI,
+    syncAccountsBeforeClassify: boolean,
   ) {
     this.actualAiService = actualApiClient;
     this.llmService = llmService;
     this.promptGenerator = promptGenerator;
+    this.syncAccountsBeforeClassify = syncAccountsBeforeClassify;
   }
 
   static findUUIDInString(str: string): string | null {
@@ -41,7 +44,7 @@ class TransactionService implements TransactionServiceI {
   }
 
   async processTransactions(): Promise<void> {
-    if (syncAccountsBeforeClassify) {
+    if (this.syncAccountsBeforeClassify) {
       await this.syncAccounts();
     }
 
@@ -51,7 +54,7 @@ class TransactionService implements TransactionServiceI {
     const transactions = await this.actualAiService.getTransactions();
     const uncategorizedTransactions = transactions.filter(
       (transaction) => !transaction.category
-            && transaction.transfer_id === null
+            && (transaction.transfer_id === null || transaction.transfer_id === undefined)
             && transaction.starting_balance_flag !== true
             && transaction.imported_payee !== null
             && transaction.imported_payee !== ''
