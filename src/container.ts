@@ -24,6 +24,7 @@ import {
   e2ePassword,
 } from './config';
 import ActualAiService from './actual-ai';
+import PromptGenerator from './prompt-generator';
 
 const llmModelFactory = new LlmModelFactory(
   llmProvider,
@@ -53,6 +54,7 @@ const transactionService = new TransactionService(
   actualApiClient,
   generateText,
   llmModelFactory,
+  new PromptGenerator(),
 );
 
 const actualAi = new ActualAiService(

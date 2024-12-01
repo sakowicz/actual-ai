@@ -1,6 +1,6 @@
 import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
 import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
-import LlmGenerator from '../src/llm-generator';
+import PromptGenerator from '../src/prompt-generator';
 
 describe('LlmGenerator', () => {
   const promptSet: [TransactionEntity, string][] = [
@@ -93,7 +93,8 @@ describe('LlmGenerator', () => {
       { id: '1', name: 'Airbnb * XXXX1234567' },
       { id: '2', name: 'Carrefour' },
     ];
-    const prompt = LlmGenerator.generatePrompt(categoryGroups, transaction, payees);
+    const promptGenerator = new PromptGenerator();
+    const prompt = promptGenerator.generate(categoryGroups, transaction, payees);
 
     expect(prompt).toEqual(expectedPrompt);
   });
