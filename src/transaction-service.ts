@@ -1,10 +1,7 @@
-import { LanguageModel } from 'ai';
-import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import { syncAccountsBeforeClassify } from './config';
 import suppressConsoleLogsAsync from './utils';
 import {
-  LlmModelFactoryI, GenerateTextFunction, TransactionServiceI, PromptGeneratorI, ActualApiServiceI,
+  TransactionServiceI, PromptGeneratorI, ActualApiServiceI, LlmServiceI,
 } from './types';
 
 const NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
@@ -13,21 +10,17 @@ const NOTES_GUESSED = 'actual-ai guessed this category';
 class TransactionService implements TransactionServiceI {
   private actualAiService: ActualApiServiceI;
 
-  private generateText: GenerateTextFunction;
-
-  private model: LanguageModel;
+  private llmService: LlmServiceI;
 
   private promptGenerator: PromptGeneratorI;
 
   constructor(
     actualApiClient: ActualApiServiceI,
-    generateText: GenerateTextFunction,
-    llmModelFactory: LlmModelFactoryI,
+    llmService: LlmServiceI,
     promptGenerator: PromptGeneratorI,
   ) {
     this.actualAiService = actualApiClient;
-    this.generateText = generateText;
-    this.model = llmModelFactory.create();
+    this.llmService = llmService;
     this.promptGenerator = promptGenerator;
   }
 
@@ -68,7 +61,8 @@ class TransactionService implements TransactionServiceI {
     for (let i = 0; i < uncategorizedTransactions.length; i++) {
       const transaction = uncategorizedTransactions[i];
       console.log(`${i + 1}/${uncategorizedTransactions.length} Processing transaction ${transaction.imported_payee} / ${transaction.notes} / ${transaction.amount}`);
-      const guess = await this.ask(categoryGroups, transaction, payees);
+      const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
+      const guess = await this.llmService.ask(prompt);
       const guessUUID = TransactionService.findUUIDInString(guess);
       const guessCategory = categories.find((category) => category.id === guessUUID);
 
@@ -85,22 +79,6 @@ class TransactionService implements TransactionServiceI {
         guessCategory.id,
       );
     }
-  }
-
-  async ask(
-    categoryGroups: APICategoryGroupEntity[],
-    transaction: TransactionEntity,
-    payees: APIPayeeEntity[],
-  ): Promise<string> {
-    const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
-    const { text } = await this.generateText({
-      model: this.model,
-      prompt,
-      temperature: 0.1,
-      max_tokens: 50,
-    });
-
-    return text.replace(/(\r\n|\n|\r|"|')/gm, '');
   }
 }
 

@@ -34,6 +34,10 @@ export interface ActualAiServiceI {
   classify(): Promise<void>;
 }
 
+export interface LlmServiceI {
+  ask(prompt: string): Promise<string>;
+}
+
 export interface PromptGeneratorI {
   generate(
     categoryGroups: APICategoryGroupEntity[],

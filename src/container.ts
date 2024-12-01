@@ -25,6 +25,7 @@ import {
 } from './config';
 import ActualAiService from './actual-ai';
 import PromptGenerator from './prompt-generator';
+import LlmService from './llm-service';
 
 const llmModelFactory = new LlmModelFactory(
   llmProvider,
@@ -50,10 +51,15 @@ const actualApiService = new ActualApiService(
   budgetId,
   e2ePassword,
 );
-const transactionService = new TransactionService(
-  actualApiService,
+
+const llmService = new LlmService(
   generateText,
   llmModelFactory,
+);
+
+const transactionService = new TransactionService(
+  actualApiService,
+  llmService,
   new PromptGenerator(),
 );
 
