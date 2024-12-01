@@ -11,15 +11,15 @@ class ActualApiService implements ActualApiServiceI {
 
   private fs: typeof import('fs');
 
-  private dataDir: string;
+  private readonly dataDir: string;
 
-  private serverURL: string;
+  private readonly serverURL: string;
 
-  private password: string;
+  private readonly password: string;
 
-  private budgetId: string;
+  private readonly budgetId: string;
 
-  private e2ePassword: string;
+  private readonly e2ePassword: string;
 
   constructor(
     actualApiClient: typeof import('@actual-app/api'),
@@ -77,7 +77,7 @@ class ActualApiService implements ActualApiServiceI {
     return this.actualApiClient.getCategoryGroups();
   }
 
-  public async getCategories(): Promise<(APICategoryEntity|APICategoryGroupEntity)[]> {
+  public async getCategories(): Promise<(APICategoryEntity | APICategoryGroupEntity)[]> {
     return this.actualApiClient.getCategories();
   }
 

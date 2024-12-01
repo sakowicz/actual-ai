@@ -6,29 +6,29 @@ import { createOllama } from 'ollama-ai-provider';
 import { LlmModelFactoryI } from './types';
 
 class LlmModelFactory implements LlmModelFactoryI {
-  private llmProvider: string;
+  private readonly llmProvider: string;
 
-  private openaiApiKey: string;
+  private readonly openaiApiKey: string;
 
-  private openaiModel: string;
+  private readonly openaiModel: string;
 
-  private openaiBaseURL: string;
+  private readonly openaiBaseURL: string;
 
-  private anthropicBaseURL: string;
+  private readonly anthropicBaseURL: string;
 
-  private anthropicApiKey: string;
+  private readonly anthropicApiKey: string;
 
-  private anthropicModel: string;
+  private readonly anthropicModel: string;
 
-  private googleModel: string;
+  private readonly googleModel: string;
 
-  private googleBaseURL: string;
+  private readonly googleBaseURL: string;
 
-  private googleApiKey: string;
+  private readonly googleApiKey: string;
 
-  private ollamaModel: string;
+  private readonly ollamaModel: string;
 
-  private ollamaBaseURL: string;
+  private readonly ollamaBaseURL: string;
 
   constructor(
     llmProvider: string,

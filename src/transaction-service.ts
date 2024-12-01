@@ -1,19 +1,19 @@
 import suppressConsoleLogsAsync from './utils';
 import {
-  TransactionServiceI, PromptGeneratorI, ActualApiServiceI, LlmServiceI,
+  ActualApiServiceI, LlmServiceI, PromptGeneratorI, TransactionServiceI,
 } from './types';
 
 const NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const NOTES_GUESSED = 'actual-ai guessed this category';
 
 class TransactionService implements TransactionServiceI {
-  private actualAiService: ActualApiServiceI;
+  private readonly actualAiService: ActualApiServiceI;
 
-  private llmService: LlmServiceI;
+  private readonly llmService: LlmServiceI;
 
-  private promptGenerator: PromptGeneratorI;
+  private readonly promptGenerator: PromptGeneratorI;
 
-  private syncAccountsBeforeClassify: boolean;
+  private readonly syncAccountsBeforeClassify: boolean;
 
   constructor(
     actualApiClient: ActualApiServiceI,
@@ -54,11 +54,11 @@ class TransactionService implements TransactionServiceI {
     const transactions = await this.actualAiService.getTransactions();
     const uncategorizedTransactions = transactions.filter(
       (transaction) => !transaction.category
-            && (transaction.transfer_id === null || transaction.transfer_id === undefined)
-            && transaction.starting_balance_flag !== true
-            && transaction.imported_payee !== null
-            && transaction.imported_payee !== ''
-            && (transaction.notes === null || (!transaction.notes?.includes(NOTES_NOT_GUESSED))),
+        && (transaction.transfer_id === null || transaction.transfer_id === undefined)
+        && transaction.starting_balance_flag !== true
+        && transaction.imported_payee !== null
+        && transaction.imported_payee !== ''
+        && (transaction.notes === null || (!transaction.notes?.includes(NOTES_NOT_GUESSED))),
     );
 
     for (let i = 0; i < uncategorizedTransactions.length; i++) {
