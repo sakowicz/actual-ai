@@ -1,8 +1,9 @@
 import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
 import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { PromptGeneratorI } from './types';
 
-class LlmGenerator {
-  static generatePrompt(
+class PromptGenerator implements PromptGeneratorI {
+  generate(
     categoryGroups: APICategoryGroupEntity[],
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
@@ -33,4 +34,4 @@ class LlmGenerator {
   }
 }
 
-export default LlmGenerator;
+export default PromptGenerator;

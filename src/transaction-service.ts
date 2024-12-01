@@ -3,8 +3,9 @@ import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/l
 import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import { syncAccountsBeforeClassify } from './config';
 import suppressConsoleLogsAsync from './utils';
-import LlmGenerator from './llm-generator';
-import { LlmModelFactoryI, GenerateTextFunction, TransactionServiceI } from './types';
+import {
+  LlmModelFactoryI, GenerateTextFunction, TransactionServiceI, PromptGeneratorI,
+} from './types';
 
 const NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const NOTES_GUESSED = 'actual-ai guessed this category';
@@ -16,14 +17,18 @@ class TransactionService implements TransactionServiceI {
 
   private model: LanguageModel;
 
+  private promptGenerator: PromptGeneratorI;
+
   constructor(
     actualApiClient: typeof import('@actual-app/api'),
     generateText: GenerateTextFunction,
     llmModelFactory: LlmModelFactoryI,
+    promptGenerator: PromptGeneratorI,
   ) {
     this.actualApiClient = actualApiClient;
     this.generateText = generateText;
     this.model = llmModelFactory.create();
+    this.promptGenerator = promptGenerator;
   }
 
   static findUUIDInString(str: string): string | null {
@@ -92,7 +97,7 @@ class TransactionService implements TransactionServiceI {
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
   ): Promise<string> {
-    const prompt = LlmGenerator.generatePrompt(categoryGroups, transaction, payees);
+    const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
 
     return this.callModel(this.model, prompt);
   }

@@ -13,6 +13,7 @@
     "no-console": "off",
     "no-continue": "off",
     "no-await-in-loop": "off",
+    "class-methods-use-this": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
@@ -28,7 +29,9 @@
       {
         "ignore": ["^@actual-app/api/@types/loot-core/.+"]
       }
-    ]
+    ],
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error"]
   },
   "parserOptions": {
     "ecmaVersion": 2020,
