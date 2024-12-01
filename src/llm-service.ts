@@ -2,7 +2,7 @@ import { generateText, LanguageModel } from 'ai';
 import { LlmModelFactoryI, LlmServiceI } from './types';
 
 export default class LlmService implements LlmServiceI {
-  private model: LanguageModel;
+  private readonly model: LanguageModel;
 
   constructor(
     llmModelFactory: LlmModelFactoryI,

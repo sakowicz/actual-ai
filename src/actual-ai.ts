@@ -1,9 +1,9 @@
 import { ActualAiServiceI, ActualApiServiceI, TransactionServiceI } from './types';
 
 class ActualAiService implements ActualAiServiceI {
-  private transactionService: TransactionServiceI;
+  private readonly transactionService: TransactionServiceI;
 
-  private actualApiService: ActualApiServiceI;
+  private readonly actualApiService: ActualApiServiceI;
 
   constructor(
     transactionService: TransactionServiceI,
