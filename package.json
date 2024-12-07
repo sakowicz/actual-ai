@@ -23,7 +23,7 @@
     "ai": "^4.0.13",
     "dotenv": "^16.4.7",
     "node-cron": "^3.0.3",
-    "ollama-ai-provider": "^1.0.0",
+    "ollama-ai-provider": "^1.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
