@@ -144,4 +144,33 @@ describe('TransactionService', () => {
     // Assert
     expect(inMemoryApiService.getWasBankSyncRan()).toBe(true);
   });
+
+  it('It should not process parent transactions', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000',
+      undefined,
+      '1',
+      '2021-01-01',
+      true,
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
+
+    // Act
+    sut = new TransactionService(
+      inMemoryApiService,
+      mockedLlmService,
+      mockedPromptGenerator,
+      shouldRunBankSync,
+    );
+    await sut.processTransactions();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(undefined);
+  });
 });
