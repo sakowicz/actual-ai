@@ -72,18 +72,18 @@ services:
 #      PROMPT_TEMPLATE: >
 #        I want to categorize the given bank transactions into the following categories:
 #        {{#each categoryGroups}}
-#          {{#each categories}}
-#            * {{name}} ({{../name}}) (ID: "{{id}}")
-#          {{/each}}
+#        {{#each categories}}
+#        * {{name}} ({{../name}}) (ID: "{{id}}")
 #        {{/each}}
-#          Please categorize the following transaction:
+#        {{/each}}
+#        Please categorize the following transaction:
 #        * Amount: {{amount}}
 #        * Type: {{type}}
 #        {{#if description}}
-#          * Description: {{description}}
+#        * Description: {{description}}
 #        {{/if}}
 #        {{#if payee}}
-#          * Payee: {{payee}}
+#        * Payee: {{payee}}
 #        {{^}}
 #        * Payee: {{importedPayee}}
 #        {{/if}}
