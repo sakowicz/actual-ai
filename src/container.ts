@@ -20,6 +20,7 @@ import {
   openaiBaseURL,
   openaiModel,
   password,
+  promptTemplate,
   serverURL,
   syncAccountsBeforeClassify,
 } from './config';
@@ -56,10 +57,12 @@ const llmService = new LlmService(
   llmModelFactory,
 );
 
+const promptGenerator = new PromptGenerator(promptTemplate);
+
 const transactionService = new TransactionService(
   actualApiService,
   llmService,
-  new PromptGenerator(),
+  promptGenerator,
   syncAccountsBeforeClassify,
 );
 

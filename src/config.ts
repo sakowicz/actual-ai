@@ -1,4 +1,7 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
+
+const defaultPromptTemplate = fs.readFileSync('./src/templates/prompt.hbs', 'utf8').trim();
 
 dotenv.config();
 
@@ -22,3 +25,4 @@ export const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? '';
 export const ollamaBaseURL = process.env.OLLAMA_BASE_URL ?? '';
 export const ollamaModel = process.env.OLLAMA_MODEL ?? 'phi3.5';
 export const dataDir = '/tmp/actual-ai/';
+export const promptTemplate = process.env.PROMPT_TEMPLATE ?? defaultPromptTemplate;
