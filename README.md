@@ -68,7 +68,9 @@ services:
 #      OLLAMA_MODEL: phi3.5 # optional. required if you want to use a Ollama specific model, default is "phi3.5"
 #      OLLAMA_BASE_URL:  # optional. required for ollama provider
 #      ACTUAL_E2E_PASSWORD:  # optional. required if you have E2E encryption
-#      NODE_TLS_REJECT_UNAUTHORIZED: 0 # optional. required if you have trouble connecting to Actual server
+#      NODE_TLS_REJECT_UNAUTHORIZED: 0 # optional. required if you have trouble connecting to Actual server 
+#      NOT_GUESSED_TAG=#actual-ai-miss
+#      GUESSED_TAG=#actual-ai-guessed
 #      PROMPT_TEMPLATE: >
 #        I want to categorize the given bank transactions into the following categories:
 #        {{#each categoryGroups}}
