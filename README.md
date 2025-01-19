@@ -89,7 +89,7 @@ services:
 #        {{^}}
 #        * Payee: {{importedPayee}}
 #        {{/if}}
-#        ANSWER BY A CATEGORY ID. DO NOT WRITE THE WHOLE SENTENCE. Do not guess, if you don't know the answer, return "idk".
+#        ANSWER BY A CATEGORY ID. Do not guess, if you don't know the answer, return "uncategorized".
 ```
 
 ## Customizing the Prompt
