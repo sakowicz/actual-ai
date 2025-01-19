@@ -70,7 +70,7 @@ services:
 #      ACTUAL_E2E_PASSWORD:  # optional. required if you have E2E encryption
 #      NODE_TLS_REJECT_UNAUTHORIZED: 0 # optional. required if you have trouble connecting to Actual server 
 #      NOT_GUESSED_TAG=#actual-ai-miss
-#      GUESSED_TAG=#actual-ai-guessed
+#      GUESSED_TAG=#actual-ai
 #      PROMPT_TEMPLATE: >
 #        I want to categorize the given bank transactions into the following categories:
 #        {{#each categoryGroups}}
