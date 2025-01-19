@@ -93,14 +93,7 @@ class TransactionService implements TransactionServiceI {
       const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
       const categoryIds = categories.map((category) => category.id);
       categoryIds.push('uncategorized');
-      let guess = null;
-      try {
-        guess = await this.llmService.ask(prompt, categoryIds);
-      } catch (error) {
-        console.error(`${i + 1}/${uncategorizedTransactions.length} Error when asking external LLM Provider.`, error);
-        await this.actualApiService.updateTransactionNotes(transaction.id, this.appendTag(transaction.notes ?? '', this.notGuessedTag));
-        continue;
-      }
+      const guess = await this.llmService.ask(prompt, categoryIds);
       const guessCategory = categories.find((category) => category.id === guess);
 
       if (!guessCategory) {
