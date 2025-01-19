@@ -13,7 +13,9 @@ import {
   googleApiKey,
   googleBaseURL,
   googleModel,
+  guessedTag,
   llmProvider,
+  notGuessedTag,
   ollamaBaseURL,
   ollamaModel,
   openaiApiKey,
@@ -63,12 +65,14 @@ const transactionService = new TransactionService(
   actualApiService,
   llmService,
   promptGenerator,
-  syncAccountsBeforeClassify,
+  notGuessedTag,
+  guessedTag,
 );
 
 const actualAi = new ActualAiService(
   transactionService,
   actualApiService,
+  syncAccountsBeforeClassify,
 );
 
 export default actualAi;

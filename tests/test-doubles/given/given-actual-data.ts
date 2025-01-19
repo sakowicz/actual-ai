@@ -43,6 +43,7 @@ export default class GivenActualData {
     account = '1',
     date = '2021-01-01',
     isParent = false,
+    category: undefined | string = undefined,
   ): TransactionEntity {
     return {
       id,
@@ -54,6 +55,7 @@ export default class GivenActualData {
       notes,
       payee,
       is_parent: isParent,
+      category,
     };
   }
 

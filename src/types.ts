@@ -36,6 +36,8 @@ export interface ActualApiServiceI {
 
 export interface TransactionServiceI {
   processTransactions(): Promise<void>;
+
+  migrateToTags(): Promise<void>;
 }
 
 export interface ActualAiServiceI {

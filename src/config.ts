@@ -26,3 +26,5 @@ export const ollamaBaseURL = process.env.OLLAMA_BASE_URL ?? '';
 export const ollamaModel = process.env.OLLAMA_MODEL ?? 'phi3.5';
 export const dataDir = '/tmp/actual-ai/';
 export const promptTemplate = process.env.PROMPT_TEMPLATE ?? defaultPromptTemplate;
+export const notGuessedTag = process.env.NOT_GUESSED_TAG ?? '#actual-ai-miss';
+export const guessedTag = process.env.GUESSED_TAG ?? '#actual-ai';
