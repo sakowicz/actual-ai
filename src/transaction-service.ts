@@ -30,12 +30,6 @@ class TransactionService implements TransactionServiceI {
     this.guessedTag = guessedTag;
   }
 
-  static findUUIDInString(str: string): string | null {
-    const regex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/g;
-    const matchResult = str.match(regex);
-    return matchResult ? matchResult[0] : null;
-  }
-
   appendTag(notes: string, tag: string): string {
     const clearedNotes = this.clearPreviousTags(notes);
     return `${clearedNotes} ${tag}`.trim();
@@ -97,9 +91,10 @@ class TransactionService implements TransactionServiceI {
       const transaction = uncategorizedTransactions[i];
       console.log(`${i + 1}/${uncategorizedTransactions.length} Processing transaction ${transaction.imported_payee} / ${transaction.notes} / ${transaction.amount}`);
       const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
-      const guess = await this.llmService.ask(prompt);
-      const guessUUID = TransactionService.findUUIDInString(guess);
-      const guessCategory = categories.find((category) => category.id === guessUUID);
+      const categoryIds = categories.map((category) => category.id);
+      categoryIds.push('uncategorized');
+      const guess = await this.llmService.ask(prompt, categoryIds);
+      const guessCategory = categories.find((category) => category.id === guess);
 
       if (!guessCategory) {
         console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM could not classify the transaction. LLM guess: ${guess}`);

@@ -1,4 +1,4 @@
-import { generateText, LanguageModel } from 'ai';
+import { generateObject, LanguageModel } from 'ai';
 import { LlmModelFactoryI, LlmServiceI } from './types';
 
 export default class LlmService implements LlmServiceI {
@@ -10,14 +10,15 @@ export default class LlmService implements LlmServiceI {
     this.model = llmModelFactory.create();
   }
 
-  public async ask(prompt: string): Promise<string> {
-    const { text } = await generateText({
+  public async ask(prompt: string, categoryIds: string[]): Promise<string> {
+    const { object } = await generateObject({
       model: this.model,
+      output: 'enum',
+      enum: categoryIds,
       prompt,
       temperature: 0.1,
-      maxTokens: 35,
     });
 
-    return text.replace(/(\r\n|\n|\r|"|')/gm, '');
+    return object.replace(/(\r\n|\n|\r|"|')/gm, '');
   }
 }

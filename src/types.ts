@@ -45,7 +45,7 @@ export interface ActualAiServiceI {
 }
 
 export interface LlmServiceI {
-  ask(prompt: string): Promise<string>;
+  ask(prompt: string, categoryIds: string[]): Promise<string>;
 }
 
 export interface PromptGeneratorI {
