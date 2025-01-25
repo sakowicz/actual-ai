@@ -18,7 +18,7 @@
     "@actual-app/api": "^25.1.0",
     "@ai-sdk/anthropic": "^1.0.6",
     "@ai-sdk/google": "^1.1.0",
-    "@ai-sdk/openai": "^1.0.18",
+    "@ai-sdk/openai": "^1.1.0",
     "@types/jest": "^29.5.14",
     "ai": "^4.1.0",
     "dotenv": "^16.4.7",
