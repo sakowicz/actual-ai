@@ -87,6 +87,30 @@ describe('ActualAiService', () => {
     expect(updatedTransactions[0].notes).toBe('Carrefour XXXX1234567 822-307-2000 #actual-ai');
   });
 
+  it('It should assign a notes to guessed transaction when LLM returned category name instead of ID', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    mockedLlmService.setGuess('Groceries');
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+      syncAccountsBeforeClassify,
+    );
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].notes).toBe('Carrefour XXXX1234567 822-307-2000 #actual-ai');
+  });
+
   it('It should assign a notes to not guessed transaction', async () => {
     // Arrange
     const transaction = GivenActualData.createTransaction(
