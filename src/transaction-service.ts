@@ -94,7 +94,14 @@ class TransactionService implements TransactionServiceI {
       const categoryIds = categories.map((category) => category.id);
       categoryIds.push('uncategorized');
       const guess = await this.llmService.ask(prompt, categoryIds);
-      const guessCategory = categories.find((category) => category.id === guess);
+      let guessCategory = categories.find((category) => category.id === guess);
+
+      if (!guessCategory) {
+        guessCategory = categories.find((category) => category.name === guess);
+        if (guessCategory) {
+          console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM guessed category name instead of ID. LLM guess: ${guess}`);
+        }
+      }
 
       if (!guessCategory) {
         console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM could not classify the transaction. LLM guess: ${guess}`);
