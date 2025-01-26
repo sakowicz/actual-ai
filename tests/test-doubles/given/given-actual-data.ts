@@ -1,4 +1,5 @@
 import {
+  APIAccountEntity,
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
@@ -11,6 +12,10 @@ export default class GivenActualData {
   public static CATEGORY_TRAVEL = '541836f1-e756-4473-a5d0-6c1d3f06c7fa';
 
   public static CATEGORY_SALARY = '123836f1-e756-4473-a5d0-6c1d3f06c7fa';
+
+  public static ACCOUNT_OFF_BUDGET = '321836f1-e756-4473-a5d0-6c1d3f06c7fa';
+
+  public static ACCOUNT_MAIN = '333836f1-e756-4473-a5d0-6c1d3f06c7fa';
 
   public static PAYEE_AIRBNB = '1';
 
@@ -34,13 +39,24 @@ export default class GivenActualData {
     return { id, name };
   }
 
+  public static createAccount(
+    id: string,
+    name: string,
+    isOffBudget: boolean,
+    isClosed: boolean,
+  ): APIAccountEntity {
+    return {
+      id, name, offbudget: isOffBudget, closed: isClosed,
+    };
+  }
+
   public static createTransaction(
     id: string,
     amount: number,
     importedPayee: string,
     notes = '',
     payee: undefined | string = undefined,
-    account = '1',
+    account = GivenActualData.ACCOUNT_MAIN,
     date = '2021-01-01',
     isParent = false,
     category: undefined | string = undefined,
@@ -87,13 +103,10 @@ export default class GivenActualData {
     ];
   }
 
-  public static createSampleTransactions(): TransactionEntity[] {
+  public static createSampleAccounts(): APIAccountEntity[] {
     return [
-      this.createTransaction('1', 100, 'Carrefour 32321', 'Transaction without category'),
-      this.createTransaction('2', 100, 'Carrefour 32321', 'Transaction with Groceries category', GivenActualData.CATEGORY_GROCERIES),
-      this.createTransaction('3', 100, 'Airbnb * XXXX1234567', 'Transaction with Travel category', undefined, GivenActualData.PAYEE_AIRBNB),
-      this.createTransaction('4', -30000, ' 3', 'Transaction with salary income', GivenActualData.CATEGORY_SALARY, GivenActualData.PAYEE_GOOGLE),
-      this.createTransaction('5', -30000, '1', 'Transaction with income without category', undefined, GivenActualData.PAYEE_GOOGLE),
+      this.createAccount(GivenActualData.ACCOUNT_MAIN, 'Main Account', false, false),
+      this.createAccount(GivenActualData.ACCOUNT_OFF_BUDGET, 'Off Budget Account', true, false),
     ];
   }
 }

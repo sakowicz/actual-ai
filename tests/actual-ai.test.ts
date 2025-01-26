@@ -1,4 +1,5 @@
 import {
+  APIAccountEntity,
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
@@ -16,7 +17,7 @@ describe('ActualAiService', () => {
   let inMemoryApiService: InMemoryActualApiService;
   let mockedLlmService: MockedLlmService;
   let mockedPromptGenerator: MockedPromptGenerator;
-  let syncAccountsBeforeClassify = true;
+  let syncAccountsBeforeClassify = false;
   const GUESSED_TAG = '#actual-ai';
   const NOT_GUESSED_TAG = '#actual-ai-miss';
 
@@ -27,6 +28,7 @@ describe('ActualAiService', () => {
     const categoryGroups: APICategoryGroupEntity[] = GivenActualData.createSampleCategoryGroups();
     const categories: APICategoryEntity[] = GivenActualData.createSampleCategories();
     const payees: APIPayeeEntity[] = GivenActualData.createSamplePayees();
+    const accounts: APIAccountEntity[] = GivenActualData.createSampleAccounts();
     transactionService = new TransactionService(
       inMemoryApiService,
       mockedLlmService,
@@ -37,6 +39,7 @@ describe('ActualAiService', () => {
     inMemoryApiService.setCategoryGroups(categoryGroups);
     inMemoryApiService.setCategories(categories);
     inMemoryApiService.setPayees(payees);
+    inMemoryApiService.setAccounts(accounts);
   });
 
   it('It should assign a category to transaction', async () => {
@@ -61,6 +64,32 @@ describe('ActualAiService', () => {
     // Assert
     const updatedTransactions = await inMemoryApiService.getTransactions();
     expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
+  });
+
+  it('It should process off-budget transaction when flag is set to false', async () => {
+    // Arrange
+    const transactionOffBudget = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000',
+      undefined,
+      GivenActualData.ACCOUNT_OFF_BUDGET,
+    );
+    inMemoryApiService.setTransactions([transactionOffBudget]);
+    mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+      syncAccountsBeforeClassify,
+    );
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(undefined);
   });
 
   it('It should assign a notes to guessed transaction', async () => {

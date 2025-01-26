@@ -1,4 +1,5 @@
 import {
+  APIAccountEntity,
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
@@ -83,6 +84,10 @@ class ActualApiService implements ActualApiServiceI {
 
   public async getPayees(): Promise<APIPayeeEntity[]> {
     return this.actualApiClient.getPayees();
+  }
+
+  public async getAccounts(): Promise<APIAccountEntity[]> {
+    return this.actualApiClient.getAccounts();
   }
 
   public async getTransactions(): Promise<TransactionEntity[]> {

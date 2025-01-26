@@ -76,6 +76,9 @@ class TransactionService implements TransactionServiceI {
     const categories = await this.actualApiService.getCategories();
     const payees = await this.actualApiService.getPayees();
     const transactions = await this.actualApiService.getTransactions();
+    const accounts = await this.actualApiService.getAccounts();
+    const accountsToSkip = accounts.filter((account) => account.offbudget)
+      .map((account) => account.id);
 
     const uncategorizedTransactions = transactions.filter(
       (transaction) => !transaction.category
@@ -84,7 +87,8 @@ class TransactionService implements TransactionServiceI {
         && transaction.imported_payee !== null
         && transaction.imported_payee !== ''
         && (transaction.notes === null || (!transaction.notes?.includes(this.notGuessedTag)))
-        && !transaction.is_parent,
+        && !transaction.is_parent
+        && !accountsToSkip.includes(transaction.account),
     );
 
     for (let i = 0; i < uncategorizedTransactions.length; i++) {
