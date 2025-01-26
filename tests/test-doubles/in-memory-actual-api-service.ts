@@ -1,4 +1,5 @@
 import {
+  APIAccountEntity,
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
@@ -12,6 +13,8 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
   private categories: (APICategoryEntity | APICategoryGroupEntity)[] = [];
 
   private payees: APIPayeeEntity[] = [];
+
+  private accounts: APIAccountEntity[] = [];
 
   private transactions: TransactionEntity[] = [];
 
@@ -39,6 +42,14 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
 
   setCategories(categories: (APICategoryEntity | APICategoryGroupEntity)[]): void {
     this.categories = categories;
+  }
+
+  async getAccounts(): Promise<APIAccountEntity[]> {
+    return Promise.resolve(this.accounts);
+  }
+
+  setAccounts(accounts: APIAccountEntity[]): void {
+    this.accounts = accounts;
   }
 
   async getPayees(): Promise<APIPayeeEntity[]> {

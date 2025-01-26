@@ -1,5 +1,6 @@
 import { LanguageModel } from 'ai';
 import {
+  APIAccountEntity,
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
@@ -18,6 +19,8 @@ export interface ActualApiServiceI {
   getCategoryGroups(): Promise<APICategoryGroupEntity[]>
 
   getCategories(): Promise<(APICategoryEntity | APICategoryGroupEntity)[]>
+
+  getAccounts(): Promise<APIAccountEntity[]>
 
   getPayees(): Promise<APIPayeeEntity[]>
 
