@@ -1,5 +1,5 @@
 import {
-  generateObject, generateText, LanguageModel, TypeValidationError,
+  generateObject, generateText, LanguageModel, NoObjectGeneratedError,
 } from 'ai';
 import { LlmModelFactoryI, LlmServiceI } from './types';
 
@@ -22,7 +22,7 @@ export default class LlmService implements LlmServiceI {
     try {
       return this.askWithEnum(prompt, categoryIds);
     } catch (error) {
-      if (!(error instanceof TypeValidationError)) {
+      if (!NoObjectGeneratedError.isInstance(error)) {
         throw error;
       }
 
