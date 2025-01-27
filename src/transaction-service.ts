@@ -106,6 +106,12 @@ class TransactionService implements TransactionServiceI {
           console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM guessed category name instead of ID. LLM guess: ${guess}`);
         }
       }
+      if (!guessCategory) {
+        guessCategory = categories.find((category) => guess.includes(category.id));
+        if (guessCategory) {
+          console.warn(`${i + 1}/${uncategorizedTransactions.length} Found category ID in LLM guess, but it wasn't 1:1. LLM guess: ${guess}`);
+        }
+      }
 
       if (!guessCategory) {
         console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM could not classify the transaction. LLM guess: ${guess}`);

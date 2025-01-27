@@ -65,8 +65,8 @@ services:
 #      GOOGLE_GENERATIVE_AI_API_KEY:  # optional. required if you want to use the Google Generative AI API
 #      GOOGLE_GENERATIVE_AI_MODEL:  # optional. required if you want to use a specific model, default is "gemini-1.5-flash"
 #      GOOGLE_GENERATIVE_AI_BASE_URL:  # optional. default: "https://generativelanguage.googleapis.com"
-#      OLLAMA_MODEL: phi3.5 # optional. required if you want to use a Ollama specific model, default is "phi3.5"
-#      OLLAMA_BASE_URL:  # optional. required for ollama provider
+#      OLLAMA_MODEL=llama3.1 optional. required if you want to use a Ollama specific model, default is "phi3.5"
+#      OLLAMA_BASE_URL=http://localhost:11434/api # optional. required for ollama provider
 #      ACTUAL_E2E_PASSWORD:  # optional. required if you have E2E encryption
 #      NODE_TLS_REJECT_UNAUTHORIZED: 0 # optional. required if you have trouble connecting to Actual server 
 #      NOT_GUESSED_TAG=#actual-ai-miss
@@ -89,7 +89,7 @@ services:
 #        {{^}}
 #        * Payee: {{importedPayee}}
 #        {{/if}}
-#        ANSWER BY A CATEGORY ID. Do not guess, if you don't know the answer, return "uncategorized".
+#        ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY NAME, JUST AN ID. Do not guess, if you don't know the answer, return "uncategorized".
 ```
 
 ## Customizing the Prompt

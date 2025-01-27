@@ -1,17 +1,16 @@
-import {
-  generateObject, generateText, LanguageModel, NoObjectGeneratedError,
-} from 'ai';
+import { generateObject, generateText, LanguageModel } from 'ai';
 import { LlmModelFactoryI, LlmServiceI } from './types';
 
 export default class LlmService implements LlmServiceI {
   private readonly model: LanguageModel;
 
-  private isFallbackMode = false;
+  private isFallbackMode;
 
   constructor(
     llmModelFactory: LlmModelFactoryI,
   ) {
     this.model = llmModelFactory.create();
+    this.isFallbackMode = llmModelFactory.isFallbackMode();
   }
 
   public async ask(prompt: string, categoryIds: string[]): Promise<string> {
@@ -19,18 +18,7 @@ export default class LlmService implements LlmServiceI {
       return this.askUsingFallbackModel(prompt);
     }
 
-    try {
-      return this.askWithEnum(prompt, categoryIds);
-    } catch (error) {
-      if (!NoObjectGeneratedError.isInstance(error)) {
-        throw error;
-      }
-
-      console.warn('Looks like the model does not support enum generation. Falling back to text generation.');
-
-      this.isFallbackMode = true;
-      return this.askUsingFallbackModel(prompt);
-    }
+    return this.askWithEnum(prompt, categoryIds);
   }
 
   public async askWithEnum(prompt: string, categoryIds: string[]): Promise<string> {

@@ -48,4 +48,15 @@ describe('LlmModelFactory', () => {
     const sut = createSut('123');
     expect(() => sut.create()).toThrow('Unknown provider: 123');
   });
+
+  it('should return fallback provider for ollama', () => {
+    const sut = createSut('ollama');
+
+    expect(sut.isFallbackMode()).toEqual(true);
+  });
+  it('should return not fallback provider for openai', () => {
+    const sut = createSut('openai');
+
+    expect(sut.isFallbackMode()).toEqual(false);
+  });
 });
