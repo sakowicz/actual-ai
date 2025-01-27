@@ -66,6 +66,30 @@ describe('ActualAiService', () => {
     expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
   });
 
+  it('It should assign a category to transaction when guess contain category id', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    mockedLlmService.setGuess(`I think that the category id will be ${GivenActualData.CATEGORY_GROCERIES}`);
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+      syncAccountsBeforeClassify,
+    );
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
+  });
+
   it('It should process off-budget transaction when flag is set to false', async () => {
     // Arrange
     const transactionOffBudget = GivenActualData.createTransaction(

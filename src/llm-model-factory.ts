@@ -92,6 +92,10 @@ class LlmModelFactory implements LlmModelFactoryI {
         throw new Error(`Unknown provider: ${this.llmProvider}`);
     }
   }
+
+  public isFallbackMode(): boolean {
+    return this.llmProvider === 'ollama';
+  }
 }
 
 export default LlmModelFactory;

@@ -9,6 +9,8 @@ import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models
 
 export interface LlmModelFactoryI {
   create(): LanguageModel;
+
+  isFallbackMode(): boolean;
 }
 
 export interface ActualApiServiceI {
