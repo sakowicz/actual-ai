@@ -32,7 +32,7 @@
     "@jest/globals": "^29.7.0",
     "@types/node": "^22.10.5",
     "@types/node-cron": "^3.0.11",
-    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
     "@typescript-eslint/parser": "^8.21.0",
     "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
