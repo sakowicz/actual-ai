@@ -17,7 +17,7 @@
   "dependencies": {
     "@actual-app/api": "^25.2.1",
     "@ai-sdk/anthropic": "^1.1.6",
-    "@ai-sdk/google": "^1.1.8",
+    "@ai-sdk/google": "^1.1.11",
     "@ai-sdk/openai": "^1.1.9",
     "@types/jest": "^29.5.14",
     "ai": "^4.1.28",
