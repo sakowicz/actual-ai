@@ -13,6 +13,9 @@ import {
   googleApiKey,
   googleBaseURL,
   googleModel,
+  groqApiKey,
+  groqBaseURL,
+  groqModel,
   guessedTag,
   llmProvider,
   notGuessedTag,
@@ -43,6 +46,9 @@ const llmModelFactory = new LlmModelFactory(
   googleApiKey,
   ollamaModel,
   ollamaBaseURL,
+  groqApiKey,
+  groqModel,
+  groqBaseURL,
 );
 
 const actualApiService = new ActualApiService(

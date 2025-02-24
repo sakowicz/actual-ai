@@ -3,6 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOllama } from 'ollama-ai-provider';
+import { createGroq } from '@ai-sdk/groq';
 import { LlmModelFactoryI } from './types';
 
 class LlmModelFactory implements LlmModelFactoryI {
@@ -30,6 +31,12 @@ class LlmModelFactory implements LlmModelFactoryI {
 
   private readonly ollamaBaseURL: string;
 
+  private readonly groqApiKey: string;
+
+  private readonly groqModel: string;
+
+  private readonly groqBaseURL: string;
+
   constructor(
     llmProvider: string,
     openaiApiKey: string,
@@ -43,6 +50,9 @@ class LlmModelFactory implements LlmModelFactoryI {
     googleApiKey: string,
     ollamaModel: string,
     ollamaBaseURL: string,
+    groqApiKey: string,
+    groqModel: string,
+    groqBaseURL: string,
   ) {
     this.llmProvider = llmProvider;
     this.openaiApiKey = openaiApiKey;
@@ -56,6 +66,9 @@ class LlmModelFactory implements LlmModelFactoryI {
     this.googleApiKey = googleApiKey;
     this.ollamaModel = ollamaModel;
     this.ollamaBaseURL = ollamaBaseURL;
+    this.groqApiKey = groqApiKey;
+    this.groqModel = groqModel;
+    this.groqBaseURL = groqBaseURL;
   }
 
   public create(): LanguageModel {
@@ -87,6 +100,13 @@ class LlmModelFactory implements LlmModelFactoryI {
           baseURL: this.ollamaBaseURL,
         });
         return ollama(this.ollamaModel);
+      }
+      case 'groq': {
+        const groq = createGroq({
+          baseURL: this.groqBaseURL,
+          apiKey: this.groqApiKey,
+        });
+        return groq(this.groqModel) as LanguageModel;
       }
       default:
         throw new Error(`Unknown provider: ${this.llmProvider}`);

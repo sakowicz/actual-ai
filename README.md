@@ -55,7 +55,7 @@ services:
       CLASSIFICATION_SCHEDULE_CRON: 0 */4 * * * # How often to run classification.
       CLASSIFY_ON_STARTUP: true # Whether to classify transactions on startup (don't wait for cron schedule)
       SYNC_ACCOUNTS_BEFORE_CLASSIFY: false # Whether to sync accounts before classification
-      LLM_PROVIDER: openai # Can be "openai", "anthropic", "google-generative-ai" or "ollama"
+      LLM_PROVIDER: openai # Can be "openai", "anthropic", "google-generative-ai", "ollama" or "groq"
 #      OPENAI_API_KEY:  # optional. required if you want to use the OpenAI API
 #      OPENAI_MODEL:  # optional. required if you want to use a specific model, default is "gpt-4o-mini"
 #      OPENAI_BASE_URL:  # optional. required if you don't want to use the OpenAI API but OpenAI compatible API, ex: "http://ollama:11424/v1
@@ -67,6 +67,9 @@ services:
 #      GOOGLE_GENERATIVE_AI_BASE_URL:  # optional. default: "https://generativelanguage.googleapis.com"
 #      OLLAMA_MODEL=llama3.1 optional. required if you want to use a Ollama specific model, default is "phi3.5"
 #      OLLAMA_BASE_URL=http://localhost:11434/api # optional. required for ollama provider
+#      GROQ_API_KEY:  # optional. required if you want to use the Groq API
+#      GROQ_MODEL:  # optional. required if you want to use a specific model, default is "mixtral-8x7b-32768"
+#      GROQ_BASE_URL:  # optional. default: "https://api.groq.com/openai/v1"
 #      ACTUAL_E2E_PASSWORD:  # optional. required if you have E2E encryption
 #      NODE_TLS_REJECT_UNAUTHORIZED: 0 # optional. required if you have trouble connecting to Actual server 
 #      NOT_GUESSED_TAG=#actual-ai-miss

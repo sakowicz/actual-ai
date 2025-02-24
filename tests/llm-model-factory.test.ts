@@ -15,6 +15,9 @@ describe('LlmModelFactory', () => {
       'google-api-key',
       'ollama-model',
       'https://api.ollama.com',
+      'groq-api-key',
+      'groq-model',
+      'https://api.groq.com',
     );
   }
 

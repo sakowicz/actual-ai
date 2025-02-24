@@ -28,3 +28,6 @@ export const dataDir = '/tmp/actual-ai/';
 export const promptTemplate = process.env.PROMPT_TEMPLATE ?? defaultPromptTemplate;
 export const notGuessedTag = process.env.NOT_GUESSED_TAG ?? '#actual-ai-miss';
 export const guessedTag = process.env.GUESSED_TAG ?? '#actual-ai';
+export const groqApiKey = process.env.GROQ_API_KEY ?? '';
+export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
+export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
