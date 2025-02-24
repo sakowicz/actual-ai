@@ -22,14 +22,26 @@ class ActualAiService implements ActualAiServiceI {
     console.log('Starting classification process');
     try {
       await this.actualApiService.initializeApi();
-      if (this.syncAccountsBeforeClassify) {
-        await this.syncAccounts();
+
+      try {
+        if (this.syncAccountsBeforeClassify) {
+          await this.syncAccounts();
+        }
+      } catch (error) {
+        console.error('Bank sync failed, continuing with existing transactions:', error);
       }
+
+      // These should run even if sync failed
       await this.transactionService.migrateToTags();
       await this.transactionService.processTransactions();
-      await this.actualApiService.shutdownApi();
     } catch (error) {
       console.error('An error occurred:', error);
+    } finally {
+      try {
+        await this.actualApiService.shutdownApi();
+      } catch (shutdownError) {
+        console.error('Error during API shutdown:', shutdownError);
+      }
     }
   }
 
