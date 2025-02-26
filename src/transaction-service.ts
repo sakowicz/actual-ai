@@ -4,6 +4,7 @@ import {
 
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
+const BATCH_SIZE = 20; // Process transactions in batches of 20
 
 class TransactionService implements TransactionServiceI {
   private readonly actualApiService: ActualApiServiceI;
@@ -91,40 +92,69 @@ class TransactionService implements TransactionServiceI {
         && !accountsToSkip.includes(transaction.account),
     );
 
-    for (let i = 0; i < uncategorizedTransactions.length; i++) {
-      const transaction = uncategorizedTransactions[i];
-      console.log(`${i + 1}/${uncategorizedTransactions.length} Processing transaction ${transaction.imported_payee} / ${transaction.notes} / ${transaction.amount}`);
-      const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
-      const categoryIds = categories.map((category) => category.id);
-      categoryIds.push('uncategorized');
-      const guess = await this.llmService.ask(prompt, categoryIds);
-      let guessCategory = categories.find((category) => category.id === guess);
+    console.log(`Found ${uncategorizedTransactions.length} transactions to process`);
+    const categoryIds = categories.map((category) => category.id);
+    categoryIds.push('uncategorized');
 
-      if (!guessCategory) {
-        guessCategory = categories.find((category) => category.name === guess);
-        if (guessCategory) {
-          console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM guessed category name instead of ID. LLM guess: ${guess}`);
+    // Process transactions in batches to avoid hitting rate limits
+    for (
+      let batchStart = 0; 
+      batchStart < uncategorizedTransactions.length; 
+      batchStart += BATCH_SIZE
+    ) {
+      const batchEnd = Math.min(batchStart + BATCH_SIZE, uncategorizedTransactions.length);
+      console.log(`Processing batch ${batchStart / BATCH_SIZE + 1} (transactions ${batchStart + 1}-${batchEnd})`);
+
+      const batch = uncategorizedTransactions.slice(batchStart, batchEnd);
+
+      for (let i = 0; i < batch.length; i++) {
+        const transaction = batch[i];
+        const globalIndex = batchStart + i;
+        console.log(`${globalIndex + 1}/${uncategorizedTransactions.length} Processing transaction ${transaction.imported_payee} / ${transaction.notes} / ${transaction.amount}`);
+
+        try {
+          const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
+          const guess = await this.llmService.ask(prompt, categoryIds);
+          let guessCategory = categories.find((category) => category.id === guess);
+
+          if (!guessCategory) {
+            guessCategory = categories.find((category) => category.name === guess);
+            if (guessCategory) {
+              console.warn(`${globalIndex + 1}/${uncategorizedTransactions.length} LLM guessed category name instead of ID. LLM guess: ${guess}`);
+            }
+          }
+          if (!guessCategory) {
+            guessCategory = categories.find((category) => guess.includes(category.id));
+            if (guessCategory) {
+              console.warn(`${globalIndex + 1}/${uncategorizedTransactions.length} Found category ID in LLM guess, but it wasn't 1:1. LLM guess: ${guess}`);
+            }
+          }
+
+          if (!guessCategory) {
+            console.warn(`${globalIndex + 1}/${uncategorizedTransactions.length} LLM could not classify the transaction. LLM guess: ${guess}`);
+            await this.actualApiService.updateTransactionNotes(transaction.id, this.appendTag(transaction.notes ?? '', this.notGuessedTag));
+            continue;
+          }
+          console.log(`${globalIndex + 1}/${uncategorizedTransactions.length} Guess: ${guessCategory.name}`);
+
+          await this.actualApiService.updateTransactionNotesAndCategory(
+            transaction.id,
+            this.appendTag(transaction.notes ?? '', this.guessedTag),
+            guessCategory.id,
+          );
+        } catch (error) {
+          console.error(`Error processing transaction ${globalIndex + 1}/${uncategorizedTransactions.length}:`, error);
+          // Continue with next transaction
         }
       }
-      if (!guessCategory) {
-        guessCategory = categories.find((category) => guess.includes(category.id));
-        if (guessCategory) {
-          console.warn(`${i + 1}/${uncategorizedTransactions.length} Found category ID in LLM guess, but it wasn't 1:1. LLM guess: ${guess}`);
-        }
-      }
 
-      if (!guessCategory) {
-        console.warn(`${i + 1}/${uncategorizedTransactions.length} LLM could not classify the transaction. LLM guess: ${guess}`);
-        await this.actualApiService.updateTransactionNotes(transaction.id, this.appendTag(transaction.notes ?? '', this.notGuessedTag));
-        continue;
+      // Add a small delay between batches to avoid overwhelming the API
+      if (batchEnd < uncategorizedTransactions.length) {
+        console.log('Pausing for 2 seconds before next batch...');
+        await new Promise((resolve) => {
+          setTimeout(resolve, 2000);
+        });
       }
-      console.log(`${i + 1}/${uncategorizedTransactions.length} Guess: ${guessCategory.name}`);
-
-      await this.actualApiService.updateTransactionNotesAndCategory(
-        transaction.id,
-        this.appendTag(transaction.notes ?? '', this.guessedTag),
-        guessCategory.id,
-      );
     }
   }
 }
