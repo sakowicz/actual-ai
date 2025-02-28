@@ -9,6 +9,7 @@ import {
   anthropicModel,
   budgetId,
   dataDir,
+  dryRunNewCategories,
   e2ePassword,
   googleApiKey,
   googleBaseURL,
@@ -26,7 +27,9 @@ import {
   openaiModel,
   password,
   promptTemplate,
+  categorySuggestionTemplate,
   serverURL,
+  suggestNewCategories,
   syncAccountsBeforeClassify,
 } from './config';
 import ActualAiService from './actual-ai';
@@ -65,7 +68,7 @@ const llmService = new LlmService(
   llmModelFactory,
 );
 
-const promptGenerator = new PromptGenerator(promptTemplate);
+const promptGenerator = new PromptGenerator(promptTemplate, categorySuggestionTemplate);
 
 const transactionService = new TransactionService(
   actualApiService,
@@ -73,6 +76,8 @@ const transactionService = new TransactionService(
   promptGenerator,
   notGuessedTag,
   guessedTag,
+  suggestNewCategories,
+  dryRunNewCategories,
 );
 
 const actualAi = new ActualAiService(

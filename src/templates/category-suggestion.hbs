@@ -1,0 +1,27 @@
+I need to suggest a new category for a transaction that doesn't fit any existing categories.
+
+Transaction details:
+* Amount: {{amount}}
+* Type: {{type}}
+{{#if description}}
+* Description: {{description}}
+{{/if}}
+{{#if payee}}
+* Payee: {{payee}}
+{{^}}
+* Payee: {{importedPayee}}
+{{/if}}
+
+Available category groups:
+{{#each categoryGroups}}
+* {{name}} (ID: "{{id}}")
+{{/each}}
+
+RESPOND WITH A JSON OBJECT that suggests a new category with these properties:
+1. "name": A short, descriptive name for the new category
+2. "groupId": The ID of an existing category group this new category should belong to
+
+Example response:
+{"name": "Online Subscriptions", "groupId": "group-id-here"}
+
+Choose a specific, not overly general name. Use existing category naming patterns. Select an appropriate existing group ID. 

@@ -123,6 +123,15 @@ class ActualApiService implements ActualApiServiceI {
   public async runBankSync(): Promise<void> {
     await this.actualApiClient.runBankSync();
   }
+
+  public async createCategory(name: string, groupId: string): Promise<string> {
+    const result = await this.actualApiClient.createCategory({
+      name,
+      group: groupId,
+    });
+
+    return result;
+  }
 }
 
 export default ActualApiService;

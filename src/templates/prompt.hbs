@@ -1,10 +1,12 @@
-I want to categorize the given bank transactions into the following categories:
+I want to categorize the given bank transaction into one of the following categories:
 {{#each categoryGroups}}
+GROUP: {{name}} (ID: "{{id}}")
 {{#each categories}}
-* {{name}} ({{../name}}) (ID: "{{id}}")
+* {{name}} (ID: "{{id}}")
 {{/each}}
 {{/each}}
-Please categorize the following transaction:
+
+Transaction details:
 * Amount: {{amount}}
 * Type: {{type}}
 {{#if description}}
@@ -15,4 +17,6 @@ Please categorize the following transaction:
 {{^}}
 * Payee: {{importedPayee}}
 {{/if}}
-ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY NAME, JUST AN ID. Do not guess, if you don't know the answer, return "uncategorized".
+
+RESPOND ONLY WITH A CATEGORY ID from the list above. Do not write anything else.
+If you're not sure which category to use, respond with "uncategorized".
