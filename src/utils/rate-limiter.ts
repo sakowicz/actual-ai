@@ -71,7 +71,6 @@ export class RateLimiter {
         lastError = error as Error;
 
         if (this.isRateLimitError(error)) {
-          // Update token bucket information if available
           this.updateTokenBucketFromError(provider, error);
 
           // Get retry delay from error or calculate backoff

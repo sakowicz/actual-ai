@@ -3,6 +3,7 @@ import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models
 import * as handlebars from 'handlebars';
 import { PromptGeneratorI } from './types';
 import PromptTemplateException from './exceptions/prompt-template-exception';
+import { hasWebSearchTool } from './config';
 
 class PromptGenerator implements PromptGeneratorI {
   private readonly promptTemplate: string;
@@ -28,9 +29,16 @@ class PromptGenerator implements PromptGeneratorI {
     }
     const payeeName = payees.find((payee) => payee.id === transaction.payee)?.name;
 
+    // Ensure each category group has its categories property
+    const groupsWithCategories = categoryGroups.map((group) => ({
+      ...group,
+      groupName: group.name,
+      categories: group.categories || [],
+    }));
+
     try {
       return template({
-        categoryGroups,
+        categoryGroups: groupsWithCategories,
         amount: Math.abs(transaction.amount),
         type: transaction.amount > 0 ? 'Income' : 'Outcome',
         description: transaction.notes,
@@ -61,9 +69,16 @@ class PromptGenerator implements PromptGeneratorI {
 
     const payeeName = payees.find((payee) => payee.id === transaction.payee)?.name;
 
+    // Ensure each category group has its categories property
+    const groupsWithCategories = categoryGroups.map((group) => ({
+      ...group,
+      groupName: group.name,
+      categories: group.categories || [],
+    }));
+
     try {
       return template({
-        categoryGroups,
+        categoryGroups: groupsWithCategories,
         amount: Math.abs(transaction.amount),
         type: transaction.amount > 0 ? 'Income' : 'Outcome',
         description: transaction.notes,
@@ -72,6 +87,7 @@ class PromptGenerator implements PromptGeneratorI {
         date: transaction.date,
         cleared: transaction.cleared,
         reconciled: transaction.reconciled,
+        hasWebSearchTool,
       });
     } catch (error) {
       console.error('Error generating category suggestion prompt.', error);

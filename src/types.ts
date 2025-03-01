@@ -1,4 +1,4 @@
-import { LanguageModel } from 'ai';
+import { LanguageModel, Tool } from 'ai';
 import {
   APIAccountEntity,
   APICategoryEntity,
@@ -45,6 +45,10 @@ export interface ActualApiServiceI {
   runBankSync(): Promise<void>
 
   createCategory(name: string, groupId: string): Promise<string>
+
+  createCategoryGroup(name: string): Promise<string>
+
+  updateCategoryGroup(id: string, name: string): Promise<void>
 }
 
 export interface TransactionServiceI {
@@ -64,7 +68,11 @@ export interface LlmServiceI {
 
   askForCategorySuggestion(
     prompt: string
-  ): Promise<{ name: string, groupId: string } | null>
+  ): Promise<{ name: string, groupName: string, groupIsNew: boolean } | null>
+}
+
+export interface ToolServiceI {
+  getTools(): Record<string, Tool>;
 }
 
 export interface PromptGeneratorI {

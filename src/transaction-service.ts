@@ -159,45 +159,71 @@ class TransactionService implements TransactionServiceI {
                 newCategoryPrompt,
               );
 
-              if (categorySuggestion?.name && categorySuggestion.groupId) {
-                console.log(`${globalIndex + 1}/${uncategorizedTransactions.length} Suggested new category: ${categorySuggestion.name} in group ${categorySuggestion.groupId}`);
+              if (
+                categorySuggestion?.name
+                && categorySuggestion.groupName
+              ) {
+                console.log(`${globalIndex + 1}/${uncategorizedTransactions.length} Suggested new category: ${categorySuggestion.name} in group ${categorySuggestion.groupName}`);
 
-                // Check if this category name already exists
-                const existingCategory = categories.find(
-                  (c) => c.name && c.name.toLowerCase() === categorySuggestion.name.toLowerCase(),
-                );
-
-                if (existingCategory) {
-                  console.log(`${globalIndex + 1}/${uncategorizedTransactions.length} Category with similar name already exists: ${existingCategory.name}`);
-
-                  // Use existing category instead
-                  await this.actualApiService.updateTransactionNotesAndCategory(
-                    transaction.id,
-                    this.appendTag(transaction.notes ?? '', this.guessedTag),
-                    existingCategory.id,
-                  );
-                  console.log(`${globalIndex + 1}/${uncategorizedTransactions.length} Used existing category: ${existingCategory.name}`);
-                } else {
-                  // Add to suggested categories map
-                  const key = `${categorySuggestion.name.toLowerCase()}-${categorySuggestion.groupId}`;
-                  if (suggestedCategories.has(key)) {
-                    suggestedCategories.get(key)?.transactions.push(transaction.id);
+                // Find or create category group
+                let groupId: string;
+                if (categorySuggestion.groupIsNew) {
+                  if (this.dryRunNewCategories) {
+                    console.log(`Dry run: Would create new category group "${categorySuggestion.groupName}"`);
+                    groupId = 'dry-run-group-id';
                   } else {
-                    suggestedCategories.set(key, {
-                      name: categorySuggestion.name,
-                      groupId: categorySuggestion.groupId,
-                      transactions: [transaction.id],
-                    });
+                    groupId = await this.actualApiService.createCategoryGroup(
+                      categorySuggestion.groupName,
+                    );
+                    console.log(`Created new category group "${categorySuggestion.groupName}" with ID ${groupId}`);
                   }
+                } else {
+                  const existingGroup = categoryGroups.find(
+                    (g) => g.name.toLowerCase() === categorySuggestion.groupName.toLowerCase(),
+                  );
+                  groupId = existingGroup?.id
+                    ?? (this.dryRunNewCategories ? 'dry-run-group-id' : await this.actualApiService.createCategoryGroup(
+                      categorySuggestion.groupName,
+                    ));
+                }
 
-                  // In dry run mode, just mark with notGuessedTag
-                  await this.actualApiService.updateTransactionNotes(
-                    transaction.id,
-                    this.appendTag(transaction.notes ?? '', `${this.notGuessedTag} (Suggested: ${categorySuggestion.name})`),
+                // Then create category and assign transactions...
+                let newCategoryId: string | null = null;
+                if (!this.dryRunNewCategories) {
+                  newCategoryId = await this.actualApiService.createCategory(
+                    categorySuggestion.name,
+                    groupId,
+                  );
+                  console.log(`Created new category "${categorySuggestion.name}" with ID ${newCategoryId}`);
+                }
+
+                // Handle transaction assignments
+                if (newCategoryId) {
+                  await Promise.all(
+                    suggestedCategories.get(
+                      categorySuggestion.name.toLowerCase(),
+                    )?.transactions.map(async (transactionId) => {
+                      const uncategorizedTransaction = uncategorizedTransactions.find(
+                        (t) => t.id === transactionId,
+                      );
+                      if (uncategorizedTransaction) {
+                        await this.actualApiService.updateTransactionNotesAndCategory(
+                          uncategorizedTransaction.id,
+                          this.appendTag(uncategorizedTransaction.notes ?? '', this.guessedTag),
+                          newCategoryId,
+                        );
+                        console.log(`Assigned transaction ${uncategorizedTransaction.id} to new category ${categorySuggestion?.name}`);
+                      }
+                    }) ?? [],
                   );
                 }
               } else {
-                await this.actualApiService.updateTransactionNotes(transaction.id, this.appendTag(transaction.notes ?? '', this.notGuessedTag));
+                // Handle invalid/missing category suggestion
+                console.log('No valid category suggestion received');
+                await this.actualApiService.updateTransactionNotes(
+                  transaction.id,
+                  this.appendTag(transaction.notes ?? '', this.notGuessedTag),
+                );
               }
             } else {
               await this.actualApiService.updateTransactionNotes(transaction.id, this.appendTag(transaction.notes ?? '', this.notGuessedTag));

@@ -106,7 +106,7 @@ class LlmModelFactory implements LlmModelFactoryI {
           baseURL: this.groqBaseURL,
           apiKey: this.groqApiKey,
         });
-        return groq(this.groqModel) as LanguageModel;
+        return groq(this.groqModel);
       }
       default:
         throw new Error(`Unknown provider: ${this.llmProvider}`);

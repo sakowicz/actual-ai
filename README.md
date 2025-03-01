@@ -35,6 +35,10 @@ The app sends requests to the LLM to classify transactions based on their descri
 
 When enabled, the LLM can suggest entirely new categories for transactions it cannot classify, and optionally create them automatically.
 
+#### 🌐 Web search for unfamiliar merchants
+
+Using the ValueSerp API, the system can search the web for information about unfamiliar merchants to help the LLM make better categorization decisions.
+
 ## 🚀 Usage
 
 Sample `docker-compose.yml` file:
@@ -62,6 +66,8 @@ services:
       LLM_PROVIDER: openai # Can be "openai", "anthropic", "google-generative-ai", "ollama" or "groq"
 #      SUGGEST_NEW_CATEGORIES: false # Whether to suggest new categories for transactions that can't be classified with existing ones
 #      DRY_RUN_NEW_CATEGORIES: true # When true, just logs suggested categories without creating them
+#      ENABLED_TOOLS: webSearch # Comma-separated list of tools to enable
+#      VALUESERP_API_KEY: your_valueserp_api_key # API key for ValueSerp, required if webSearch tool is enabled
 #      OPENAI_API_KEY:  # optional. required if you want to use the OpenAI API
 #      OPENAI_MODEL:  # optional. required if you want to use a specific model, default is "gpt-4o-mini"
 #      OPENAI_BASE_URL:  # optional. required if you don't want to use the OpenAI API but OpenAI compatible API, ex: "http://ollama:11424/v1
@@ -138,3 +144,27 @@ When `SUGGEST_NEW_CATEGORIES` is enabled, the system will:
 5. If not in dry run mode (`DRY_RUN_NEW_CATEGORIES=false`), create the new categories and assign transactions to them
 
 This feature is particularly useful when you have transactions that don't fit your current category structure and you want the LLM to help expand your categories intelligently.
+
+## Tools Integration
+
+The system supports various tools that can be enabled to enhance the LLM's capabilities:
+
+1. Set `ENABLED_TOOLS` in your environment variables as a comma-separated list of tools to enable
+2. Provide any required API keys for the tools you want to use
+
+Currently supported tools:
+
+### webSearch
+
+The webSearch tool uses the ValueSerp API to search for information about merchants that the LLM might not be familiar with, providing additional context for categorization decisions.
+
+To use this tool:
+1. Include `webSearch` in your `ENABLED_TOOLS` list
+2. Provide your ValueSerp API key as `VALUESERP_API_KEY`
+
+This is especially helpful for:
+- New or uncommon merchants
+- Merchants with ambiguous names
+- Specialized services that might be difficult to categorize without additional information
+
+The search results are included in the prompts sent to the LLM, helping it make more accurate category assignments or suggestions.

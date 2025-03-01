@@ -34,7 +34,12 @@ export const categorySuggestionTemplate = process.env.CATEGORY_SUGGESTION_TEMPLA
 export const groqApiKey = process.env.GROQ_API_KEY ?? '';
 export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
+export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
 
 // Feature Flags
 export const suggestNewCategories = process.env.SUGGEST_NEW_CATEGORIES === 'true';
 export const dryRunNewCategories = process.env.DRY_RUN_NEW_CATEGORIES !== 'false'; // Default to true
+
+// Tools configuration
+export const enabledTools = (process.env.ENABLED_TOOLS ?? '').split(',').map((tool) => tool.trim()).filter(Boolean);
+export const hasWebSearchTool = enabledTools.includes('webSearch');

@@ -132,6 +132,16 @@ class ActualApiService implements ActualApiServiceI {
 
     return result;
   }
+
+  public async createCategoryGroup(name: string): Promise<string> {
+    return this.actualApiClient.createCategoryGroup({
+      name,
+    });
+  }
+
+  public async updateCategoryGroup(id: string, name: string): Promise<void> {
+    await this.actualApiClient.updateCategoryGroup(id, { name });
+  }
 }
 
 export default ActualApiService;

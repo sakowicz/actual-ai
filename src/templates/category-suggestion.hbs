@@ -1,3 +1,9 @@
+{{#if hasWebSearchTool}}
+When suggesting a new category, you MUST use the webSearch tool to research 
+the business type and common categorizations for this transaction's payee. 
+Only suggest a category after reviewing the search results.
+{{/if}}
+
 I need to suggest a new category for a transaction that doesn't fit any existing categories.
 
 Transaction details:
@@ -12,16 +18,34 @@ Transaction details:
 * Payee: {{importedPayee}}
 {{/if}}
 
-Available category groups:
+Existing categories by group:
 {{#each categoryGroups}}
-* {{name}} (ID: "{{id}}")
+GROUP: {{name}} (ID: "{{id}}")
+{{#each categories}}
+* {{name}}
+{{/each}}
 {{/each}}
 
 RESPOND WITH A JSON OBJECT that suggests a new category with these properties:
 1. "name": A short, descriptive name for the new category
-2. "groupId": The ID of an existing category group this new category should belong to
+2. "groupName": The name of an existing OR NEW category group this should belong to
+3. "groupIsNew": Boolean indicating if this group needs to be created
 
 Example response:
-{"name": "Online Subscriptions", "groupId": "group-id-here"}
+{"name": "Membership fees", "groupName": "Subscriptions", "groupIsNew": true}
 
-Choose a specific, not overly general name. Use existing category naming patterns. Select an appropriate existing group ID. 
+IMPORTANT: Create a specific category that:
+- Is appropriate for the transaction details shown above
+- Does NOT duplicate or closely resemble any existing category names
+- Is specific rather than overly general
+- Follows the naming patterns of other categories in the same group 
+
+IMPORTANT: Your response MUST be:
+- A SINGLE VALID JSON OBJECT
+- No additional text or explanation
+- No markdown formatting
+- Properly escaped characters
+- No trailing commas
+
+Example of VALID response:
+{"name": "Pet Supplies", "groupName": "Digital Assets", "groupIsNew": true} 
