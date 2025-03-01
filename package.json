@@ -20,7 +20,7 @@
     "@ai-sdk/google": "^1.1.11",
     "@ai-sdk/openai": "^1.1.9",
     "@types/jest": "^29.5.14",
-    "ai": "^4.1.28",
+    "ai": "^4.1.47",
     "dotenv": "^16.4.7",
     "handlebars": "^4.7.8",
     "node-cron": "^3.0.3",
