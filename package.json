@@ -16,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "@actual-app/api": "^25.3.1",
-    "@ai-sdk/anthropic": "^1.1.6",
+    "@ai-sdk/anthropic": "^1.1.13",
     "@ai-sdk/google": "^1.1.11",
     "@ai-sdk/groq": "^1.1.6",
     "@ai-sdk/openai": "^1.1.9",
