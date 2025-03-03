@@ -75,22 +75,27 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async getCategoryGroups(): Promise<APICategoryGroupEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getCategoryGroups();
   }
 
   public async getCategories(): Promise<(APICategoryEntity | APICategoryGroupEntity)[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getCategories();
   }
 
   public async getPayees(): Promise<APIPayeeEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getPayees();
   }
 
   public async getAccounts(): Promise<APIAccountEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getAccounts();
   }
 
   public async getTransactions(): Promise<TransactionEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getTransactions(undefined, undefined, undefined);
   }
 
