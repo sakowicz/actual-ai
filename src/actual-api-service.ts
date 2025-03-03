@@ -61,12 +61,21 @@ class ActualApiService implements ActualApiServiceI {
       }
       console.log('Budget downloaded');
     } catch (error: unknown) {
+      let errorMessage = 'Failed to download budget';
       if (error instanceof Error) {
-        console.error('Failed to download budget:', error.message);
-      } else {
-        console.error('Failed to download budget:', error);
+        errorMessage += `: ${error.message}`;
+        if ('status' in error && typeof error.status === 'number') {
+          errorMessage += ` (HTTP ${error.status})`;
+        }
       }
-      throw new Error('Budget download failed');
+      console.error(errorMessage);
+      console.error('Full error details:', error);
+
+      throw new Error(`Budget download failed. Verify that:
+1. Budget ID "${this.budgetId}" is correct
+2. Server URL "${this.serverURL}" is reachable
+3. Password is correct
+4. E2E password (if used) is valid`);
     }
   }
 

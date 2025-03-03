@@ -15,6 +15,9 @@ describe('LlmModelFactory', () => {
       'google-api-key',
       'ollama-model',
       'https://api.ollama.com',
+      'groq-api-key',
+      'groq-model',
+      'https://api.groq.com',
     );
   }
 
@@ -44,6 +47,13 @@ describe('LlmModelFactory', () => {
     expect(model.provider).toEqual('ollama.chat');
   });
 
+  it('should create a Groq model', () => {
+    const sut = createSut('groq');
+    const model = sut.create();
+    expect(model).toBeDefined();
+    expect(model.provider).toEqual('groq.chat');
+  });
+
   it('should throw an error for an unknown provider', () => {
     const sut = createSut('123');
     expect(() => sut.create()).toThrow('Unknown provider: 123');
@@ -54,8 +64,15 @@ describe('LlmModelFactory', () => {
 
     expect(sut.isFallbackMode()).toEqual(true);
   });
+
   it('should return not fallback provider for openai', () => {
     const sut = createSut('openai');
+
+    expect(sut.isFallbackMode()).toEqual(false);
+  });
+
+  it('should return not fallback provider for groq', () => {
+    const sut = createSut('groq');
 
     expect(sut.isFallbackMode()).toEqual(false);
   });
