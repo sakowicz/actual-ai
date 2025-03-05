@@ -5,11 +5,10 @@ import {
   APICategoryGroupEntity,
   APIPayeeEntity,
 } from '@actual-app/api/@types/loot-core/server/api-models';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/types/models';
 
 export interface LlmModelI {
   ask(prompt: string, possibleAnswers: string[]): Promise<string>;
-  askFreeform(prompt: string): Promise<string>;
 }
 
 export interface LlmModelFactoryI {
@@ -33,6 +32,10 @@ export interface ActualApiServiceI {
   getPayees(): Promise<APIPayeeEntity[]>
 
   getTransactions(): Promise<TransactionEntity[]>
+
+  getRules(): Promise<RuleEntity[]>
+
+  getPayeeRules(payeeId: string): Promise<RuleEntity[]>
 
   updateTransactionNotes(id: string, notes: string): Promise<void>
 
@@ -63,12 +66,34 @@ export interface ActualAiServiceI {
   syncAccounts(): Promise<void>
 }
 
-export interface LlmServiceI {
-  ask(prompt: string, possibleAnswers: string[]): Promise<string>;
+export interface RuleDescription {
+  ruleName: string;
+  conditions: {
+    field: string;
+    op: string;
+    type?: string;
+    value: string | string[];
+  }[];
+  categoryName: string;
+  categoryId: string;
+  index?: number;
+}
 
-  askForCategorySuggestion(
+export interface CategorySuggestion {
+  name: string;
+  groupName: string;
+  groupIsNew: boolean;
+}
+
+export interface LlmServiceI {
+  ask(prompt: string, categoryIds: string[]): Promise<string>;
+
+  askForCategorySuggestion(prompt: string): Promise<CategorySuggestion | null>;
+
+  findSimilarRules(
+    transaction: TransactionEntity,
     prompt: string
-  ): Promise<{ name: string, groupName: string, groupIsNew: boolean } | null>
+  ): Promise<{ categoryId: string; ruleName: string } | null>;
 }
 
 export interface ToolServiceI {
@@ -87,4 +112,15 @@ export interface PromptGeneratorI {
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
   ): string
+
+  generateSimilarRulesPrompt(
+    transaction: TransactionEntity & { payeeName?: string },
+    rulesDescription: RuleDescription[],
+  ): string
+
+  transformRulesToDescriptions(
+    rules: RuleEntity[],
+    categories: (APICategoryEntity | APICategoryGroupEntity)[],
+    payees: APIPayeeEntity[],
+  ): RuleDescription[]
 }

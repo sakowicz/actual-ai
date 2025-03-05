@@ -4,7 +4,7 @@ import {
   APICategoryGroupEntity,
   APIPayeeEntity,
 } from '@actual-app/api/@types/loot-core/server/api-models';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/types/models';
 import { ActualApiServiceI } from './types';
 
 class ActualApiService implements ActualApiServiceI {
@@ -106,6 +106,14 @@ class ActualApiService implements ActualApiServiceI {
   public async getTransactions(): Promise<TransactionEntity[]> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getTransactions(undefined, undefined, undefined);
+  }
+
+  public async getRules(): Promise<RuleEntity[]> {
+    return this.actualApiClient.getRules();
+  }
+
+  public async getPayeeRules(payeeId: string): Promise<RuleEntity[]> {
+    return this.actualApiClient.getPayeeRules(payeeId);
   }
 
   public async updateTransactionNotes(id: string, notes: string): Promise<void> {

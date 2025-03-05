@@ -81,13 +81,17 @@ class TransactionService implements TransactionServiceI {
   }
 
   async processTransactions(): Promise<void> {
-    const categoryGroups = await this.actualApiService.getCategoryGroups();
-    const categories = await this.actualApiService.getCategories();
-    const payees = await this.actualApiService.getPayees();
-    const transactions = await this.actualApiService.getTransactions();
-    const accounts = await this.actualApiService.getAccounts();
-    const accountsToSkip = accounts.filter((account) => account.offbudget)
-      .map((account) => account.id);
+    const [categoryGroups, categories, payees, transactions, accounts, rules] = await Promise.all([
+      this.actualApiService.getCategoryGroups(),
+      this.actualApiService.getCategories(),
+      this.actualApiService.getPayees(),
+      this.actualApiService.getTransactions(),
+      this.actualApiService.getAccounts(),
+      this.actualApiService.getRules(),
+    ]);
+    const accountsToSkip = accounts?.filter((account) => account.offbudget)
+      .map((account) => account.id) ?? [];
+    console.log(`Found ${rules.length} transaction categorization rules`);
 
     const uncategorizedTransactions = transactions.filter(
       (transaction) => !transaction.category
@@ -128,6 +132,79 @@ class TransactionService implements TransactionServiceI {
         console.log(`${globalIndex + 1}/${uncategorizedTransactions.length} Processing transaction ${transaction.imported_payee} / ${transaction.notes} / ${transaction.amount}`);
 
         try {
+          // Check if there are any rules that might apply to this payee
+          const payeeRules = transaction.payee
+            ? await this.actualApiService.getPayeeRules(transaction.payee)
+            : [];
+
+          // Log if we found any matching rules
+          if (payeeRules.length > 0) {
+            console.log(`Found ${payeeRules.length} rules associated with payee ID ${transaction.payee}`);
+
+            // Find a rule that might set a category
+            const categoryRule = payeeRules.find((rule) => rule.actions.some(
+              (action) => 'field' in action && action.field === 'category' && action.op === 'set',
+            ));
+
+            if (categoryRule) {
+              // Extract the category ID from the rule
+              const categoryAction = categoryRule.actions.find(
+                (action) => 'field' in action && action.field === 'category' && action.op === 'set',
+              );
+
+              if (categoryAction && 'value' in categoryAction && typeof categoryAction.value === 'string') {
+                const categoryId = categoryAction.value;
+                const category = categories.find((c) => c.id === categoryId);
+
+                if (category) {
+                  console.log(`Rule suggests category: ${category.name}`);
+                  await this.actualApiService.updateTransactionNotesAndCategory(
+                    transaction.id,
+                    this.appendTag(transaction.notes ?? '', `${this.guessedTag} (from rule)`),
+                    categoryId,
+                  );
+                  // Skip to next transaction since we've categorized this one
+                  continue;
+                }
+              }
+            }
+          }
+
+          // If no direct payee rule was found, check if transaction is similar to any existing rule
+          if (this.llmService.findSimilarRules) {
+            const rulesDescription = this.promptGenerator.transformRulesToDescriptions(
+              rules,
+              categories,
+              payees,
+            );
+
+            const similarRulesPrompt = this.promptGenerator.generateSimilarRulesPrompt(
+              transaction,
+              rulesDescription,
+            );
+
+            const similarRuleResult = await this.llmService.findSimilarRules(
+              transaction,
+              similarRulesPrompt,
+            );
+
+            if (similarRuleResult) {
+              const { categoryId, ruleName } = similarRuleResult;
+              const category = categories.find((c) => c.id === categoryId);
+
+              if (category) {
+                console.log(`Transaction similar to rule "${ruleName}", suggesting category: ${category.name}`);
+                await this.actualApiService.updateTransactionNotesAndCategory(
+                  transaction.id,
+                  this.appendTag(transaction.notes ?? '', `${this.guessedTag} (similar to rule)`),
+                  categoryId,
+                );
+                // Skip to next transaction since we've categorized this one
+                continue;
+              }
+            }
+          }
+
           const prompt = this.promptGenerator.generate(categoryGroups, transaction, payees);
           const guess = await this.llmService.ask(prompt, categoryIds);
           let guessCategory = categories.find((category) => category.id === guess);

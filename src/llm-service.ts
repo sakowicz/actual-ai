@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { generateObject, generateText, LanguageModel } from 'ai';
-import { LlmModelFactoryI, LlmServiceI, ToolServiceI } from './types';
+import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import {
+  CategorySuggestion, LlmModelFactoryI, LlmServiceI, ToolServiceI,
+} from './types';
 import { RateLimiter } from './utils/rate-limiter';
 import { PROVIDER_LIMITS } from './utils/provider-limits';
 
@@ -75,7 +78,7 @@ export default class LlmService implements LlmServiceI {
 
   public async askForCategorySuggestion(
     prompt: string,
-  ): Promise<{ name: string, groupName: string, groupIsNew: boolean } | null> {
+  ): Promise<CategorySuggestion | null> {
     try {
       console.log(
         `Making LLM request for category suggestion to ${this.provider}${this.isFallbackMode ? ' (fallback mode)' : ''}`,
@@ -86,8 +89,6 @@ export default class LlmService implements LlmServiceI {
         groupName: z.string(),
         groupIsNew: z.boolean(),
       });
-
-      type CategorySuggestion = z.infer<typeof categorySchema>;
 
       const response = await this.rateLimiter.executeWithRateLimiting<CategorySuggestion | null>(
         this.provider,
@@ -101,7 +102,6 @@ export default class LlmService implements LlmServiceI {
             system: 'You must use webSearch for unfamiliar payees before suggesting categories',
           });
 
-          // Add this debug logging
           console.log('Generation steps:', steps.map((step) => ({
             text: step.text,
             toolCalls: step.toolCalls,
@@ -133,6 +133,69 @@ export default class LlmService implements LlmServiceI {
       return null;
     } catch (error) {
       console.error('Error while getting category suggestion:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Analyze if a transaction is similar to any existing rule and suggest a category
+   * @param transaction The transaction to analyze
+   * @param rules List of existing rules in the system
+   * @param categories List of categories for reference
+   * @param prompt The prompt to use for finding similar rules
+   * @returns A suggested category ID if similar rules exist, null otherwise
+   */
+  public async findSimilarRules(
+    transaction: TransactionEntity,
+    prompt: string,
+  ): Promise<{ categoryId: string; ruleName: string } | null> {
+    try {
+      console.log(
+        `Checking if transaction "${transaction.imported_payee}" matches any existing rules`,
+      );
+
+      // console.log('Prompt:', prompt.slice(0, 300));
+
+      return this.rateLimiter.executeWithRateLimiting<
+      { categoryId: string; ruleName: string } | null>(
+        this.provider,
+        async () => {
+          const { text, steps } = await generateText({
+            model: this.model,
+            prompt,
+            temperature: 0.1,
+            tools: this.toolService?.getTools(),
+            maxSteps: 3,
+            system: 'You must respond with pong if you receive don\'t have an answer',
+          });
+
+          console.log('Generation steps:', steps.map((step) => ({
+            text: step.text,
+            toolCalls: step.toolCalls,
+            toolResults: step.toolResults,
+          })));
+
+          try {
+            // Parse the JSON response
+            const response = JSON.parse(text) as { categoryId?: string; ruleName?: string } | null;
+
+            if (response?.categoryId && response.ruleName) {
+              console.log(`Found similar rule "${response.ruleName}" suggesting category ${response.categoryId}`);
+              return {
+                categoryId: response.categoryId,
+                ruleName: response.ruleName,
+              };
+            }
+
+            return null;
+          } catch {
+            console.log('No similar rules found or invalid response');
+            return null;
+          }
+        },
+      );
+    } catch (error) {
+      console.error('Error while finding similar rules:', error);
       return null;
     }
   }

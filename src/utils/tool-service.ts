@@ -24,7 +24,7 @@ export default class ToolService implements ToolServiceI {
   public getTools() {
     const tools: Record<string, Tool> = {};
 
-    if (enabledTools.includes('webSearch')) {
+    if (Array.isArray(enabledTools) && enabledTools.includes('webSearch')) {
       tools.webSearch = tool({
         description: 'Essential for researching business types and industry categorizations when existing categories are insufficient. Use when payee is unfamiliar or category context is unclear',
         parameters: z.object({
@@ -35,6 +35,7 @@ export default class ToolService implements ToolServiceI {
         }),
         execute: async ({ query }: { query: string }): Promise<string> => {
           if (!this.valueSerpApiKey) return 'Search unavailable';
+          console.log(`Performing web search for ${query}`);
           const results = await this.performSearch(query);
           return this.formatSearchResults(results);
         },

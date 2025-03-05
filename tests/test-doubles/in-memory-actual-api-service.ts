@@ -4,7 +4,7 @@ import {
   APICategoryGroupEntity,
   APIPayeeEntity,
 } from '@actual-app/api/@types/loot-core/server/api-models';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import { ActualApiServiceI } from '../../src/types';
 
 export default class InMemoryActualApiService implements ActualApiServiceI {
@@ -103,5 +103,66 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
 
   public getWasBankSyncRan(): boolean {
     return this.wasBankSyncRan;
+  }
+
+  async createCategory(name: string, groupId: string): Promise<string> {
+    const categoryId = `cat-${Date.now()}`;
+    const newCategory: APICategoryEntity = {
+      id: categoryId,
+      name,
+      group_id: groupId,
+      is_income: false,
+    };
+
+    this.categories.push(newCategory);
+
+    // Update the category group to include this category
+    const groupIndex = this.categoryGroups.findIndex((group) => group.id === groupId);
+    if (groupIndex >= 0) {
+      if (!this.categoryGroups[groupIndex].categories) {
+        this.categoryGroups[groupIndex].categories = [];
+      }
+      this.categoryGroups[groupIndex].categories.push(newCategory);
+    }
+
+    return Promise.resolve(categoryId);
+  }
+
+  async createCategoryGroup(name: string): Promise<string> {
+    const groupId = `group-${Date.now()}`;
+    const newGroup: APICategoryGroupEntity = {
+      id: groupId,
+      name,
+      is_income: false,
+      categories: [],
+    };
+
+    this.categoryGroups.push(newGroup);
+    this.categories.push(newGroup);
+
+    return Promise.resolve(groupId);
+  }
+
+  async updateCategoryGroup(id: string, name: string): Promise<void> {
+    const groupIndex = this.categoryGroups.findIndex((group) => group.id === id);
+    if (groupIndex >= 0) {
+      this.categoryGroups[groupIndex].name = name;
+    }
+
+    // Also update in the categories array
+    const categoryIndex = this.categories.findIndex((cat) => cat.id === id);
+    if (categoryIndex >= 0) {
+      this.categories[categoryIndex].name = name;
+    }
+
+    return Promise.resolve();
+  }
+
+  async getRules(): Promise<RuleEntity[]> {
+    return Promise.resolve([]);
+  }
+
+  async getPayeeRules(_payeeId: string): Promise<RuleEntity[]> {
+    return Promise.resolve([]);
   }
 }

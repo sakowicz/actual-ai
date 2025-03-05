@@ -28,6 +28,7 @@ import {
   password,
   promptTemplate,
   categorySuggestionTemplate,
+  similarRulesTemplate,
   serverURL,
   suggestNewCategories,
   syncAccountsBeforeClassify,
@@ -72,12 +73,16 @@ const actualApiService = new ActualApiService(
   e2ePassword,
 );
 
+const promptGenerator = new PromptGenerator(
+  promptTemplate,
+  categorySuggestionTemplate,
+  similarRulesTemplate,
+);
+
 const llmService = new LlmService(
   llmModelFactory,
   toolService,
 );
-
-const promptGenerator = new PromptGenerator(promptTemplate, categorySuggestionTemplate);
 
 const transactionService = new TransactionService(
   actualApiService,

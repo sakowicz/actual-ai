@@ -1,4 +1,4 @@
-import { LlmServiceI } from '../../src/types';
+import { CategorySuggestion, LlmServiceI } from '../../src/types';
 
 export default class MockedLlmService implements LlmServiceI {
   private guess = 'uncategorized';
@@ -7,7 +7,15 @@ export default class MockedLlmService implements LlmServiceI {
     return Promise.resolve(this.guess);
   }
 
+  async askForCategorySuggestion(): Promise<CategorySuggestion | null> {
+    return Promise.resolve(null);
+  }
+
   setGuess(guess: string): void {
     this.guess = guess;
+  }
+
+  async findSimilarRules(): Promise<{ categoryId: string; ruleName: string } | null> {
+    return Promise.resolve(null);
   }
 }

@@ -1,0 +1,38 @@
+Transaction details:
+* Payee: {{importedPayee}}
+* Amount: {{amount}}
+* Type: {{type}}
+{{#if description}}
+* Description: {{description}}
+{{/if}}
+{{#if date}}
+* Date: {{date}}
+{{/if}}
+
+Existing rules in the system:
+{{#each rules}}
+{{incIndex @index}}. Rule: "{{ruleName}}"
+- Category: {{categoryName}}
+- Conditions:
+{{#each conditions}}
+  - {{field}} {{op}} 
+    {{#if (eq type "id")}}
+    [{{#each value}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
+    {{else}}
+    "{{value}}"
+    {{/if}}
+{{/each}}
+{{/each}}
+
+Based on the transaction details, determine if it closely matches any of the existing rules.
+If there's a match, return a JSON object with the categoryId and ruleName.
+If there's no good match, return null.
+
+Example response for a match: {"categoryId": "abc123", "ruleName": "Rule Name"}
+Example response for no match: null
+
+IMPORTANT: Your response MUST be:
+- A SINGLE VALID JSON OBJECT or null
+- No additional text or explanation
+- No markdown formatting
+- Properly escaped characters 

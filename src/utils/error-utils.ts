@@ -1,3 +1,12 @@
+interface RateLimitError extends Error {
+  statusCode?: number;
+  responseHeaders?: {
+    'retry-after'?: string;
+    'Retry-After'?: string;
+  };
+  responseBody?: string;
+}
+
 /**
  * Checks if an error is a rate limit error
  * @param error Any error object or value
@@ -5,17 +14,13 @@
  */
 export const isRateLimitError = (error: unknown): boolean => {
   if (!error) return false;
-
-  // Convert to string to handle various error types
-  const errorStr = String(error);
-
-  // Check for common rate limit indicators
+  const errorStr = error instanceof Error ? error.message : JSON.stringify(error);
   return errorStr.toLowerCase().includes('rate limit')
     || errorStr.toLowerCase().includes('rate_limit')
     || errorStr.toLowerCase().includes('too many requests')
     || (error instanceof Error
       && 'statusCode' in error
-      && (error as any).statusCode === 429);
+      && (error as RateLimitError).statusCode === 429);
 };
 
 /**
@@ -28,32 +33,31 @@ export const extractRetryAfterMs = (error: unknown): number | undefined => {
 
   if (error instanceof Error) {
     try {
-      // Check for retry information in error message (common in provider responses)
       const match = /try again in (\d+(\.\d+)?)s/i.exec(error.message);
       if (match?.[1]) {
         return Math.ceil(parseFloat(match[1]) * 1000);
       }
-
-      // Try to get from headers if available
-      if ('responseHeaders' in error && (error as any).responseHeaders) {
-        const headers = (error as any).responseHeaders;
-        if (headers['retry-after'] || headers['Retry-After']) {
-          const retryAfter = headers['retry-after'] || headers['Retry-After'];
-          if (!isNaN(Number(retryAfter))) {
+      if ('responseHeaders' in error && (error as RateLimitError).responseHeaders) {
+        const headers = (error as RateLimitError).responseHeaders;
+        if (headers?.['retry-after'] || headers?.['Retry-After']) {
+          const retryAfter = headers['retry-after'] ?? headers['Retry-After'];
+          if (retryAfter && !Number.isNaN(Number(retryAfter))) {
             return Number(retryAfter) * 1000;
           }
         }
       }
 
-      // Check for reset time in responseBody if it exists
-      if ('responseBody' in error && typeof (error as any).responseBody === 'string') {
-        try {
-          const body = JSON.parse((error as any).responseBody);
-          if (body.error?.reset_time) {
-            return body.error.reset_time * 1000;
+      if ('responseBody' in error) {
+        const { responseBody } = (error as RateLimitError);
+        if (typeof responseBody === 'string') {
+          try {
+            const body = JSON.parse(responseBody) as { error?: { reset_time?: number } };
+            if (body.error?.reset_time) {
+              return body.error.reset_time * 1000;
+            }
+          } catch {
+            // Ignore JSON parse errors
           }
-        } catch (e) {
-          // Ignore JSON parse errors
         }
       }
     } catch (e) {
