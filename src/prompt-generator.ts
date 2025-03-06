@@ -1,7 +1,9 @@
-import { APICategoryEntity, APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
+import { APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
 import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import handlebars from './handlebars-helpers';
-import { PromptGeneratorI, RuleDescription } from './types';
+import {
+  PromptGeneratorI, RuleDescription, APICategoryEntity, APICategoryGroupEntity,
+} from './types';
 import PromptTemplateException from './exceptions/prompt-template-exception';
 import { hasWebSearchTool } from './config';
 import { transformRulesToDescriptions } from './utils/rule-utils';
@@ -41,7 +43,7 @@ class PromptGenerator implements PromptGeneratorI {
     const groupsWithCategories = categoryGroups.map((group) => ({
       ...group,
       groupName: group.name,
-      categories: group.categories || [],
+      categories: group.categories ?? [],
     }));
 
     try {
@@ -81,7 +83,7 @@ class PromptGenerator implements PromptGeneratorI {
     const groupsWithCategories = categoryGroups.map((group) => ({
       ...group,
       groupName: group.name,
-      categories: group.categories || [],
+      categories: group.categories ?? [],
     }));
 
     try {
@@ -143,10 +145,45 @@ class PromptGenerator implements PromptGeneratorI {
 
   transformRulesToDescriptions(
     rules: RuleEntity[],
-    categories: (APICategoryEntity | APICategoryGroupEntity)[],
+    categories: APICategoryEntity[],
     payees: APIPayeeEntity[] = [],
   ): RuleDescription[] {
     return transformRulesToDescriptions(rules, categories, payees);
+  }
+
+  generateUnifiedPrompt(
+    categoryGroups: APICategoryGroupEntity[],
+    transaction: TransactionEntity,
+    payees: APIPayeeEntity[],
+    rules: RuleEntity[],
+  ): string {
+    const template = handlebars.compile(this.promptTemplate);
+    const payeeName = payees.find((p) => p.id === transaction.payee)?.name;
+
+    const categories = categoryGroups.flatMap((group) => (group.categories ?? []).map((cat) => ({
+      ...cat,
+      groupName: group.name,
+    })));
+
+    const rulesDescription = this.transformRulesToDescriptions(
+      rules,
+      categories as APICategoryEntity[],
+      payees,
+    );
+
+    return template({
+      categoryGroups: categoryGroups.map((g) => ({
+        ...g,
+        categories: g.categories ?? [],
+      })),
+      rules: rulesDescription,
+      amount: Math.abs(transaction.amount),
+      type: transaction.amount > 0 ? 'Income' : 'Expense',
+      description: transaction.notes,
+      payee: payeeName,
+      importedPayee: transaction.imported_payee,
+      date: transaction.date,
+    });
   }
 }
 

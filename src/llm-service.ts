@@ -2,10 +2,17 @@ import { z } from 'zod';
 import { generateObject, generateText, LanguageModel } from 'ai';
 import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import {
-  CategorySuggestion, LlmModelFactoryI, LlmServiceI, ToolServiceI,
+  CategorySuggestion, LlmModelFactoryI, LlmServiceI, ToolServiceI, UnifiedResponse,
 } from './types';
 import { RateLimiter } from './utils/rate-limiter';
 import { PROVIDER_LIMITS } from './utils/provider-limits';
+
+function cleanJsonResponse(text: string): string {
+  // Remove markdown code fences and any surrounding text
+  const cleaned = text.replace(/```json\n?|\n?```/g, '');
+  // Remove leading/trailing whitespace and non-JSON characters
+  return cleaned.trim().replace(/^[^{[]*|[^}\]]*$/g, '');
+}
 
 export default class LlmService implements LlmServiceI {
   private readonly llmModelFactory: LlmModelFactoryI;
@@ -18,7 +25,7 @@ export default class LlmService implements LlmServiceI {
 
   private readonly toolService?: ToolServiceI;
 
-  private isFallbackMode;
+  private readonly isFallbackMode;
 
   constructor(
     llmModelFactory: LlmModelFactoryI,
@@ -232,5 +239,82 @@ export default class LlmService implements LlmServiceI {
         return text.replace(/(\r\n|\n|\r|"|')/gm, '');
       },
     );
+  }
+
+  public async unifiedAsk(prompt: string): Promise<UnifiedResponse> {
+    return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
+      try {
+        const { text } = await generateText({
+          model: this.model,
+          prompt,
+          temperature: 0.2,
+          tools: this.toolService?.getTools(),
+          maxSteps: 3,
+          system: 'You must use webSearch for unfamiliar payees before suggesting categories',
+        });
+
+        // Move cleanedText declaration outside the try-catch
+        const cleanedText = cleanJsonResponse(text);
+        console.log('Cleaned LLM response:', cleanedText);
+
+        try {
+          // First, try to parse as JSON
+          let parsed: Partial<UnifiedResponse>;
+          try {
+            parsed = JSON.parse(cleanedText) as Partial<UnifiedResponse>;
+          } catch {
+            // If not valid JSON, check if it's a simple ID
+            const trimmedText = cleanedText.trim().replace(/^"|"$/g, '');
+
+            if (/^[a-zA-Z0-9_-]+$/.test(trimmedText)) {
+              console.log(`LLM returned simple ID: "${trimmedText}"`);
+              return {
+                type: 'existing',
+                categoryId: trimmedText,
+              };
+            }
+
+            throw new Error('Response is neither valid JSON nor simple ID');
+          }
+
+          // Type guard validation
+          if (parsed.type === 'existing' && parsed.categoryId) {
+            return { type: 'existing', categoryId: parsed.categoryId };
+          }
+          if (parsed.type === 'rule' && parsed.categoryId && parsed.ruleName) {
+            return {
+              type: 'rule',
+              categoryId: parsed.categoryId,
+              ruleName: parsed.ruleName,
+            };
+          }
+          if (parsed.type === 'new' && parsed.newCategory) {
+            return {
+              type: 'new',
+              newCategory: parsed.newCategory,
+            };
+          }
+
+          // If the response doesn't match expected format but has a categoryId,
+          // default to treating it as an existing category
+          if (parsed.categoryId) {
+            console.log('LLM response missing type but has categoryId, treating as existing category');
+            return {
+              type: 'existing',
+              categoryId: parsed.categoryId,
+            };
+          }
+
+          console.error('Invalid response structure from LLM:', parsed);
+          throw new Error('Invalid response format from LLM');
+        } catch (parseError) {
+          console.error('Failed to parse LLM response:', cleanedText, parseError);
+          throw new Error('Invalid response format from LLM');
+        }
+      } catch (error) {
+        console.error('LLM response validation failed:', error);
+        throw new Error('Invalid response format from LLM');
+      }
+    });
   }
 }

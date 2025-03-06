@@ -168,3 +168,22 @@ This is especially helpful for:
 - Specialized services that might be difficult to categorize without additional information
 
 The search results are included in the prompts sent to the LLM, helping it make more accurate category assignments or suggestions.
+
+## Dry Run Mode
+
+Enable dry run mode by setting `DRY_RUN=true` (default). In this mode:
+- No transactions will be modified
+- No categories will be created
+- All proposed changes will be logged to console
+- System will show what would happen with real execution
+
+To perform actual changes:
+1. Set `DRY_RUN=false`
+2. Ensure `SUGGEST_NEW_CATEGORIES=true` if you want new category creation
+3. Run the classification process
+
+Dry run messages will show:
+- Which transactions would be categorized
+- Which rules would be applied
+- What new categories would be created
+- How many transactions would be affected by each change

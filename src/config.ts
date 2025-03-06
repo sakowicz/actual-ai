@@ -41,7 +41,7 @@ export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
 
 // Feature Flags
 export const suggestNewCategories = process.env.SUGGEST_NEW_CATEGORIES === 'true';
-export const dryRunNewCategories = process.env.DRY_RUN_NEW_CATEGORIES !== 'false'; // Default to true
+export const dryRun = process.env.DRY_RUN !== 'false'; // Default to true unless explicitly false
 
 // Tools configuration
 export const enabledTools = (process.env.ENABLED_TOOLS ?? '').split(',').map((tool) => tool.trim()).filter(Boolean);

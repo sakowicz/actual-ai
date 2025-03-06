@@ -1,10 +1,4 @@
-I want to categorize the given bank transaction into one of the following categories:
-{{#each categoryGroups}}
-GROUP: {{name}} (ID: "{{id}}")
-{{#each categories}}
-* {{name}} (ID: "{{id}}")
-{{/each}}
-{{/each}}
+I want to categorize the given bank transaction.
 
 Transaction details:
 * Amount: {{amount}}
@@ -17,6 +11,46 @@ Transaction details:
 {{^}}
 * Payee: {{importedPayee}}
 {{/if}}
+{{#if date}}
+* Date: {{date}}
+{{/if}}
 
-RESPOND ONLY WITH A CATEGORY ID from the list above. Do not write anything else.
-If you're not sure which category to use, respond with "uncategorized".
+Existing categories by group:
+{{#each categoryGroups}}
+GROUP: {{name}} (ID: "{{id}}")
+{{#each categories}}
+* {{name}} (ID: "{{id}}")
+{{/each}}
+{{/each}}
+
+{{#if rules.length}}
+Existing Rules:
+{{#each rules}}
+{{incIndex @index}}. {{ruleName}} → {{categoryName}}
+   Conditions: {{#each conditions}}{{field}} {{op}} {{value}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/each}}
+{{/if}}
+
+IMPORTANT: You MUST respond with ONLY a valid JSON object using this structure:
+{
+  "type": "existing"|"new"|"rule",
+  "categoryId": "string", // Required for existing category or rule match
+  "ruleName": "string", // Required if matching rule
+  "newCategory": { // Required if suggesting new category
+    "name": "string", 
+    "groupName": "string",
+    "groupIsNew": boolean
+  }
+}
+
+DO NOT output any text before or after the JSON. Your entire response must be a valid, parsable JSON object.
+
+Examples:
+{"type": "existing", "categoryId": "abc123"}
+{"type": "rule", "categoryId": "def456", "ruleName": "Coffee Shop"}
+{"type": "new", "newCategory": {"name": "Pet Supplies", "groupName": "Pets", "groupIsNew": true}}
+
+Extra rules:
+* If the transaction is a Credit Card Payment, categorize it as "Transfer" unless it is a fee.
+* Flowers can go in the "Gift" category.
+

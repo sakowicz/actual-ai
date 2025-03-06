@@ -9,7 +9,7 @@ import {
   anthropicModel,
   budgetId,
   dataDir,
-  dryRunNewCategories,
+  dryRun,
   e2ePassword,
   googleApiKey,
   googleBaseURL,
@@ -91,7 +91,7 @@ const transactionService = new TransactionService(
   notGuessedTag,
   guessedTag,
   suggestNewCategories,
-  dryRunNewCategories,
+  dryRun,
 );
 
 const actualAi = new ActualAiService(
