@@ -9,9 +9,15 @@ import { PROVIDER_LIMITS } from './utils/provider-limits';
 
 function cleanJsonResponse(text: string): string {
   // Remove markdown code fences and any surrounding text
-  const cleaned = text.replace(/```json\n?|\n?```/g, '');
-  // Remove leading/trailing whitespace and non-JSON characters
-  return cleaned.trim().replace(/^[^{[]*|[^}\]]*$/g, '');
+  let cleaned = text.replace(/```json\n?|\n?```/g, '');
+  cleaned = cleaned.trim();
+
+  // Remove leading characters up to first JSON structure character
+  cleaned = cleaned.replace(/^[^{[]*?([{[])/, '$1');
+  // Remove trailing characters after last JSON structure character
+  cleaned = cleaned.replace(/([}\]])[^}\]]*$/, '$1');
+
+  return cleaned.trim();
 }
 
 export default class LlmService implements LlmServiceI {
@@ -302,6 +308,12 @@ export default class LlmService implements LlmServiceI {
             return {
               type: 'existing',
               categoryId: parsed.categoryId,
+            };
+          }
+          if (parsed && typeof parsed === 'string') {
+            return {
+              type: 'existing',
+              categoryId: parsed,
             };
           }
 

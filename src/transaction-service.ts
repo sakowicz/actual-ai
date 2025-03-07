@@ -166,7 +166,7 @@ class TransactionService implements TransactionServiceI {
             await this.handleRuleMatch(transaction, {
               ruleName: response.ruleName,
               categoryId: response.categoryId,
-            });
+            }, categories);
           } else if (response.type === 'existing' && response.categoryId) {
             await this.handleExistingCategory(transaction, {
               categoryId: response.categoryId,
@@ -271,9 +271,13 @@ class TransactionService implements TransactionServiceI {
   private async handleRuleMatch(
     transaction: TransactionEntity,
     response: { categoryId: string; ruleName: string },
+    categories: CategoryEntity[],
   ) {
+    const category = categories.find((c) => c.id === response.categoryId);
+    const categoryName = category ? category.name : 'Unknown Category';
+
     if (this.dryRun) {
-      console.log(`DRY RUN: Would assign transaction ${transaction.id} to category ${response.categoryId} via rule ${response.ruleName}`);
+      console.log(`DRY RUN: Would assign transaction ${transaction.id} to category "${categoryName}" (${response.categoryId}) via rule ${response.ruleName}`);
       return;
     }
 
