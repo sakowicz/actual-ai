@@ -106,7 +106,7 @@ class LlmModelFactory implements LlmModelFactoryI {
           baseURL: this.groqBaseURL,
           apiKey: this.groqApiKey,
         });
-        return groq(this.groqModel) as LanguageModel;
+        return groq(this.groqModel) as unknown as LanguageModel;
       }
       default:
         throw new Error(`Unknown provider: ${this.llmProvider}`);
@@ -115,6 +115,14 @@ class LlmModelFactory implements LlmModelFactoryI {
 
   public isFallbackMode(): boolean {
     return this.llmProvider === 'ollama';
+  }
+
+  public getProvider(): string {
+    return this.llmProvider;
+  }
+
+  public getModelProvider(): string {
+    return this.llmProvider;
   }
 }
 
