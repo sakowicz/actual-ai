@@ -1,6 +1,6 @@
 {
   "name": "@sakowicz/actual-ai",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "Transaction AI classification for Actual Budget app.",
   "main": "app.js",
   "scripts": {
