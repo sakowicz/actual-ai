@@ -35,7 +35,6 @@ class ActualAiService implements ActualAiServiceI {
         );
       }
 
-      // These should run even if sync failed
       await this.transactionService.migrateToTags();
 
       try {

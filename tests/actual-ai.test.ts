@@ -4,16 +4,18 @@ import MockedLlmService from './test-doubles/mocked-llm-service';
 import MockedPromptGenerator from './test-doubles/mocked-prompt-generator';
 import GivenActualData from './test-doubles/given/given-actual-data';
 import ActualAiService from '../src/actual-ai';
+import * as config from '../src/config';
 
-// Mock the config module
-jest.mock('../src/config', () => ({
-  isFeatureEnabled: (feature: string) => {
-    if (feature === 'dryRun' || feature === 'dryRunNewCategories') {
-      return false;
-    }
-    return true;
-  },
-}));
+// Create a reusable mock for isFeatureEnabled
+const originalIsFeatureEnabled = config.isFeatureEnabled;
+const mockIsFeatureEnabled = jest.spyOn(config, 'isFeatureEnabled');
+
+// Default to having rerunMissedTransactions off for most tests
+mockIsFeatureEnabled.mockImplementation((feature: string) => {
+  if (feature === 'rerunMissedTransactions') return false;
+  if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+  return originalIsFeatureEnabled(feature);
+});
 
 describe('ActualAiService', () => {
   let sut: ActualAiService;
@@ -26,6 +28,13 @@ describe('ActualAiService', () => {
   const NOT_GUESSED_TAG = '#actual-ai-miss';
 
   beforeEach(() => {
+    // Reset mock implementation before each test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
     inMemoryApiService = new InMemoryActualApiService();
     mockedLlmService = new MockedLlmService();
     mockedPromptGenerator = new MockedPromptGenerator();
@@ -48,6 +57,10 @@ describe('ActualAiService', () => {
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
     inMemoryApiService.setRules(rules);
+  });
+
+  afterEach(() => {
+    mockIsFeatureEnabled.mockReset();
   });
 
   it('It should assign a category to transaction', async () => {
@@ -206,6 +219,13 @@ describe('ActualAiService', () => {
     inMemoryApiService.setTransactions([transaction]);
     mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
 
+    // Ensure rerunMissedTransactions is false for this test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
     // Act
     sut = new ActualAiService(
       transactionService,
@@ -343,6 +363,13 @@ describe('ActualAiService', () => {
     inMemoryApiService.setTransactions([transaction1, transaction2, transaction3]);
     mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
 
+    // Ensure rerunMissedTransactions is false for this test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
     // Act
     sut = new ActualAiService(
       transactionService,
@@ -373,5 +400,38 @@ describe('ActualAiService', () => {
 
     // Assert
     expect(inMemoryApiService.getWasBankSyncRan()).toBe(true);
+  });
+
+  // Add a new test for when rerunMissedTransactions is true
+  it('It should process transaction with missed tag when rerunMissedTransactions is true', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000 | #actual-ai-miss',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
+
+    // Set rerunMissedTransactions to true for this test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return true;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+      syncAccountsBeforeClassify,
+    );
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
+    expect(updatedTransactions[0].notes).toContain(GUESSED_TAG);
   });
 });

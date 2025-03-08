@@ -63,7 +63,6 @@ export default class LlmService implements LlmServiceI {
     try {
       console.log(`Making LLM request to ${this.provider}${this.isFallbackMode ? ' (fallback mode)' : ''}`);
 
-      // In fallback mode, return a UnifiedResponse with the string as categoryId
       if (this.isFallbackMode) {
         const result = await this.askUsingFallbackModel(prompt);
         return {
@@ -72,7 +71,6 @@ export default class LlmService implements LlmServiceI {
         };
       }
 
-      // If categoryIds are provided, use enum selection and return as UnifiedResponse
       if (categoryIds && categoryIds.length > 0) {
         const result = await this.askWithEnum(prompt, categoryIds);
         return {
@@ -81,7 +79,6 @@ export default class LlmService implements LlmServiceI {
         };
       }
 
-      // Otherwise, handle unified response
       return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
         try {
           const { text } = await generateText({

@@ -13,7 +13,7 @@ import { isFeatureEnabled } from './config';
 
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
-const BATCH_SIZE = 20; // Process transactions in batches of 20
+const BATCH_SIZE = 20;
 
 class TransactionService implements TransactionServiceI {
   private readonly actualApiService: ActualApiServiceI;
@@ -47,13 +47,13 @@ class TransactionService implements TransactionServiceI {
 
   clearPreviousTags(notes: string): string {
     return notes
-      .replace(new RegExp(` ${this.guessedTag}`, 'g'), '')
-      .replace(new RegExp(` ${this.notGuessedTag}`, 'g'), '')
-      .replace(new RegExp(` \\| ${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
-      .replace(new RegExp(` \\| ${LEGACY_NOTES_GUESSED}`, 'g'), '')
-      .replace(new RegExp(` ${LEGACY_NOTES_GUESSED}`, 'g'), '')
-      .replace(new RegExp(` ${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
-      .replace(/-miss(?= #actual-ai)/g, '') // Only remove -miss if it's followed by the tag
+      .replace(new RegExp(`\\s*${this.guessedTag}`, 'g'), '')
+      .replace(new RegExp(`\\s*${this.notGuessedTag}`, 'g'), '')
+      .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
+      .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
+      .replace(new RegExp(`\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
+      .replace(new RegExp(`\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
+      .replace(/-miss(?= #actual-ai)/g, '')
       .trim();
   }
 
@@ -71,19 +71,16 @@ class TransactionService implements TransactionServiceI {
       const transaction = transactionsToMigrate[i];
       console.log(`${i + 1}/${transactionsToMigrate.length} Migrating transaction ${transaction.imported_payee} / ${transaction.notes} / ${transaction.amount}`);
 
-      let newNotes = null;
+      const baseNotes = this.clearPreviousTags(transaction.notes ?? '');
+      let newNotes = baseNotes;
+
       if (transaction.notes?.includes(LEGACY_NOTES_NOT_GUESSED)) {
-        // Clean up the notes and add the tag
-        const baseNotes = this.clearPreviousTags(transaction.notes);
-        newNotes = `${baseNotes} ${this.notGuessedTag}`;
-      }
-      if (transaction.notes?.includes(LEGACY_NOTES_GUESSED)) {
-        // Clean up the notes and add the tag
-        const baseNotes = this.clearPreviousTags(transaction.notes);
-        newNotes = `${baseNotes} ${this.guessedTag}`;
+        newNotes = this.appendTag(baseNotes, this.notGuessedTag);
+      } else if (transaction.notes?.includes(LEGACY_NOTES_GUESSED)) {
+        newNotes = this.appendTag(baseNotes, this.guessedTag);
       }
 
-      if (newNotes) {
+      if (newNotes !== transaction.notes) {
         await this.actualApiService.updateTransactionNotes(transaction.id, newNotes);
       }
     }
@@ -117,7 +114,9 @@ class TransactionService implements TransactionServiceI {
         && transaction.imported_payee !== null
         && transaction.imported_payee !== ''
         && (
-          isFeatureEnabled('rerunMissedTransactions') ?? !transaction.notes?.includes(this.notGuessedTag)
+          isFeatureEnabled('rerunMissedTransactions')
+            ? true // Include all if rerun enabled
+            : !transaction.notes?.includes(this.notGuessedTag)
         )
         && !transaction.is_parent
         && !accountsToSkip.includes(transaction.account),

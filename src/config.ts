@@ -33,7 +33,6 @@ export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
 export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
 
-// Feature Flags System
 export interface FeatureFlag {
   enabled: boolean;
   defaultValue: boolean;
@@ -59,30 +58,25 @@ try {
   console.warn('Failed to parse FEATURES environment variable, ignoring', e);
 }
 
-// Register standard features with defaults
 function registerStandardFeatures() {
-  // Suggest new categories (disabled by default)
   features.suggestNewCategories = {
     enabled: enabledFeatures.includes('suggestNewCategories'),
     defaultValue: false,
     description: 'Suggest new categories for transactions that cannot be classified',
   };
 
-  // Dry run mode (enabled by default)
   features.dryRun = {
     enabled: enabledFeatures.includes('dryRun'),
     defaultValue: true,
     description: 'Run in dry mode without actually making changes',
   };
 
-  // Dry run for new categories (enabled by default)
   features.dryRunNewCategories = {
     enabled: enabledFeatures.includes('dryRunNewCategories'),
     defaultValue: true,
     description: 'Only log suggested categories without creating them',
   };
 
-  // Rerun missed transactions (disabled by default)
   features.rerunMissedTransactions = {
     enabled: enabledFeatures.includes('rerunMissedTransactions'),
     defaultValue: false,
@@ -90,14 +84,11 @@ function registerStandardFeatures() {
   };
 }
 
-// Register available tools as features
 function registerToolFeatures() {
-  // Parse tools from ENABLED_TOOLS for backward compatibility
   const legacyTools = (process.env.ENABLED_TOOLS ?? '').split(',')
     .map((tool) => tool.trim())
     .filter(Boolean);
 
-  // Register webSearch tool
   features.webSearch = {
     enabled: enabledFeatures.includes('webSearch') || legacyTools.includes('webSearch'),
     defaultValue: false,
