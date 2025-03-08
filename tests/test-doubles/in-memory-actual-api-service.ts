@@ -20,6 +20,8 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
 
   private wasBankSyncRan = false;
 
+  private rules: RuleEntity[] = [];
+
   async initializeApi(): Promise<void> {
     // Initialize the API (mock implementation)
   }
@@ -159,10 +161,14 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
   }
 
   async getRules(): Promise<RuleEntity[]> {
-    return Promise.resolve([]);
+    return Promise.resolve(this.rules);
   }
 
   async getPayeeRules(_payeeId: string): Promise<RuleEntity[]> {
     return Promise.resolve([]);
+  }
+
+  setRules(rules: RuleEntity[]): void {
+    this.rules = rules;
   }
 }

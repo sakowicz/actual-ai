@@ -27,8 +27,6 @@ import {
   openaiModel,
   password,
   promptTemplate,
-  categorySuggestionTemplate,
-  similarRulesTemplate,
   serverURL,
   suggestNewCategories,
   syncAccountsBeforeClassify,
@@ -75,8 +73,6 @@ const actualApiService = new ActualApiService(
 
 const promptGenerator = new PromptGenerator(
   promptTemplate,
-  categorySuggestionTemplate,
-  similarRulesTemplate,
 );
 
 const llmService = new LlmService(

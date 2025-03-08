@@ -98,7 +98,7 @@ export interface UnifiedResponse {
 }
 
 export interface LlmServiceI {
-  unifiedAsk(prompt: string): Promise<UnifiedResponse>;
+  ask(prompt: string, categoryIds?: string[]): Promise<UnifiedResponse>;
 }
 
 export interface ToolServiceI {
@@ -106,16 +106,10 @@ export interface ToolServiceI {
 }
 
 export interface PromptGeneratorI {
-  generateUnifiedPrompt(
+  generate(
     categoryGroups: APICategoryGroupEntity[],
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
     rules: RuleEntity[],
   ): string;
-
-  transformRulesToDescriptions(
-    rules: RuleEntity[],
-    categories: APICategoryEntity[],
-    payees: APIPayeeEntity[],
-  ): RuleDescription[];
 }

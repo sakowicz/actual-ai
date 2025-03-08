@@ -27,7 +27,7 @@ class TransactionService implements TransactionServiceI {
 
   private readonly suggestNewCategories: boolean;
 
-  private readonly dryRun: boolean;
+  private dryRun = true;
 
   constructor(
     actualApiClient: ActualApiServiceI,
@@ -113,7 +113,7 @@ class TransactionService implements TransactionServiceI {
         && transaction.starting_balance_flag !== true
         && transaction.imported_payee !== null
         && transaction.imported_payee !== ''
-        // && !transaction.notes?.includes(this.notGuessedTag)
+        && !transaction.notes?.includes(this.notGuessedTag)
         && !transaction.is_parent
         && !accountsToSkip.includes(transaction.account),
     );
@@ -153,14 +153,14 @@ class TransactionService implements TransactionServiceI {
         );
 
         try {
-          const prompt = this.promptGenerator.generateUnifiedPrompt(
+          const prompt = this.promptGenerator.generate(
             categoryGroups,
             transaction,
             payees,
             rules,
           );
 
-          const response = await this.llmService.unifiedAsk(prompt);
+          const response = await this.llmService.ask(prompt);
 
           if (response.type === 'rule' && response.ruleName && response.categoryId) {
             await this.handleRuleMatch(transaction, {
@@ -294,7 +294,14 @@ class TransactionService implements TransactionServiceI {
     categories: CategoryEntity[],
   ) {
     const category = categories.find((c) => c.id === response.categoryId);
-    if (!category) return;
+    if (!category) {
+      // Add not guessed tag when category not found
+      await this.actualApiService.updateTransactionNotes(
+        transaction.id,
+        this.appendTag(transaction.notes ?? '', this.notGuessedTag),
+      );
+      return;
+    }
 
     if (this.dryRun) {
       console.log(`DRY RUN: Would assign transaction ${transaction.id} to existing category ${category.name}`);

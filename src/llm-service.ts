@@ -1,24 +1,10 @@
-import { z } from 'zod';
 import { generateObject, generateText, LanguageModel } from 'ai';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import {
-  CategorySuggestion, LlmModelFactoryI, LlmServiceI, ToolServiceI, UnifiedResponse,
+  LlmModelFactoryI, LlmServiceI, ToolServiceI, UnifiedResponse,
 } from './types';
 import { RateLimiter } from './utils/rate-limiter';
 import { PROVIDER_LIMITS } from './utils/provider-limits';
-
-function cleanJsonResponse(text: string): string {
-  // Remove markdown code fences and any surrounding text
-  let cleaned = text.replace(/```json\n?|\n?```/g, '');
-  cleaned = cleaned.trim();
-
-  // Remove leading characters up to first JSON structure character
-  cleaned = cleaned.replace(/^[^{[]*?([{[])/, '$1');
-  // Remove trailing characters after last JSON structure character
-  cleaned = cleaned.replace(/([}\]])[^}\]]*$/, '$1');
-
-  return cleaned.trim();
-}
+import { parseLlmResponse } from './utils/json-utils';
 
 export default class LlmService implements LlmServiceI {
   private readonly llmModelFactory: LlmModelFactoryI;
@@ -73,40 +59,32 @@ export default class LlmService implements LlmServiceI {
     }
   }
 
-  public async ask(prompt: string, categoryIds: string[]): Promise<string> {
+  public async ask(prompt: string, categoryIds?: string[]): Promise<UnifiedResponse> {
     try {
       console.log(`Making LLM request to ${this.provider}${this.isFallbackMode ? ' (fallback mode)' : ''}`);
 
+      // In fallback mode, return a UnifiedResponse with the string as categoryId
       if (this.isFallbackMode) {
-        return await this.askUsingFallbackModel(prompt);
+        const result = await this.askUsingFallbackModel(prompt);
+        return {
+          type: 'existing',
+          categoryId: result.replace(/(\r\n|\n|\r|"|')/gm, ''),
+        };
       }
 
-      return await this.askWithEnum(prompt, categoryIds);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`Error during LLM request to ${this.provider}: ${errorMsg}`);
-      throw error;
-    }
-  }
+      // If categoryIds are provided, use enum selection and return as UnifiedResponse
+      if (categoryIds && categoryIds.length > 0) {
+        const result = await this.askWithEnum(prompt, categoryIds);
+        return {
+          type: 'existing',
+          categoryId: result,
+        };
+      }
 
-  public async askForCategorySuggestion(
-    prompt: string,
-  ): Promise<CategorySuggestion | null> {
-    try {
-      console.log(
-        `Making LLM request for category suggestion to ${this.provider}${this.isFallbackMode ? ' (fallback mode)' : ''}`,
-      );
-
-      const categorySchema = z.object({
-        name: z.string(),
-        groupName: z.string(),
-        groupIsNew: z.boolean(),
-      });
-
-      const response = await this.rateLimiter.executeWithRateLimiting<CategorySuggestion | null>(
-        this.provider,
-        async () => {
-          const { text, steps } = await generateText({
+      // Otherwise, handle unified response
+      return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
+        try {
+          const { text } = await generateText({
             model: this.model,
             prompt,
             temperature: 0.2,
@@ -115,101 +93,16 @@ export default class LlmService implements LlmServiceI {
             system: 'You must use webSearch for unfamiliar payees before suggesting categories',
           });
 
-          console.log('Generation steps:', steps.map((step) => ({
-            text: step.text,
-            toolCalls: step.toolCalls,
-            toolResults: step.toolResults,
-          })));
-
-          // Parse the JSON response from the text
-          try {
-            const parsedResponse = JSON.parse(text) as unknown;
-            // Validate against schema
-            const result = categorySchema.safeParse(parsedResponse);
-            return result.success ? result.data : null;
-          } catch (e) {
-            console.error('Failed to parse JSON response:', e);
-            return null;
-          }
-        },
-      );
-
-      if (response) {
-        return {
-          name: response.name,
-          groupName: response.groupName,
-          groupIsNew: response.groupIsNew,
-        };
-      }
-
-      console.warn('LLM response did not contain valid category suggestion format');
-      return null;
+          return parseLlmResponse(text);
+        } catch (error) {
+          console.error('LLM response validation failed:', error);
+          throw new Error('Invalid response format from LLM');
+        }
+      });
     } catch (error) {
-      console.error('Error while getting category suggestion:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Analyze if a transaction is similar to any existing rule and suggest a category
-   * @param transaction The transaction to analyze
-   * @param rules List of existing rules in the system
-   * @param categories List of categories for reference
-   * @param prompt The prompt to use for finding similar rules
-   * @returns A suggested category ID if similar rules exist, null otherwise
-   */
-  public async findSimilarRules(
-    transaction: TransactionEntity,
-    prompt: string,
-  ): Promise<{ categoryId: string; ruleName: string } | null> {
-    try {
-      console.log(
-        `Checking if transaction "${transaction.imported_payee}" matches any existing rules`,
-      );
-
-      // console.log('Prompt:', prompt.slice(0, 300));
-
-      return this.rateLimiter.executeWithRateLimiting<
-      { categoryId: string; ruleName: string } | null>(
-        this.provider,
-        async () => {
-          const { text, steps } = await generateText({
-            model: this.model,
-            prompt,
-            temperature: 0.1,
-            tools: this.toolService?.getTools(),
-            maxSteps: 3,
-            system: 'You must respond with pong if you receive don\'t have an answer',
-          });
-
-          console.log('Generation steps:', steps.map((step) => ({
-            text: step.text,
-            toolCalls: step.toolCalls,
-            toolResults: step.toolResults,
-          })));
-
-          try {
-            // Parse the JSON response
-            const response = JSON.parse(text) as { categoryId?: string; ruleName?: string } | null;
-
-            if (response?.categoryId && response.ruleName) {
-              console.log(`Found similar rule "${response.ruleName}" suggesting category ${response.categoryId}`);
-              return {
-                categoryId: response.categoryId,
-                ruleName: response.ruleName,
-              };
-            }
-
-            return null;
-          } catch {
-            console.log('No similar rules found or invalid response');
-            return null;
-          }
-        },
-      );
-    } catch (error) {
-      console.error('Error while finding similar rules:', error);
-      return null;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`Error during LLM request to ${this.provider}: ${errorMsg}`);
+      throw error;
     }
   }
 
@@ -245,88 +138,5 @@ export default class LlmService implements LlmServiceI {
         return text.replace(/(\r\n|\n|\r|"|')/gm, '');
       },
     );
-  }
-
-  public async unifiedAsk(prompt: string): Promise<UnifiedResponse> {
-    return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
-      try {
-        const { text } = await generateText({
-          model: this.model,
-          prompt,
-          temperature: 0.2,
-          tools: this.toolService?.getTools(),
-          maxSteps: 3,
-          system: 'You must use webSearch for unfamiliar payees before suggesting categories',
-        });
-
-        // Move cleanedText declaration outside the try-catch
-        const cleanedText = cleanJsonResponse(text);
-        console.log('Cleaned LLM response:', cleanedText);
-
-        try {
-          // First, try to parse as JSON
-          let parsed: Partial<UnifiedResponse>;
-          try {
-            parsed = JSON.parse(cleanedText) as Partial<UnifiedResponse>;
-          } catch {
-            // If not valid JSON, check if it's a simple ID
-            const trimmedText = cleanedText.trim().replace(/^"|"$/g, '');
-
-            if (/^[a-zA-Z0-9_-]+$/.test(trimmedText)) {
-              console.log(`LLM returned simple ID: "${trimmedText}"`);
-              return {
-                type: 'existing',
-                categoryId: trimmedText,
-              };
-            }
-
-            throw new Error('Response is neither valid JSON nor simple ID');
-          }
-
-          // Type guard validation
-          if (parsed.type === 'existing' && parsed.categoryId) {
-            return { type: 'existing', categoryId: parsed.categoryId };
-          }
-          if (parsed.type === 'rule' && parsed.categoryId && parsed.ruleName) {
-            return {
-              type: 'rule',
-              categoryId: parsed.categoryId,
-              ruleName: parsed.ruleName,
-            };
-          }
-          if (parsed.type === 'new' && parsed.newCategory) {
-            return {
-              type: 'new',
-              newCategory: parsed.newCategory,
-            };
-          }
-
-          // If the response doesn't match expected format but has a categoryId,
-          // default to treating it as an existing category
-          if (parsed.categoryId) {
-            console.log('LLM response missing type but has categoryId, treating as existing category');
-            return {
-              type: 'existing',
-              categoryId: parsed.categoryId,
-            };
-          }
-          if (parsed && typeof parsed === 'string') {
-            return {
-              type: 'existing',
-              categoryId: parsed,
-            };
-          }
-
-          console.error('Invalid response structure from LLM:', parsed);
-          throw new Error('Invalid response format from LLM');
-        } catch (parseError) {
-          console.error('Failed to parse LLM response:', cleanedText, parseError);
-          throw new Error('Invalid response format from LLM');
-        }
-      } catch (error) {
-        console.error('LLM response validation failed:', error);
-        throw new Error('Invalid response format from LLM');
-      }
-    });
   }
 }

@@ -2,8 +2,6 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 
 const defaultPromptTemplate = fs.readFileSync('./src/templates/prompt.hbs', 'utf8').trim();
-const defaultCategorySuggestionTemplate = fs.readFileSync('./src/templates/category-suggestion.hbs', 'utf8').trim();
-const defaultSimilarRulesTemplate = fs.readFileSync('./src/templates/similar-rules.hbs', 'utf8').trim();
 
 dotenv.config();
 
@@ -30,10 +28,6 @@ export const dataDir = '/tmp/actual-ai/';
 export const promptTemplate = process.env.PROMPT_TEMPLATE ?? defaultPromptTemplate;
 export const notGuessedTag = process.env.NOT_GUESSED_TAG ?? '#actual-ai-miss';
 export const guessedTag = process.env.GUESSED_TAG ?? '#actual-ai';
-export const categorySuggestionTemplate = process.env.CATEGORY_SUGGESTION_TEMPLATE
-  ?? defaultCategorySuggestionTemplate;
-export const similarRulesTemplate = process.env.SIMILAR_RULES_TEMPLATE
-  ?? defaultSimilarRulesTemplate;
 export const groqApiKey = process.env.GROQ_API_KEY ?? '';
 export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';

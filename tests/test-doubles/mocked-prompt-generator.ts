@@ -1,30 +1,22 @@
 import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
-import { PromptGeneratorI } from '../../src/types';
+import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { APICategoryEntity, PromptGeneratorI, RuleDescription } from '../../src/types';
 
 export default class MockedPromptGenerator implements PromptGeneratorI {
-  generate(): string {
-    return 'mocked prompt';
-  }
-
-  generateCategorySuggestion(
+  generate(
     _categoryGroups: APICategoryGroupEntity[],
     _transaction: TransactionEntity,
     _payees: APIPayeeEntity[],
+    _rules?: RuleEntity[],
   ): string {
-    return 'mocked category suggestion prompt';
+    return 'mocked prompt';
   }
 
-  generateSimilarRulesPrompt(
-    _transaction: TransactionEntity,
-    _rulesDescription: {
-      ruleName: string;
-      conditions: string;
-      categoryName: string;
-      categoryId: string;
-      index?: number;
-    }[],
-  ): string {
-    return 'mocked similar rules prompt';
+  transformRulesToDescriptions(
+    _rules: RuleEntity[],
+    _categories: APICategoryEntity[],
+    _payees: APIPayeeEntity[],
+  ): RuleDescription[] {
+    return [];
   }
 }

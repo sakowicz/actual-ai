@@ -1,9 +1,3 @@
-import {
-  APIAccountEntity,
-  APICategoryEntity,
-  APICategoryGroupEntity,
-  APIPayeeEntity,
-} from '@actual-app/api/@types/loot-core/server/api-models';
 import TransactionService from '../src/transaction-service';
 import InMemoryActualApiService from './test-doubles/in-memory-actual-api-service';
 import MockedLlmService from './test-doubles/mocked-llm-service';
@@ -25,21 +19,27 @@ describe('ActualAiService', () => {
     inMemoryApiService = new InMemoryActualApiService();
     mockedLlmService = new MockedLlmService();
     mockedPromptGenerator = new MockedPromptGenerator();
-    const categoryGroups: APICategoryGroupEntity[] = GivenActualData.createSampleCategoryGroups();
-    const categories: APICategoryEntity[] = GivenActualData.createSampleCategories();
-    const payees: APIPayeeEntity[] = GivenActualData.createSamplePayees();
-    const accounts: APIAccountEntity[] = GivenActualData.createSampleAccounts();
+    const categoryGroups = GivenActualData.createSampleCategoryGroups();
+    const categories = GivenActualData.createSampleCategories();
+    const payees = GivenActualData.createSamplePayees();
+    const accounts = GivenActualData.createSampleAccounts();
+    const rules = GivenActualData.createSampleRules();
+
     transactionService = new TransactionService(
       inMemoryApiService,
       mockedLlmService,
       mockedPromptGenerator,
       NOT_GUESSED_TAG,
       GUESSED_TAG,
+      false,
+      false,
     );
+
     inMemoryApiService.setCategoryGroups(categoryGroups);
     inMemoryApiService.setCategories(categories);
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
+    inMemoryApiService.setRules(rules);
   });
 
   it('It should assign a category to transaction', async () => {
