@@ -33,10 +33,124 @@ export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
 export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
 
-// Feature Flags
-export const suggestNewCategories = process.env.SUGGEST_NEW_CATEGORIES === 'true';
-export const dryRun = process.env.DRY_RUN !== 'false'; // Default to true unless explicitly false
+// Feature Flags System
+export interface FeatureFlag {
+  enabled: boolean;
+  defaultValue: boolean;
+  description: string;
+  options?: string[];
+}
 
-// Tools configuration
-export const enabledTools = (process.env.ENABLED_TOOLS ?? '').split(',').map((tool) => tool.trim()).filter(Boolean);
-export const hasWebSearchTool = enabledTools.includes('webSearch');
+export type FeatureFlags = Record<string, FeatureFlag>;
+
+export const features: FeatureFlags = {};
+
+let enabledFeatures: string[] = [];
+try {
+  if (process.env.FEATURES) {
+    const parsedFeatures = JSON.parse(process.env.FEATURES) as unknown;
+    if (Array.isArray(parsedFeatures)) {
+      enabledFeatures = parsedFeatures as string[];
+    } else {
+      console.warn('FEATURES environment variable is not a valid JSON array, ignoring');
+    }
+  }
+} catch (e) {
+  console.warn('Failed to parse FEATURES environment variable, ignoring', e);
+}
+
+// Register standard features with defaults
+function registerStandardFeatures() {
+  // Suggest new categories (disabled by default)
+  features.suggestNewCategories = {
+    enabled: enabledFeatures.includes('suggestNewCategories'),
+    defaultValue: false,
+    description: 'Suggest new categories for transactions that cannot be classified',
+  };
+
+  // Dry run mode (enabled by default)
+  features.dryRun = {
+    enabled: enabledFeatures.includes('dryRun'),
+    defaultValue: true,
+    description: 'Run in dry mode without actually making changes',
+  };
+
+  // Dry run for new categories (enabled by default)
+  features.dryRunNewCategories = {
+    enabled: enabledFeatures.includes('dryRunNewCategories'),
+    defaultValue: true,
+    description: 'Only log suggested categories without creating them',
+  };
+
+  // Rerun missed transactions (disabled by default)
+  features.rerunMissedTransactions = {
+    enabled: enabledFeatures.includes('rerunMissedTransactions'),
+    defaultValue: false,
+    description: 'Re-process transactions marked as not guessed',
+  };
+}
+
+// Register available tools as features
+function registerToolFeatures() {
+  // Parse tools from ENABLED_TOOLS for backward compatibility
+  const legacyTools = (process.env.ENABLED_TOOLS ?? '').split(',')
+    .map((tool) => tool.trim())
+    .filter(Boolean);
+
+  // Register webSearch tool
+  features.webSearch = {
+    enabled: enabledFeatures.includes('webSearch') || legacyTools.includes('webSearch'),
+    defaultValue: false,
+    description: 'Enable web search capability for merchant lookup',
+    options: ['webSearch'],
+  };
+
+  // Additional tools can be added here following the same pattern
+  // features.newTool = {
+  //   enabled: enabledFeatures.includes('newTool'),
+  //   defaultValue: false,
+  //   description: '...'
+  // };
+}
+
+registerStandardFeatures();
+registerToolFeatures();
+
+export function isFeatureEnabled(featureName: string): boolean {
+  return features[featureName]?.enabled ?? features[featureName]?.defaultValue ?? false;
+}
+
+export function registerCustomFeatureFlag(
+  name: string,
+  enabled: boolean,
+  defaultValue: boolean,
+  description: string,
+  options?: string[],
+): void {
+  features[name] = {
+    enabled,
+    defaultValue,
+    description,
+    options,
+  };
+}
+
+export function toggleFeature(featureName: string, enabled?: boolean): boolean {
+  if (!features[featureName]) {
+    console.warn(`Feature flag '${featureName}' does not exist`);
+    return false;
+  }
+  const newValue = enabled ?? !features[featureName].enabled;
+  features[featureName].enabled = newValue;
+  return newValue;
+}
+
+export function getEnabledTools(): string[] {
+  return Object.entries(features)
+    .filter(([_, config]) => config.options && isFeatureEnabled(config.options[0]))
+    .flatMap(([_, config]) => config.options ?? []);
+}
+
+export function isToolEnabled(toolName: string): boolean {
+  return getEnabledTools().includes(toolName);
+}

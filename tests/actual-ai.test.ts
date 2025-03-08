@@ -5,6 +5,16 @@ import MockedPromptGenerator from './test-doubles/mocked-prompt-generator';
 import GivenActualData from './test-doubles/given/given-actual-data';
 import ActualAiService from '../src/actual-ai';
 
+// Mock the config module
+jest.mock('../src/config', () => ({
+  isFeatureEnabled: (feature: string) => {
+    if (feature === 'dryRun' || feature === 'dryRunNewCategories') {
+      return false;
+    }
+    return true;
+  },
+}));
+
 describe('ActualAiService', () => {
   let sut: ActualAiService;
   let transactionService: TransactionService;
@@ -31,8 +41,6 @@ describe('ActualAiService', () => {
       mockedPromptGenerator,
       NOT_GUESSED_TAG,
       GUESSED_TAG,
-      false,
-      false,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);
@@ -244,15 +252,15 @@ describe('ActualAiService', () => {
       '1',
       -123,
       'Carrefour 1235',
-      'Carrefour XXXX1234567 822-307-2000 | actual-ai could not guess this category',
+      'Carrefour XXXX1234567 822-307-2000 #actual-ai-miss',
     );
     const transactionGuessed = GivenActualData.createTransaction(
       '2',
       -123,
       'Carrefour 1234',
-      'Carrefour XXXX1234567 822-307-3000 | actual-ai guessed this category',
+      'Carrefour XXXX1234567 822-307-3000 actual-ai guessed this category',
       undefined,
-      '1',
+      GivenActualData.ACCOUNT_MAIN,
       '2021-01-01',
       false,
       GivenActualData.CATEGORY_GROCERIES,

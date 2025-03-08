@@ -9,6 +9,7 @@ import type {
   TransactionServiceI,
   CategorySuggestion,
 } from './types';
+import { isFeatureEnabled } from './config';
 
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
@@ -25,26 +26,18 @@ class TransactionService implements TransactionServiceI {
 
   private readonly guessedTag: string;
 
-  private readonly suggestNewCategories: boolean;
-
-  private dryRun = true;
-
   constructor(
     actualApiClient: ActualApiServiceI,
     llmService: LlmServiceI,
     promptGenerator: PromptGeneratorI,
     notGuessedTag: string,
     guessedTag: string,
-    suggestNewCategories = false,
-    dryRun = true,
   ) {
     this.actualApiService = actualApiClient;
     this.llmService = llmService;
     this.promptGenerator = promptGenerator;
     this.notGuessedTag = notGuessedTag;
     this.guessedTag = guessedTag;
-    this.suggestNewCategories = suggestNewCategories;
-    this.dryRun = dryRun;
   }
 
   appendTag(notes: string, tag: string): string {
@@ -53,10 +46,14 @@ class TransactionService implements TransactionServiceI {
   }
 
   clearPreviousTags(notes: string): string {
-    return notes.replace(new RegExp(` ${this.guessedTag}`, 'g'), '')
+    return notes
+      .replace(new RegExp(` ${this.guessedTag}`, 'g'), '')
       .replace(new RegExp(` ${this.notGuessedTag}`, 'g'), '')
       .replace(new RegExp(` \\| ${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
       .replace(new RegExp(` \\| ${LEGACY_NOTES_GUESSED}`, 'g'), '')
+      .replace(new RegExp(` ${LEGACY_NOTES_GUESSED}`, 'g'), '')
+      .replace(new RegExp(` ${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
+      .replace(/-miss(?= #actual-ai)/g, '') // Only remove -miss if it's followed by the tag
       .trim();
   }
 
@@ -76,10 +73,14 @@ class TransactionService implements TransactionServiceI {
 
       let newNotes = null;
       if (transaction.notes?.includes(LEGACY_NOTES_NOT_GUESSED)) {
-        newNotes = this.appendTag(transaction.notes, this.notGuessedTag);
+        // Clean up the notes and add the tag
+        const baseNotes = this.clearPreviousTags(transaction.notes);
+        newNotes = `${baseNotes} ${this.notGuessedTag}`;
       }
       if (transaction.notes?.includes(LEGACY_NOTES_GUESSED)) {
-        newNotes = this.appendTag(transaction.notes, this.guessedTag);
+        // Clean up the notes and add the tag
+        const baseNotes = this.clearPreviousTags(transaction.notes);
+        newNotes = `${baseNotes} ${this.guessedTag}`;
       }
 
       if (newNotes) {
@@ -89,7 +90,7 @@ class TransactionService implements TransactionServiceI {
   }
 
   async processTransactions(): Promise<void> {
-    if (this.dryRun) {
+    if (isFeatureEnabled('dryRun')) {
       console.log('=== DRY RUN MODE ===');
       console.log('No changes will be made to transactions or categories');
       console.log('=====================');
@@ -107,13 +108,17 @@ class TransactionService implements TransactionServiceI {
       .map((account) => account.id) ?? [];
     console.log(`Found ${rules.length} transaction categorization rules`);
 
+    console.log('rerunMissedTransactions', isFeatureEnabled('rerunMissedTransactions'));
+
     const uncategorizedTransactions = transactions.filter(
       (transaction) => !transaction.category
         && (transaction.transfer_id === null || transaction.transfer_id === undefined)
         && transaction.starting_balance_flag !== true
         && transaction.imported_payee !== null
         && transaction.imported_payee !== ''
-        && !transaction.notes?.includes(this.notGuessedTag)
+        && (
+          isFeatureEnabled('rerunMissedTransactions') ?? !transaction.notes?.includes(this.notGuessedTag)
+        )
         && !transaction.is_parent
         && !accountsToSkip.includes(transaction.account),
     );
@@ -203,16 +208,33 @@ class TransactionService implements TransactionServiceI {
     }
 
     // Create new categories if not in dry run mode
-    if (this.suggestNewCategories && suggestedCategories.size > 0) {
+    if (isFeatureEnabled('suggestNewCategories') && suggestedCategories.size > 0) {
       // Optimize categories before applying/reporting
       const optimizedCategories = this.optimizeCategorySuggestions(suggestedCategories);
 
-      if (this.dryRun) {
+      if (isFeatureEnabled('dryRun')) {
         console.log(`\nDRY RUN: Would create ${optimizedCategories.size} new categories after optimization:`);
         Array.from(optimizedCategories.entries()).forEach(([_, suggestion]) => {
           console.log(
             `- ${suggestion.name} in ${suggestion.groupIsNew ? 'new' : 'existing'} group "${suggestion.groupName}"`,
             `for ${suggestion.transactions.length} transactions`,
+          );
+        });
+      } else if (isFeatureEnabled('dryRunNewCategories')) {
+        console.log(`\nDRY RUN CATEGORIES: Would create ${optimizedCategories.size} new categories:`);
+        Array.from(optimizedCategories.entries()).forEach(([_, suggestion]) => {
+          console.log(
+            `- ${suggestion.name} in ${suggestion.groupIsNew ? 'new' : 'existing'} group "${suggestion.groupName}"`,
+            `for ${suggestion.transactions.length} transactions`,
+          );
+        });
+
+        // Don't create categories but log which transactions would be affected
+        uncategorizedTransactions.forEach((uncategorizedTransaction) => {
+          // Skip transactions needing new categories in dry run mode
+          console.log(
+            `Skipping categorization for '${uncategorizedTransaction.imported_payee}' `
+            + 'as it needs a new category',
           );
         });
       } else {
@@ -276,7 +298,7 @@ class TransactionService implements TransactionServiceI {
     const category = categories.find((c) => c.id === response.categoryId);
     const categoryName = category ? category.name : 'Unknown Category';
 
-    if (this.dryRun) {
+    if (isFeatureEnabled('dryRun')) {
       console.log(`DRY RUN: Would assign transaction ${transaction.id} to category "${categoryName}" (${response.categoryId}) via rule ${response.ruleName}`);
       return;
     }
@@ -303,7 +325,7 @@ class TransactionService implements TransactionServiceI {
       return;
     }
 
-    if (this.dryRun) {
+    if (isFeatureEnabled('dryRun')) {
       console.log(`DRY RUN: Would assign transaction ${transaction.id} to existing category ${category.name}`);
       return;
     }

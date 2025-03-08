@@ -2,10 +2,10 @@ import { APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-mode
 import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import handlebars from './handlebars-helpers';
 import {
-  PromptGeneratorI, RuleDescription, APICategoryEntity, APICategoryGroupEntity,
+  PromptGeneratorI, APICategoryGroupEntity,
 } from './types';
 import PromptTemplateException from './exceptions/prompt-template-exception';
-import { hasWebSearchTool } from './config';
+import { isToolEnabled } from './config';
 import { transformRulesToDescriptions } from './utils/rule-utils';
 
 class PromptGenerator implements PromptGeneratorI {
@@ -39,14 +39,14 @@ class PromptGenerator implements PromptGeneratorI {
       categories: group.categories ?? [],
     }));
 
-    const rulesDescription = this.transformRulesToDescriptions(
+    const rulesDescription = transformRulesToDescriptions(
       rules,
       groupsWithCategories,
       payees,
     );
 
     try {
-      const webSearchEnabled = typeof hasWebSearchTool === 'boolean' ? hasWebSearchTool : false;
+      const webSearchEnabled = typeof isToolEnabled('webSearch') === 'boolean' ? isToolEnabled('webSearch') : false;
       return template({
         categoryGroups: groupsWithCategories,
         rules: rulesDescription,
@@ -64,14 +64,6 @@ class PromptGenerator implements PromptGeneratorI {
       console.error('Error generating prompt. Check syntax of your template.');
       throw new PromptTemplateException('Error generating prompt. Check syntax of your template.');
     }
-  }
-
-  transformRulesToDescriptions(
-    rules: RuleEntity[],
-    categories: APICategoryEntity[],
-    payees: APIPayeeEntity[] = [],
-  ): RuleDescription[] {
-    return transformRulesToDescriptions(rules, categories, payees);
   }
 }
 

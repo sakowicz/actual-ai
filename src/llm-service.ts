@@ -90,7 +90,6 @@ export default class LlmService implements LlmServiceI {
             temperature: 0.2,
             tools: this.toolService?.getTools(),
             maxSteps: 3,
-            system: 'You must use webSearch for unfamiliar payees before suggesting categories',
           });
 
           return parseLlmResponse(text);

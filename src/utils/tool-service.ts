@@ -2,7 +2,7 @@ import * as https from 'https';
 import { z } from 'zod';
 import { tool, Tool } from 'ai';
 import { ToolServiceI } from '../types';
-import { enabledTools } from '../config';
+import { getEnabledTools } from '../config';
 
 interface SearchResult {
   title: string;
@@ -24,7 +24,7 @@ export default class ToolService implements ToolServiceI {
   public getTools() {
     const tools: Record<string, Tool> = {};
 
-    if (Array.isArray(enabledTools) && enabledTools.includes('webSearch')) {
+    if (getEnabledTools().includes('webSearch')) {
       tools.webSearch = tool({
         description: 'Essential for researching business types and industry categorizations when existing categories are insufficient. Use when payee is unfamiliar or category context is unclear',
         parameters: z.object({

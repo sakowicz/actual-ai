@@ -7,7 +7,7 @@ export default class MockedLlmService implements LlmServiceI {
     categoryId: 'uncategorized',
   };
 
-  async ask(): Promise<UnifiedResponse> {
+  async ask(_prompt: string, _categoryIds?: string[]): Promise<UnifiedResponse> {
     return Promise.resolve(this.response);
   }
 

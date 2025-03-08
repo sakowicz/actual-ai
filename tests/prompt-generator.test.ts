@@ -5,6 +5,10 @@ import PromptGenerator from '../src/prompt-generator';
 import GivenActualData from './test-doubles/given/given-actual-data';
 import PromptTemplateException from '../src/exceptions/prompt-template-exception';
 import handlebars from '../src/handlebars-helpers';
+import * as config from '../src/config';
+
+// Mock the isToolEnabled function
+jest.spyOn(config, 'isToolEnabled').mockReturnValue(false);
 
 describe('PromptGenerator', () => {
   const promptTemplate = fs.readFileSync('./src/templates/prompt.hbs', 'utf8').trim();
@@ -26,7 +30,7 @@ describe('PromptGenerator', () => {
         '2',
         -1626,
         'Steam Purc',
-        'Steam Purc   16.26_V-miss #actual-ai-miss',
+        'Steam Purc   16.26_V #actual-ai-miss',
         undefined,
         undefined,
         '2025-02-18',
@@ -161,5 +165,52 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
     expect(prompt).toContain('* Amount: 1000');
     expect(prompt).toContain('* Type: Outcome');
     expect(prompt).toContain('* Date: 2021-01-01');
+  });
+
+  // Add test cases for web search tool
+  describe('web search tool', () => {
+    it('should include web search tool message when enabled', () => {
+      jest.spyOn(config, 'isToolEnabled').mockReturnValue(true);
+
+      const transaction = GivenActualData.createTransaction(
+        '1',
+        -1000,
+        'Carrefour 2137',
+        '',
+        GivenActualData.PAYEE_CARREFOUR,
+        undefined,
+        '2021-01-01',
+      );
+
+      const categoryGroups = GivenActualData.createSampleCategoryGroups();
+      const payees = GivenActualData.createSamplePayees();
+
+      const promptGenerator = new PromptGenerator(promptTemplate);
+      const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
+
+      expect(prompt).toContain('You can use the web search tool to find more information about the transaction.');
+    });
+
+    it('should not include web search tool message when disabled', () => {
+      jest.spyOn(config, 'isToolEnabled').mockReturnValue(false);
+
+      const transaction = GivenActualData.createTransaction(
+        '1',
+        -1000,
+        'Carrefour 2137',
+        '',
+        GivenActualData.PAYEE_CARREFOUR,
+        undefined,
+        '2021-01-01',
+      );
+
+      const categoryGroups = GivenActualData.createSampleCategoryGroups();
+      const payees = GivenActualData.createSamplePayees();
+
+      const promptGenerator = new PromptGenerator(promptTemplate);
+      const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
+
+      expect(prompt).not.toContain('You can use the web search tool to find more information about the transaction.');
+    });
   });
 });

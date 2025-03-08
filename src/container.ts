@@ -9,7 +9,6 @@ import {
   anthropicModel,
   budgetId,
   dataDir,
-  dryRun,
   e2ePassword,
   googleApiKey,
   googleBaseURL,
@@ -28,10 +27,9 @@ import {
   password,
   promptTemplate,
   serverURL,
-  suggestNewCategories,
   syncAccountsBeforeClassify,
   valueSerpApiKey,
-  enabledTools,
+  getEnabledTools,
 } from './config';
 import ActualAiService from './actual-ai';
 import PromptGenerator from './prompt-generator';
@@ -39,7 +37,7 @@ import LlmService from './llm-service';
 import ToolService from './utils/tool-service';
 
 // Create tool service if API key is available and tools are enabled
-const toolService = valueSerpApiKey && enabledTools.length > 0
+const toolService = valueSerpApiKey && getEnabledTools().length > 0
   ? new ToolService(valueSerpApiKey)
   : undefined;
 
@@ -86,8 +84,6 @@ const transactionService = new TransactionService(
   promptGenerator,
   notGuessedTag,
   guessedTag,
-  suggestNewCategories,
-  dryRun,
 );
 
 const actualAi = new ActualAiService(
