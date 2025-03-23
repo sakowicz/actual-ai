@@ -4,7 +4,7 @@ import {
   APICategoryGroupEntity,
   APIPayeeEntity,
 } from '@actual-app/api/@types/loot-core/server/api-models';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/types/models';
 
 export default class GivenActualData {
   public static CATEGORY_GROCERIES = 'ff7be77b-40f4-4e9d-aea4-be6b8c431281';
@@ -107,6 +107,35 @@ export default class GivenActualData {
     return [
       this.createAccount(GivenActualData.ACCOUNT_MAIN, 'Main Account', false, false),
       this.createAccount(GivenActualData.ACCOUNT_OFF_BUDGET, 'Off Budget Account', true, false),
+    ];
+  }
+
+  static createSampleRules(): RuleEntity[] {
+    return [
+      {
+        id: '879da987-9879-8798-7987-987987987987',
+        stage: null,
+        conditionsOp: 'and',
+        conditions: [],
+        actions: [{
+          op: 'set',
+          field: 'category',
+          value: this.CATEGORY_GROCERIES,
+          type: 'id',
+        }],
+      },
+      {
+        id: '879da987-9879-8798-7987-987987987988',
+        stage: null,
+        conditionsOp: 'and',
+        conditions: [],
+        actions: [{
+          op: 'set',
+          field: 'category',
+          value: this.CATEGORY_TRAVEL,
+          type: 'id',
+        }],
+      },
     ];
   }
 }

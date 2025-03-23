@@ -1,6 +1,6 @@
 {
   "name": "@sakowicz/actual-ai",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "Transaction AI classification for Actual Budget app.",
   "main": "app.js",
   "scripts": {
@@ -22,12 +22,14 @@
     "@ai-sdk/openai": "^1.1.9",
     "@types/jest": "^29.5.14",
     "ai": "^4.1.28",
+    "axios": "^1.8.1",
     "dotenv": "^16.4.7",
     "handlebars": "^4.7.8",
     "node-cron": "^3.0.3",
     "ollama-ai-provider": "^1.2.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

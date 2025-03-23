@@ -1,15 +1,21 @@
-import {
-  APIAccountEntity,
-  APICategoryEntity,
-  APICategoryGroupEntity,
-  APIPayeeEntity,
-} from '@actual-app/api/@types/loot-core/server/api-models';
 import TransactionService from '../src/transaction-service';
 import InMemoryActualApiService from './test-doubles/in-memory-actual-api-service';
 import MockedLlmService from './test-doubles/mocked-llm-service';
 import MockedPromptGenerator from './test-doubles/mocked-prompt-generator';
 import GivenActualData from './test-doubles/given/given-actual-data';
 import ActualAiService from '../src/actual-ai';
+import * as config from '../src/config';
+
+// Create a reusable mock for isFeatureEnabled
+const originalIsFeatureEnabled = config.isFeatureEnabled;
+const mockIsFeatureEnabled = jest.spyOn(config, 'isFeatureEnabled');
+
+// Default to having rerunMissedTransactions off for most tests
+mockIsFeatureEnabled.mockImplementation((feature: string) => {
+  if (feature === 'rerunMissedTransactions') return false;
+  if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+  return originalIsFeatureEnabled(feature);
+});
 
 describe('ActualAiService', () => {
   let sut: ActualAiService;
@@ -17,18 +23,26 @@ describe('ActualAiService', () => {
   let inMemoryApiService: InMemoryActualApiService;
   let mockedLlmService: MockedLlmService;
   let mockedPromptGenerator: MockedPromptGenerator;
-  let syncAccountsBeforeClassify = false;
   const GUESSED_TAG = '#actual-ai';
   const NOT_GUESSED_TAG = '#actual-ai-miss';
 
   beforeEach(() => {
+    // Reset mock implementation before each test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
     inMemoryApiService = new InMemoryActualApiService();
     mockedLlmService = new MockedLlmService();
     mockedPromptGenerator = new MockedPromptGenerator();
-    const categoryGroups: APICategoryGroupEntity[] = GivenActualData.createSampleCategoryGroups();
-    const categories: APICategoryEntity[] = GivenActualData.createSampleCategories();
-    const payees: APIPayeeEntity[] = GivenActualData.createSamplePayees();
-    const accounts: APIAccountEntity[] = GivenActualData.createSampleAccounts();
+    const categoryGroups = GivenActualData.createSampleCategoryGroups();
+    const categories = GivenActualData.createSampleCategories();
+    const payees = GivenActualData.createSamplePayees();
+    const accounts = GivenActualData.createSampleAccounts();
+    const rules = GivenActualData.createSampleRules();
+
     transactionService = new TransactionService(
       inMemoryApiService,
       mockedLlmService,
@@ -36,10 +50,16 @@ describe('ActualAiService', () => {
       NOT_GUESSED_TAG,
       GUESSED_TAG,
     );
+
     inMemoryApiService.setCategoryGroups(categoryGroups);
     inMemoryApiService.setCategories(categories);
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
+    inMemoryApiService.setRules(rules);
+  });
+
+  afterEach(() => {
+    mockIsFeatureEnabled.mockReset();
   });
 
   it('It should assign a category to transaction', async () => {
@@ -57,7 +77,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -81,7 +100,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -107,7 +125,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -131,7 +148,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -155,7 +171,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -178,7 +193,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -198,11 +212,17 @@ describe('ActualAiService', () => {
     inMemoryApiService.setTransactions([transaction]);
     mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
 
+    // Ensure rerunMissedTransactions is false for this test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
     // Act
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -229,7 +249,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -244,15 +263,15 @@ describe('ActualAiService', () => {
       '1',
       -123,
       'Carrefour 1235',
-      'Carrefour XXXX1234567 822-307-2000 | actual-ai could not guess this category',
+      'Carrefour XXXX1234567 822-307-2000 #actual-ai-miss',
     );
     const transactionGuessed = GivenActualData.createTransaction(
       '2',
       -123,
       'Carrefour 1234',
-      'Carrefour XXXX1234567 822-307-3000 | actual-ai guessed this category',
+      'Carrefour XXXX1234567 822-307-3000 actual-ai guessed this category',
       undefined,
-      '1',
+      GivenActualData.ACCOUNT_MAIN,
       '2021-01-01',
       false,
       GivenActualData.CATEGORY_GROCERIES,
@@ -263,7 +282,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -293,7 +311,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -335,11 +352,17 @@ describe('ActualAiService', () => {
     inMemoryApiService.setTransactions([transaction1, transaction2, transaction3]);
     mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
 
+    // Ensure rerunMissedTransactions is false for this test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
     // Act
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -353,17 +376,53 @@ describe('ActualAiService', () => {
 
   it('It should run bank sync when flag is set', async () => {
     // Arrange
-    syncAccountsBeforeClassify = true;
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'syncAccountsBeforeClassify') return true;
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
 
     // Act
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
     // Assert
     expect(inMemoryApiService.getWasBankSyncRan()).toBe(true);
+  });
+
+  // Add a new test for when rerunMissedTransactions is true
+  it('It should process transaction with missed tag when rerunMissedTransactions is true', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000 | #actual-ai-miss',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
+
+    // Set rerunMissedTransactions to true for this test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'rerunMissedTransactions') return true;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+    );
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
+    expect(updatedTransactions[0].notes).toContain(GUESSED_TAG);
   });
 });

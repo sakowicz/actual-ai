@@ -3,3 +3,4 @@ tmp/budgets/
 dist/
 
 .env
+*.log
