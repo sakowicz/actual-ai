@@ -90,25 +90,6 @@ services:
 #      NODE_TLS_REJECT_UNAUTHORIZED: 0 # optional. required if you have trouble connecting to Actual server 
 #      NOT_GUESSED_TAG=#actual-ai-miss
 #      GUESSED_TAG=#actual-ai
-#      PROMPT_TEMPLATE: >
-#        I want to categorize the given bank transactions into the following categories:
-#        {{#each categoryGroups}}
-#        {{#each categories}}
-#        * {{name}} ({{../name}}) (ID: "{{id}}")
-#        {{/each}}
-#        {{/each}}
-#        Please categorize the following transaction:
-#        * Amount: {{amount}}
-#        * Type: {{type}}
-#        {{#if description}}
-#        * Description: {{description}}
-#        {{/if}}
-#        {{#if payee}}
-#        * Payee: {{payee}}
-#        {{^}}
-#        * Payee: {{importedPayee}}
-#        {{/if}}
-#        ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY NAME, JUST AN ID. Do not guess, if you don't know the answer, return "uncategorized".
 ```
 
 ## Feature Configuration
