@@ -196,7 +196,7 @@ export class RateLimiter {
           const headers = rateLimitError.responseHeaders;
           if (headers && 'retry-after' in headers) {
             const retryAfter = headers['retry-after'];
-            if (retryAfter && Number.isNaN(Number(retryAfter)) === false) {
+            if (retryAfter && !Number.isNaN(Number(retryAfter))) {
               return Number(retryAfter) * 1000;
             }
           }
@@ -271,7 +271,7 @@ export class RateLimiter {
     }
   }
 
-  private sleep(ms: number): Promise<void> {
+  protected sleep(ms: number): Promise<void> {
     return new Promise<void>((resolve) => {
       setTimeout(resolve, ms);
     });
