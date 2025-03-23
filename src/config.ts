@@ -10,8 +10,6 @@ export const password = process.env.ACTUAL_PASSWORD ?? '';
 export const budgetId = process.env.ACTUAL_BUDGET_ID ?? '';
 export const e2ePassword = process.env.ACTUAL_E2E_PASSWORD ?? '';
 export const cronSchedule = process.env.CLASSIFICATION_SCHEDULE_CRON ?? '';
-export const classifyOnStartup = process.env.CLASSIFY_ON_STARTUP === 'true';
-export const syncAccountsBeforeClassify = process.env.SYNC_ACCOUNTS_BEFORE_CLASSIFY === 'true';
 export const llmProvider = process.env.LLM_PROVIDER ?? 'openai';
 export const openaiBaseURL = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
 export const openaiApiKey = process.env.OPENAI_API_KEY ?? '';
@@ -66,7 +64,7 @@ function registerStandardFeatures() {
   };
 
   features.dryRun = {
-    enabled: enabledFeatures.includes('dryRun'),
+    enabled: enabledFeatures.includes('dryRun') || process.env.DRY_RUN === 'true',
     defaultValue: true,
     description: 'Run in dry mode without actually making changes',
   };
@@ -82,6 +80,18 @@ function registerStandardFeatures() {
     defaultValue: false,
     description: 'Re-process transactions marked as not guessed',
   };
+
+  features.classifyOnStartup = {
+    enabled: enabledFeatures.includes('classifyOnStartup') || process.env.CLASSIFY_ON_STARTUP === 'true',
+    defaultValue: false,
+    description: 'Run classification when the application starts',
+  };
+
+  features.syncAccountsBeforeClassify = {
+    enabled: enabledFeatures.includes('syncAccountsBeforeClassify') || process.env.SYNC_ACCOUNTS_BEFORE_CLASSIFY === 'true',
+    defaultValue: false,
+    description: 'Sync accounts before running classification',
+  };
 }
 
 function registerToolFeatures() {
@@ -94,6 +104,13 @@ function registerToolFeatures() {
     defaultValue: false,
     description: 'Enable web search capability for merchant lookup',
     options: ['webSearch'],
+  };
+
+  features.freeWebSearch = {
+    enabled: enabledFeatures.includes('freeWebSearch') || legacyTools.includes('freeWebSearch'),
+    defaultValue: false,
+    description: 'Enable free web search capability for merchant lookup (self-hosted alternative to ValueSerp)',
+    options: ['freeWebSearch'],
   };
 
   // Additional tools can be added here following the same pattern

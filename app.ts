@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { cronSchedule, classifyOnStartup } from './src/config';
+import { cronSchedule, isFeatureEnabled } from './src/config';
 import actualAi from './src/container';
 
 if (!cron.validate(cronSchedule)) {
@@ -12,7 +12,7 @@ cron.schedule(cronSchedule, async () => {
 });
 
 console.log('Application started');
-if (classifyOnStartup) {
+if (isFeatureEnabled('classifyOnStartup')) {
   (async () => {
     await actualAi.classify();
   })();
