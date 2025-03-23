@@ -64,7 +64,7 @@ function registerStandardFeatures() {
   };
 
   features.dryRun = {
-    enabled: enabledFeatures.includes('dryRun') || process.env.DRY_RUN === 'true',
+    enabled: enabledFeatures.includes('dryRun'),
     defaultValue: true,
     description: 'Run in dry mode without actually making changes',
   };

@@ -109,10 +109,12 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async getRules(): Promise<RuleEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getRules();
   }
 
   public async getPayeeRules(payeeId: string): Promise<RuleEntity[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getPayeeRules(payeeId);
   }
 

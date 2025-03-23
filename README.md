@@ -39,6 +39,10 @@ When enabled, the LLM can suggest entirely new categories for transactions it ca
 
 Using the ValueSerp API, the system can search the web for information about unfamiliar merchants to help the LLM make better categorization decisions.
 
+#### 🔎 Free web search alternative
+
+A self-hosted alternative to ValueSerp that uses free public search API (DuckDuckGo) to search for merchant information without requiring an API key.
+
 #### 🔄 Re-run missed transactions
 
 Re-process transactions previously marked as unclassified.
@@ -65,10 +69,8 @@ services:
       ACTUAL_PASSWORD: your_actual_password
       ACTUAL_BUDGET_ID: your_actual_budget_id # This is the ID from Settings → Show advanced settings → Sync ID
       CLASSIFICATION_SCHEDULE_CRON: 0 */4 * * * # How often to run classification.
-      CLASSIFY_ON_STARTUP: true # Whether to classify transactions on startup (don't wait for cron schedule)
-      SYNC_ACCOUNTS_BEFORE_CLASSIFY: false # Whether to sync accounts before classification
       LLM_PROVIDER: openai # Can be "openai", "anthropic", "google-generative-ai", "ollama" or "groq"
-#      FEATURES: '["webSearch", "suggestNewCategories"]'
+      FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "freeWebSearch", "suggestNewCategories"]'
 #      VALUESERP_API_KEY: your_valueserp_api_key # API key for ValueSerp, required if webSearch tool is enabled
 #      OPENAI_API_KEY:  # optional. required if you want to use the OpenAI API
 #      OPENAI_MODEL:  # optional. required if you want to use a specific model, default is "gpt-4o-mini"
@@ -116,12 +118,15 @@ You can configure features in using the FEATURES array (recommended):
 The `FEATURES` environment variable accepts a JSON array of feature names to enable:
 
 ```
-FEATURES='["webSearch", "suggestNewCategories"]'
+FEATURES='["freeWebSearch", "suggestNewCategories", "classifyOnStartup", "syncAccountsBeforeClassify"]'
 ```
 
 Available features:
 - `webSearch` - Enable web search for merchant information
+- `freeWebSearch` - Enable free web search for merchant information (self-hosted alternative to ValueSerp)
 - `suggestNewCategories` - Allow suggesting new categories for transactions
+- `classifyOnStartup` - Run classification when the application starts
+- `syncAccountsBeforeClassify` - Sync accounts before running classification
 - `dryRun` - Run in dry run mode (enabled by default)
 - `dryRunNewCategories` - Only log suggested categories without creating them (enabled by default)
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
@@ -197,7 +202,7 @@ The `dryRun` feature is enabled by default. In this mode:
 - System will show what would happen with real execution
 
 To perform actual changes:
-1. Remove `dryRun` from your FEATURES array or set `DRY_RUN=false`
+1. Remove `dryRun` from your FEATURES array
 2. Ensure `suggestNewCategories` is enabled if you want new category creation
 3. Run the classification process
 

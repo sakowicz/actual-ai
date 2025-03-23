@@ -27,7 +27,6 @@ import {
   password,
   promptTemplate,
   serverURL,
-  syncAccountsBeforeClassify,
   valueSerpApiKey,
   getEnabledTools,
 } from './config';
@@ -89,7 +88,6 @@ const transactionService = new TransactionService(
 const actualAi = new ActualAiService(
   transactionService,
   actualApiService,
-  syncAccountsBeforeClassify,
 );
 
 export default actualAi;

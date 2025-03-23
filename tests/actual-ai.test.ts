@@ -23,7 +23,6 @@ describe('ActualAiService', () => {
   let inMemoryApiService: InMemoryActualApiService;
   let mockedLlmService: MockedLlmService;
   let mockedPromptGenerator: MockedPromptGenerator;
-  let syncAccountsBeforeClassify = false;
   const GUESSED_TAG = '#actual-ai';
   const NOT_GUESSED_TAG = '#actual-ai-miss';
 
@@ -78,7 +77,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -102,7 +100,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -128,7 +125,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -152,7 +148,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -176,7 +171,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -199,7 +193,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -230,7 +223,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -257,7 +249,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -291,7 +282,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -321,7 +311,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -374,7 +363,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -388,13 +376,17 @@ describe('ActualAiService', () => {
 
   it('It should run bank sync when flag is set', async () => {
     // Arrange
-    syncAccountsBeforeClassify = true;
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'syncAccountsBeforeClassify') return true;
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
 
     // Act
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 
@@ -425,7 +417,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      syncAccountsBeforeClassify,
     );
     await sut.classify();
 

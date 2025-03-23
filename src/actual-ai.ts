@@ -1,22 +1,19 @@
 import { ActualAiServiceI, ActualApiServiceI, TransactionServiceI } from './types';
 import suppressConsoleLogsAsync from './utils';
 import { formatError } from './utils/error-utils';
+import { isFeatureEnabled } from './config';
 
 class ActualAiService implements ActualAiServiceI {
   private readonly transactionService: TransactionServiceI;
 
   private readonly actualApiService: ActualApiServiceI;
 
-  private readonly syncAccountsBeforeClassify: boolean;
-
   constructor(
     transactionService: TransactionServiceI,
     actualApiService: ActualApiServiceI,
-    syncAccountsBeforeClassify: boolean,
   ) {
     this.transactionService = transactionService;
     this.actualApiService = actualApiService;
-    this.syncAccountsBeforeClassify = syncAccountsBeforeClassify;
   }
 
   public async classify() {
@@ -25,7 +22,7 @@ class ActualAiService implements ActualAiServiceI {
       await this.actualApiService.initializeApi();
 
       try {
-        if (this.syncAccountsBeforeClassify) {
+        if (isFeatureEnabled('syncAccountsBeforeClassify')) {
           await this.syncAccounts();
         }
       } catch (error) {
