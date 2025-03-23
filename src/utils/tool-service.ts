@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { tool, Tool } from 'ai';
 import { ToolServiceI } from '../types';
 import { getEnabledTools } from '../config';
+import FreeWebSearchService from './free-web-search-service';
 
 interface SearchResult {
   title: string;
@@ -17,8 +18,11 @@ interface OrganicResults {
 export default class ToolService implements ToolServiceI {
   private readonly valueSerpApiKey: string;
 
+  private readonly freeWebSearchService: FreeWebSearchService;
+
   constructor(valueSerpApiKey: string) {
     this.valueSerpApiKey = valueSerpApiKey;
+    this.freeWebSearchService = new FreeWebSearchService();
   }
 
   public getTools() {
@@ -38,6 +42,28 @@ export default class ToolService implements ToolServiceI {
           console.log(`Performing web search for ${query}`);
           const results = await this.performSearch(query);
           return this.formatSearchResults(results);
+        },
+      });
+    }
+
+    if (getEnabledTools().includes('freeWebSearch')) {
+      tools.freeWebSearch = tool({
+        description: 'Search the web for business information when existing categories are insufficient. Uses free public search APIs. Use when payee is unfamiliar or category context is unclear',
+        parameters: z.object({
+          query: z.string().describe(
+            'Combination of payee name and business type. '
+            + 'Example: "StudntLN" or "Student Loan"',
+          ),
+        }),
+        execute: async ({ query }: { query: string }): Promise<string> => {
+          console.log(`Performing free web search for ${query}`);
+          try {
+            const results = await this.freeWebSearchService.search(query);
+            return this.freeWebSearchService.formatSearchResults(results);
+          } catch (error) {
+            console.error('Error during free web search:', error);
+            return 'Web search failed. Please try again later.';
+          }
         },
       });
     }

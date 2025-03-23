@@ -113,3 +113,22 @@ export interface PromptGeneratorI {
     rules: RuleEntity[],
   ): string;
 }
+
+export interface SearchResult {
+  title: string;
+  snippet: string;
+  link: string;
+}
+
+export interface LocalSearchServiceI {
+  initialize(): Promise<void>;
+  search(query: string): Promise<SearchResult[]>;
+  addMerchant(merchantData: {
+    name: string;
+    description?: string;
+    category?: string;
+    website?: string;
+    tags?: string[];
+  }): Promise<void>;
+  formatSearchResults(results: SearchResult[]): string;
+}
