@@ -22,7 +22,7 @@
     "@ai-sdk/openai": "^1.1.9",
     "@types/jest": "^29.5.14",
     "ai": "^4.1.28",
-    "axios": "^1.8.1",
+    "axios": "^1.8.2",
     "dotenv": "^16.4.7",
     "handlebars": "^4.7.8",
     "node-cron": "^3.0.3",
