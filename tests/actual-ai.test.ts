@@ -5,6 +5,8 @@ import MockedPromptGenerator from './test-doubles/mocked-prompt-generator';
 import GivenActualData from './test-doubles/given/given-actual-data';
 import ActualAiService from '../src/actual-ai';
 import * as config from '../src/config';
+import SimilarityCalculator from '../src/similarity-calculator';
+import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -47,6 +49,7 @@ describe('ActualAiService', () => {
       inMemoryApiService,
       mockedLlmService,
       mockedPromptGenerator,
+      new CategorySuggestionOptimizer(new SimilarityCalculator()),
       NOT_GUESSED_TAG,
       GUESSED_TAG,
     );

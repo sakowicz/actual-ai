@@ -34,6 +34,8 @@ import ActualAiService from './actual-ai';
 import PromptGenerator from './prompt-generator';
 import LlmService from './llm-service';
 import ToolService from './utils/tool-service';
+import SimilarityCalculator from './similarity-calculator';
+import CategorySuggestionOptimizer from './category-suggestion-optimizer';
 
 // Create tool service if API key is available and tools are enabled
 const toolService = valueSerpApiKey && getEnabledTools().length > 0
@@ -81,6 +83,7 @@ const transactionService = new TransactionService(
   actualApiService,
   llmService,
   promptGenerator,
+  new CategorySuggestionOptimizer(new SimilarityCalculator()),
   notGuessedTag,
   guessedTag,
 );

@@ -10,6 +10,7 @@ import type {
   CategorySuggestion,
 } from './types';
 import { isFeatureEnabled } from './config';
+import CategorySuggestionOptimizer from './category-suggestion-optimizer';
 
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
@@ -22,6 +23,8 @@ class TransactionService implements TransactionServiceI {
 
   private readonly promptGenerator: PromptGeneratorI;
 
+  private readonly categorySuggestionOptimizer: CategorySuggestionOptimizer;
+
   private readonly notGuessedTag: string;
 
   private readonly guessedTag: string;
@@ -30,12 +33,14 @@ class TransactionService implements TransactionServiceI {
     actualApiClient: ActualApiServiceI,
     llmService: LlmServiceI,
     promptGenerator: PromptGeneratorI,
+    categorySuggestionOptimizer: CategorySuggestionOptimizer,
     notGuessedTag: string,
     guessedTag: string,
   ) {
     this.actualApiService = actualApiClient;
     this.llmService = llmService;
     this.promptGenerator = promptGenerator;
+    this.categorySuggestionOptimizer = categorySuggestionOptimizer;
     this.notGuessedTag = notGuessedTag;
     this.guessedTag = guessedTag;
   }
@@ -209,7 +214,8 @@ class TransactionService implements TransactionServiceI {
     // Create new categories if not in dry run mode
     if (isFeatureEnabled('suggestNewCategories') && suggestedCategories.size > 0) {
       // Optimize categories before applying/reporting
-      const optimizedCategories = this.optimizeCategorySuggestions(suggestedCategories);
+      const optimizedCategories = this.categorySuggestionOptimizer
+        .optimizeCategorySuggestions(suggestedCategories);
 
       if (isFeatureEnabled('dryRun')) {
         console.log(`\nDRY RUN: Would create ${optimizedCategories.size} new categories after optimization:`);
@@ -359,203 +365,6 @@ class TransactionService implements TransactionServiceI {
         transactions: [transaction],
       });
     }
-  }
-
-  // Add this new method to optimize category suggestions
-  private calculateNameSimilarity(name1: string, name2: string): number {
-    // Normalize the strings for comparison
-    const a = name1.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-    const b = name2.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-
-    if (a === b) return 1.0;
-
-    // Check for exact word matches
-    const words1 = new Set(a.split(' '));
-    const words2 = new Set(b.split(' '));
-
-    // Calculate Jaccard similarity for words
-    const intersection = new Set([...words1].filter((x) => words2.has(x)));
-    const union = new Set([...words1, ...words2]);
-
-    // Weight for word overlap
-    const wordSimilarity = intersection.size / union.size;
-
-    // Jaro-Winkler for character-level similarity
-    const jaro = (s1: string, s2: string) => {
-      const matchDistance = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
-      const s1Matches = new Array<boolean>(s1.length).fill(false);
-      const s2Matches = new Array<boolean>(s2.length).fill(false);
-
-      let matches = 0;
-      for (let i = 0; i < s1.length; i++) {
-        const start = Math.max(0, i - matchDistance);
-        const end = Math.min(i + matchDistance + 1, s2.length);
-        for (let j = start; j < end; j++) {
-          if (!s2Matches[j] && s1[i] === s2[j]) {
-            s1Matches[i] = true;
-            s2Matches[j] = true;
-            matches++;
-            break;
-          }
-        }
-      }
-
-      if (matches === 0) return 0;
-
-      let transpositions = 0;
-      let k = 0;
-      for (let i = 0; i < s1.length; i++) {
-        if (s1Matches[i]) {
-          while (!s2Matches[k]) k++;
-          if (s1[i] !== s2[k]) transpositions++;
-          k++;
-        }
-      }
-
-      return (
-        matches / s1.length + matches / s2.length + (matches - transpositions / 2) / matches) / 3;
-    };
-
-    const charSimilarity = jaro(a, b);
-
-    // Combine word-level and character-level similarity
-    return 0.6 * wordSimilarity + 0.4 * charSimilarity;
-  }
-
-  private chooseBestCategoryName(names: string[]): string {
-    if (names.length === 1) return names[0];
-
-    // Count frequency of words across all names
-    const wordFrequency = new Map<string, number>();
-    const nameWords = names.map((name) => {
-      const words = name.toLowerCase().split(/\s+/);
-      words.forEach((word) => {
-        wordFrequency.set(word, (wordFrequency.get(word) ?? 0) + 1);
-      });
-      return words;
-    });
-
-    // Score each name based on word frequency (more common words are better)
-    const scores = names.map((name, i) => {
-      const words = nameWords[i];
-      const freqScore = words.reduce(
-        (sum, word) => sum + wordFrequency.get(word)!,
-        0,
-      ) / words.length;
-
-      // Prefer names that are in the sweet spot length (not too short, not too long)
-      const lengthScore = 1 / (1 + Math.abs(words.length - 2));
-
-      return { name, score: freqScore * 0.7 + lengthScore * 0.3 };
-    });
-
-    // Sort by score (descending) and return the best
-    scores.sort((a, b) => b.score - a.score);
-    return scores[0].name;
-  }
-
-  private optimizeCategorySuggestions(
-    suggestedCategories: Map<string, {
-      name: string;
-      groupName: string;
-      groupIsNew: boolean;
-      groupId?: string;
-      transactions: TransactionEntity[];
-    }>,
-  ): Map<string, {
-    name: string;
-    groupName: string;
-    groupIsNew: boolean;
-    groupId?: string;
-    transactions: TransactionEntity[];
-  }> {
-    console.log('Optimizing category suggestions...');
-
-    // Convert suggestions to array.
-    const suggestions = Array.from(suggestedCategories.values());
-
-    // Cluster suggestions across groups based on name similarity.
-    const used = new Array(suggestions.length).fill(false);
-    const clusters: { suggestions: typeof suggestions }[] = [];
-    for (let i = 0; i < suggestions.length; i++) {
-      if (used[i]) continue;
-      const cluster = [suggestions[i]];
-      used[i] = true;
-      for (let j = i + 1; j < suggestions.length; j++) {
-        if (used[j]) continue;
-        // Dynamic threshold: shorter names need higher similarity.
-        const minLength = Math.min(suggestions[i].name.length, suggestions[j].name.length);
-        const baseThreshold = 0.7;
-        const dynamicThreshold = baseThreshold + (1 / Math.max(5, minLength)) * 0.3;
-        const sim = this.calculateNameSimilarity(suggestions[i].name, suggestions[j].name);
-        if (sim >= dynamicThreshold) {
-          cluster.push(suggestions[j]);
-          used[j] = true;
-        }
-      }
-      clusters.push({ suggestions: cluster });
-    }
-
-    // Create optimized categories from clusters.
-    const optimizedCategories = new Map<string, {
-      name: string;
-      groupName: string;
-      groupIsNew: boolean;
-      groupId?: string;
-      transactions: TransactionEntity[];
-      originalNames: string[];
-    }>();
-    clusters.forEach(({ suggestions: cluster }) => {
-      // Merge transactions and original names.
-      const mergedTransactions = cluster.flatMap((s) => s.transactions);
-      const originalNames = cluster.map((s) => s.name);
-      const bestName = this.chooseBestCategoryName(originalNames);
-      // Choose representative group name from frequency.
-      const groupCount = new Map<string, number>();
-      cluster.forEach((s) => {
-        const grp = s.groupName;
-        groupCount.set(grp, (groupCount.get(grp) ?? 0) + 1);
-      });
-      let repGroup = cluster[0].groupName;
-      let maxCount = 0;
-      groupCount.forEach((cnt, grp) => {
-        if (cnt > maxCount) {
-          maxCount = cnt;
-          repGroup = grp;
-        }
-      });
-      // Determine groupIsNew: if any in cluster is new, mark true.
-      const groupIsNew = cluster.some((s) => s.groupIsNew);
-      optimizedCategories.set(`${repGroup}:${bestName}`, {
-        name: bestName,
-        groupName: repGroup,
-        groupIsNew,
-        groupId: undefined,
-        transactions: mergedTransactions,
-        originalNames,
-      });
-    });
-
-    console.log(`Optimized from ${suggestions.length} to ${optimizedCategories.size} categories`);
-    optimizedCategories.forEach((category) => {
-      if (category.originalNames.length > 1) {
-        console.log(`Merged categories ${category.originalNames.join(', ')} into "${category.name}"`);
-      }
-    });
-
-    // Return map without originalNames.
-    return new Map(
-      Array.from(optimizedCategories.entries()).map(([key, value]) => [
-        key,
-        {
-          name: value.name,
-          groupName: value.groupName,
-          groupIsNew: value.groupIsNew,
-          groupId: value.groupId,
-          transactions: value.transactions,
-        },
-      ]),
-    );
   }
 }
 
