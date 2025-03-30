@@ -184,4 +184,60 @@ describe('CategorySuggestionOptimizer', () => {
       expect(merged?.transactions.length).toBe(3); // All transactions merged
     });
   });
+
+  test('should properly optimize category suggestions', () => {
+    // Arrange
+    const transaction: TransactionEntity = {
+      id: 'txn1',
+      date: '2023-01-01',
+      account: 'account1',
+      amount: -50,
+      payee: 'payee1',
+      imported_payee: 'Medical Visit',
+      category: undefined,
+      notes: '',
+      cleared: true,
+      reconciled: false,
+      transfer_id: undefined,
+      tombstone: false,
+      schedule: undefined,
+      sort_order: 0,
+      starting_balance_flag: false,
+      is_child: false,
+      is_parent: false,
+      parent_id: undefined,
+      error: undefined,
+    };
+
+    const suggestedCategories = new Map<string, {
+      name: string;
+      groupName: string;
+      groupIsNew: boolean;
+      groupId?: string;
+      transactions: TransactionEntity[];
+    }>();
+
+    suggestedCategories.set('Health & Medical:Medical Expenses', {
+      name: 'Medical Expenses',
+      groupName: 'Health & Medical',
+      groupIsNew: true, // Expect groupId to be undefined after optimization for new groups
+      transactions: [transaction],
+    });
+
+    // Act
+    const optimizedCategories = optimizer.optimizeCategorySuggestions(
+      suggestedCategories,
+    );
+
+    // Assert
+    expect(optimizedCategories.size).toBe(1);
+    const optimizedSuggestion = optimizedCategories.get('Health & Medical:Medical Expenses');
+    expect(optimizedSuggestion).toBeDefined();
+    expect(optimizedSuggestion?.name).toBe('Medical Expenses');
+    expect(optimizedSuggestion?.groupName).toBe('Health & Medical');
+    expect(optimizedSuggestion?.groupIsNew).toBe(true);
+    // The optimizer should not assign a groupId for new groups.
+    // The TransactionService is responsible for creating the group and getting the ID.
+    expect(optimizedSuggestion?.groupId).toBeUndefined();
+  });
 });
