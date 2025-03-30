@@ -98,7 +98,10 @@ describe('ActualAiService', () => {
       'Carrefour XXXX1234567 822-307-2000',
     );
     inMemoryApiService.setTransactions([transaction]);
-    mockedLlmService.setGuess(`I think that the category id will be ${GivenActualData.CATEGORY_GROCERIES}`);
+    mockedLlmService.setUnifiedResponse({
+      type: 'existing',
+      categoryId: GivenActualData.CATEGORY_GROCERIES,
+    });
 
     // Act
     sut = new ActualAiService(
