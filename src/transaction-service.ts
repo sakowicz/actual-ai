@@ -247,7 +247,7 @@ class TransactionService implements TransactionServiceI {
 
         // Use optimized categories instead of original suggestions
         await Promise.all(
-          Array.from(optimizedCategories.entries()).map(async ([_, suggestion]) => {
+          Array.from(optimizedCategories.entries()).map(async ([_key, suggestion]) => {
             try {
               // First, ensure we have a group ID
               let groupId: string;
@@ -259,13 +259,15 @@ class TransactionService implements TransactionServiceI {
                 const existingGroup = categoryGroups.find(
                   (g) => g.name.toLowerCase() === suggestion.groupName.toLowerCase(),
                 );
-                if (existingGroup) {
-                  groupId = existingGroup.id;
-                } else {
-                  // Create group if not found
-                  groupId = await this.actualApiService.createCategoryGroup(suggestion.groupName);
-                  console.log(`Created category group "${suggestion.groupName}" with ID ${groupId}`);
-                }
+                groupId = existingGroup?.id
+                  ?? await this.actualApiService.createCategoryGroup(
+                    suggestion.groupName,
+                  );
+              }
+
+              // Validate groupId exists before creating category
+              if (!groupId) {
+                throw new Error(`Missing groupId for category ${suggestion.name}`);
               }
 
               const newCategoryId = await this.actualApiService.createCategory(

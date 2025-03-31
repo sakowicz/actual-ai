@@ -1,12 +1,13 @@
+import ActualAiService from '../src/actual-ai';
 import TransactionService from '../src/transaction-service';
 import InMemoryActualApiService from './test-doubles/in-memory-actual-api-service';
 import MockedLlmService from './test-doubles/mocked-llm-service';
 import MockedPromptGenerator from './test-doubles/mocked-prompt-generator';
 import GivenActualData from './test-doubles/given/given-actual-data';
-import ActualAiService from '../src/actual-ai';
 import * as config from '../src/config';
 import SimilarityCalculator from '../src/similarity-calculator';
 import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
+import { CategorySuggestion } from '../src/types';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -97,7 +98,10 @@ describe('ActualAiService', () => {
       'Carrefour XXXX1234567 822-307-2000',
     );
     inMemoryApiService.setTransactions([transaction]);
-    mockedLlmService.setGuess(`I think that the category id will be ${GivenActualData.CATEGORY_GROCERIES}`);
+    mockedLlmService.setUnifiedResponse({
+      type: 'existing',
+      categoryId: GivenActualData.CATEGORY_GROCERIES,
+    });
 
     // Act
     sut = new ActualAiService(
@@ -427,5 +431,63 @@ describe('ActualAiService', () => {
     const updatedTransactions = await inMemoryApiService.getTransactions();
     expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
     expect(updatedTransactions[0].notes).toContain(GUESSED_TAG);
+  });
+
+  it('should create a new category and group when LLM suggests a new one', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      'new-cat-txn',
+      -50,
+      'New Service Inc.',
+      'Payment for new service',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+
+    const newCategorySuggestion: CategorySuggestion = {
+      name: 'Digital Services',
+      groupName: 'Tech Expenses',
+      groupIsNew: true,
+    };
+
+    mockedLlmService.setUnifiedResponse({
+      type: 'new',
+      newCategory: newCategorySuggestion,
+    });
+
+    // Enable suggestNewCategories feature for this test
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'suggestNewCategories') return true;
+      if (feature === 'rerunMissedTransactions') return false;
+      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
+    const createGroupSpy = jest.spyOn(inMemoryApiService, 'createCategoryGroup');
+    const createCategorySpy = jest.spyOn(inMemoryApiService, 'createCategory');
+
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+    );
+
+    // Act
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    // Explicitly type the spy results to avoid 'any' type issues
+    const createGroupResult = await createGroupSpy.mock.results[0].value as string;
+    const createCategoryResult = await createCategorySpy.mock.results[0].value as string;
+    const newGroupId = createGroupResult;
+    const newCategoryId = createCategoryResult;
+
+    expect(createGroupSpy).toHaveBeenCalledWith(newCategorySuggestion.groupName);
+    expect(createCategorySpy).toHaveBeenCalledWith(newCategorySuggestion.name, newGroupId);
+    expect(updatedTransactions[0].category).toBe(newCategoryId);
+    expect(updatedTransactions[0].notes).toContain(GUESSED_TAG);
+
+    // Clean up spies
+    createGroupSpy.mockRestore();
+    createCategorySpy.mockRestore();
   });
 });

@@ -12,7 +12,6 @@ describe('MockedLlmService', () => {
     const response = await mockedLlmService.ask('test prompt');
     expect(response).toEqual({
       type: 'existing',
-      categoryId: 'uncategorized',
     });
   });
 

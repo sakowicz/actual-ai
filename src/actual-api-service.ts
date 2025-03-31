@@ -137,7 +137,7 @@ class ActualApiService implements ActualApiServiceI {
   public async createCategory(name: string, groupId: string): Promise<string> {
     const result = await this.actualApiClient.createCategory({
       name,
-      group: groupId,
+      group_id: groupId,
     });
 
     return result;
