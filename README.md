@@ -81,7 +81,7 @@ services:
 #      GOOGLE_GENERATIVE_AI_API_KEY:  # optional. required if you want to use the Google Generative AI API
 #      GOOGLE_GENERATIVE_AI_MODEL:  # optional. required if you want to use a specific model, default is "gemini-1.5-flash"
 #      GOOGLE_GENERATIVE_AI_BASE_URL:  # optional. default: "https://generativelanguage.googleapis.com"
-#      OLLAMA_MODEL=llama3.1 optional. required if you want to use a Ollama specific model, default is "phi3.5"
+#      OLLAMA_MODEL=llama3.1 optional. required if you want to use an Ollama specific model, default is "phi3.5"
 #      OLLAMA_BASE_URL=http://localhost:11434/api # optional. required for ollama provider
 #      GROQ_API_KEY:  # optional. required if you want to use the Groq API
 #      GROQ_MODEL:  # optional. required if you want to use a specific model, default is "mixtral-8x7b-32768"
