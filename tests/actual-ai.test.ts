@@ -7,7 +7,8 @@ import GivenActualData from './test-doubles/given/given-actual-data';
 import * as config from '../src/config';
 import SimilarityCalculator from '../src/similarity-calculator';
 import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
-import { CategorySuggestion } from '../src/types';
+import { CategorySuggestion, NotesMigratorI } from '../src/types';
+import NotesMigrator from '../src/transaction/notes-migrator';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -26,6 +27,7 @@ describe('ActualAiService', () => {
   let inMemoryApiService: InMemoryActualApiService;
   let mockedLlmService: MockedLlmService;
   let mockedPromptGenerator: MockedPromptGenerator;
+  let notesMigrator: NotesMigratorI;
   const GUESSED_TAG = '#actual-ai';
   const NOT_GUESSED_TAG = '#actual-ai-miss';
 
@@ -60,6 +62,7 @@ describe('ActualAiService', () => {
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
     inMemoryApiService.setRules(rules);
+    notesMigrator = new NotesMigrator(inMemoryApiService, NOT_GUESSED_TAG, GUESSED_TAG);
   });
 
   afterEach(() => {
@@ -81,6 +84,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -107,6 +111,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -132,6 +137,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -155,6 +161,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -178,6 +185,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -200,6 +208,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -230,6 +239,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -256,6 +266,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -289,6 +300,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -318,6 +330,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -370,6 +383,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -394,6 +408,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -424,6 +439,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -468,6 +484,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
 
     // Act

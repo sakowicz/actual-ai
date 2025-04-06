@@ -1,4 +1,6 @@
-import { ActualAiServiceI, ActualApiServiceI, TransactionServiceI } from './types';
+import {
+  ActualAiServiceI, ActualApiServiceI, NotesMigratorI, TransactionServiceI,
+} from './types';
 import suppressConsoleLogsAsync from './utils';
 import { formatError } from './utils/error-utils';
 import { isFeatureEnabled } from './config';
@@ -8,12 +10,16 @@ class ActualAiService implements ActualAiServiceI {
 
   private readonly actualApiService: ActualApiServiceI;
 
+  private readonly notesMigrator: NotesMigratorI;
+
   constructor(
     transactionService: TransactionServiceI,
     actualApiService: ActualApiServiceI,
+    notesMigrator: NotesMigratorI,
   ) {
     this.transactionService = transactionService;
     this.actualApiService = actualApiService;
+    this.notesMigrator = notesMigrator;
   }
 
   public async classify() {
@@ -32,7 +38,7 @@ class ActualAiService implements ActualAiServiceI {
         );
       }
 
-      await this.transactionService.migrateToTags();
+      await this.notesMigrator.migrateToTags();
 
       try {
         await this.transactionService.processTransactions();

@@ -62,35 +62,6 @@ class TransactionService implements TransactionServiceI {
       .trim();
   }
 
-  async migrateToTags(): Promise<void> {
-    const transactions = await this.actualApiService.getTransactions();
-    const transactionsToMigrate = transactions.filter(
-      (transaction) => transaction.notes
-        && (
-          transaction.notes?.includes(LEGACY_NOTES_NOT_GUESSED)
-          || transaction.notes?.includes(LEGACY_NOTES_GUESSED)
-        ),
-    );
-
-    for (let i = 0; i < transactionsToMigrate.length; i++) {
-      const transaction = transactionsToMigrate[i];
-      console.log(`${i + 1}/${transactionsToMigrate.length} Migrating transaction ${transaction.imported_payee} / ${transaction.notes} / ${transaction.amount}`);
-
-      const baseNotes = this.clearPreviousTags(transaction.notes ?? '');
-      let newNotes = baseNotes;
-
-      if (transaction.notes?.includes(LEGACY_NOTES_NOT_GUESSED)) {
-        newNotes = this.appendTag(baseNotes, this.notGuessedTag);
-      } else if (transaction.notes?.includes(LEGACY_NOTES_GUESSED)) {
-        newNotes = this.appendTag(baseNotes, this.guessedTag);
-      }
-
-      if (newNotes !== transaction.notes) {
-        await this.actualApiService.updateTransactionNotes(transaction.id, newNotes);
-      }
-    }
-  }
-
   async processTransactions(): Promise<void> {
     if (isFeatureEnabled('dryRun')) {
       console.log('=== DRY RUN MODE ===');
