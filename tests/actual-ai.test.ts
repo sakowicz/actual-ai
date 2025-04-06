@@ -14,6 +14,7 @@ import RuleMatchHandler from '../src/transaction/rule-match-handler';
 import ExistingCategoryHandler from '../src/transaction/existing-category-handler';
 import NewCategoryHandler from '../src/transaction/new-category-handler';
 import CategorySuggester from '../src/transaction/category-suggester';
+import TransactionProcessor from '../src/transaction/transaction-processor';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -67,7 +68,7 @@ describe('ActualAiService', () => {
     const accounts = GivenActualData.createSampleAccounts();
     const rules = GivenActualData.createSampleRules();
 
-    transactionService = new TransactionService(
+    const transactionProcessor = new TransactionProcessor(
       inMemoryApiService,
       mockedLlmService,
       mockedPromptGenerator,
@@ -76,7 +77,13 @@ describe('ActualAiService', () => {
       ruleMatchHandler,
       existingCategoryHandler,
       new NewCategoryHandler(),
+    );
+
+    transactionService = new TransactionService(
+      inMemoryApiService,
+      NOT_GUESSED_TAG,
       categorySuggester,
+      transactionProcessor,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);

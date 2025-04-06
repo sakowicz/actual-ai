@@ -3,58 +3,31 @@ import type {
 } from '@actual-app/api/@types/loot-core/types/models';
 import type {
   ActualApiServiceI,
-  LlmServiceI,
-  PromptGeneratorI,
   TransactionServiceI,
 } from './types';
 import { isFeatureEnabled } from './config';
-import TagService from './transaction/tag-service';
-import RuleMatchHandler from './transaction/rule-match-handler';
-import ExistingCategoryHandler from './transaction/existing-category-handler';
-import NewCategoryHandler from './transaction/new-category-handler';
 import CategorySuggester from './transaction/category-suggester';
-
-const BATCH_SIZE = 20;
+import TransactionProcessor from './transaction/transaction-processor';
 
 class TransactionService implements TransactionServiceI {
   private readonly actualApiService: ActualApiServiceI;
 
-  private readonly llmService: LlmServiceI;
-
-  private readonly promptGenerator: PromptGeneratorI;
-
   private readonly notGuessedTag: string;
-
-  private readonly tagService: TagService;
-
-  private readonly ruleMatchHandler: RuleMatchHandler;
-
-  private readonly existingCategoryHandler: ExistingCategoryHandler;
-
-  private readonly newCategoryHandler: NewCategoryHandler;
 
   private readonly categorySuggester: CategorySuggester;
 
+  private readonly transactionProcessor: TransactionProcessor;
+
   constructor(
     actualApiClient: ActualApiServiceI,
-    llmService: LlmServiceI,
-    promptGenerator: PromptGeneratorI,
     notGuessedTag: string,
-    tagService: TagService,
-    ruleMatchHandler: RuleMatchHandler,
-    existingCategoryHandler: ExistingCategoryHandler,
-    newCategoryHandler: NewCategoryHandler,
     categorySuggester: CategorySuggester,
+    transactionProcessor: TransactionProcessor,
   ) {
     this.actualApiService = actualApiClient;
-    this.llmService = llmService;
-    this.promptGenerator = promptGenerator;
     this.notGuessedTag = notGuessedTag;
-    this.tagService = tagService;
-    this.ruleMatchHandler = ruleMatchHandler;
-    this.existingCategoryHandler = existingCategoryHandler;
-    this.newCategoryHandler = newCategoryHandler;
     this.categorySuggester = categorySuggester;
+    this.transactionProcessor = transactionProcessor;
   }
 
   async processTransactions(): Promise<void> {
@@ -109,73 +82,14 @@ class TransactionService implements TransactionServiceI {
       transactions: TransactionEntity[];
     }>();
 
-    // Process transactions in batches
-    for (
-      let batchStart = 0;
-      batchStart < uncategorizedTransactions.length;
-      batchStart += BATCH_SIZE
-    ) {
-      const batchEnd = Math.min(batchStart + BATCH_SIZE, uncategorizedTransactions.length);
-      console.log(`Processing batch ${batchStart / BATCH_SIZE + 1} (transactions ${batchStart + 1}-${batchEnd})`);
-
-      const batch = uncategorizedTransactions.slice(batchStart, batchEnd);
-
-      await batch.reduce(async (previousPromise, transaction, batchIndex) => {
-        await previousPromise;
-        const globalIndex = batchStart + batchIndex;
-        console.log(
-          `${globalIndex + 1}/${uncategorizedTransactions.length} Processing transaction '${transaction.imported_payee}'`,
-        );
-
-        try {
-          const prompt = this.promptGenerator.generate(
-            categoryGroups,
-            transaction,
-            payees,
-            rules,
-          );
-
-          const response = await this.llmService.ask(prompt);
-
-          if (response.type === 'rule' && response.ruleName && response.categoryId) {
-            await this.ruleMatchHandler.handleRuleMatch(transaction, {
-              ruleName: response.ruleName,
-              categoryId: response.categoryId,
-            }, categories);
-          } else if (response.type === 'existing' && response.categoryId) {
-            await this.existingCategoryHandler.handleExistingCategory(transaction, {
-              categoryId: response.categoryId,
-            }, categories);
-          } else if (response.type === 'new' && response.newCategory) {
-            this.newCategoryHandler.trackNewCategory(
-              transaction,
-              response.newCategory,
-              suggestedCategories,
-            );
-          } else {
-            console.warn(`Unexpected response format: ${JSON.stringify(response)}`);
-            await this.actualApiService.updateTransactionNotes(
-              transaction.id,
-              this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
-            );
-          }
-        } catch (error) {
-          console.error(`Error processing transaction ${globalIndex + 1}:`, error);
-          await this.actualApiService.updateTransactionNotes(
-            transaction.id,
-            this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
-          );
-        }
-      }, Promise.resolve());
-
-      // Add a small delay between batches to avoid overwhelming the API
-      if (batchEnd < uncategorizedTransactions.length) {
-        console.log('Pausing for 2 seconds before next batch...');
-        await new Promise((resolve) => {
-          setTimeout(resolve, 2000);
-        });
-      }
-    }
+    await this.transactionProcessor.process(
+      uncategorizedTransactions,
+      categoryGroups,
+      payees,
+      rules,
+      categories,
+      suggestedCategories,
+    );
 
     // Create new categories if not in dry run mode
     if (isFeatureEnabled('suggestNewCategories') && suggestedCategories.size > 0) {
