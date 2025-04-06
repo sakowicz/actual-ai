@@ -14,12 +14,20 @@ class TagService {
     this.guessedTag = guessedTag;
   }
 
-  appendTag(notes: string, tag: string): string {
+  public addNotGuessedTag(notes: string): string {
+    return this.appendTag(notes, this.notGuessedTag);
+  }
+
+  public addGuessedTag(notes: string): string {
+    return this.appendTag(notes, this.guessedTag);
+  }
+
+  private appendTag(notes: string, tag: string): string {
     const clearedNotes = this.clearPreviousTags(notes);
     return `${clearedNotes} ${tag}`.trim();
   }
 
-  clearPreviousTags(notes: string): string {
+  public clearPreviousTags(notes: string): string {
     return notes
       .replace(new RegExp(`\\s*${this.guessedTag}`, 'g'), '')
       .replace(new RegExp(`\\s*${this.notGuessedTag}`, 'g'), '')

@@ -88,18 +88,15 @@ const llmService = new LlmService(
 
 const tagService = new TagService(notGuessedTag, guessedTag);
 
-const ruleMatchHandler = new RuleMatchHandler(actualApiService, guessedTag, tagService);
+const ruleMatchHandler = new RuleMatchHandler(actualApiService, tagService);
 const existingCategoryHandler = new ExistingCategoryHandler(
   actualApiService,
-  notGuessedTag,
-  guessedTag,
   tagService,
 );
 
 const categorySuggester = new CategorySuggester(
   actualApiService,
   new CategorySuggestionOptimizer(new SimilarityCalculator()),
-  guessedTag,
   tagService,
 );
 
@@ -107,7 +104,6 @@ const transactionProcessor = new TransactionProcessor(
   actualApiService,
   llmService,
   promptGenerator,
-  notGuessedTag,
   tagService,
   ruleMatchHandler,
   existingCategoryHandler,
@@ -123,8 +119,6 @@ const transactionService = new TransactionService(
 
 const notesMigrator = new NotesMigrator(
   actualApiService,
-  notGuessedTag,
-  guessedTag,
   tagService,
 );
 

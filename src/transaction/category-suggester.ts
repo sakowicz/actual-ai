@@ -10,19 +10,15 @@ class CategorySuggester {
 
   private readonly categorySuggestionOptimizer: CategorySuggestionOptimizer;
 
-  private readonly guessedTag: string;
-
   private readonly tagService: TagService;
 
   constructor(
     actualApiService: ActualApiServiceI,
     categorySuggestionOptimizer: CategorySuggestionOptimizer,
-    guessedTag: string,
     tagService: TagService,
   ) {
     this.actualApiService = actualApiService;
     this.categorySuggestionOptimizer = categorySuggestionOptimizer;
-    this.guessedTag = guessedTag;
     this.tagService = tagService;
   }
 
@@ -106,7 +102,7 @@ class CategorySuggester {
               suggestion.transactions.map(async (transaction) => {
                 await this.actualApiService.updateTransactionNotesAndCategory(
                   transaction.id,
-                  this.tagService.appendTag(transaction.notes ?? '', this.guessedTag),
+                  this.tagService.addGuessedTag(transaction.notes ?? ''),
                   newCategoryId,
                 );
                 console.log(`Assigned transaction ${transaction.id} to new category ${suggestion.name}`);
