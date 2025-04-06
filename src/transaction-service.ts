@@ -11,9 +11,9 @@ import type {
 } from './types';
 import { isFeatureEnabled } from './config';
 import CategorySuggestionOptimizer from './category-suggestion-optimizer';
+import TagService from './transaction/tag-service';
+import RuleMatchHandler from './transaction/rule-match-handler';
 
-const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
-const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
 const BATCH_SIZE = 20;
 
 class TransactionService implements TransactionServiceI {
@@ -29,6 +29,10 @@ class TransactionService implements TransactionServiceI {
 
   private readonly guessedTag: string;
 
+  private readonly tagService: TagService;
+
+  private readonly ruleMatchHandler: RuleMatchHandler;
+
   constructor(
     actualApiClient: ActualApiServiceI,
     llmService: LlmServiceI,
@@ -36,6 +40,8 @@ class TransactionService implements TransactionServiceI {
     categorySuggestionOptimizer: CategorySuggestionOptimizer,
     notGuessedTag: string,
     guessedTag: string,
+    tagService: TagService,
+    ruleMatchHandler: RuleMatchHandler,
   ) {
     this.actualApiService = actualApiClient;
     this.llmService = llmService;
@@ -43,23 +49,8 @@ class TransactionService implements TransactionServiceI {
     this.categorySuggestionOptimizer = categorySuggestionOptimizer;
     this.notGuessedTag = notGuessedTag;
     this.guessedTag = guessedTag;
-  }
-
-  appendTag(notes: string, tag: string): string {
-    const clearedNotes = this.clearPreviousTags(notes);
-    return `${clearedNotes} ${tag}`.trim();
-  }
-
-  clearPreviousTags(notes: string): string {
-    return notes
-      .replace(new RegExp(`\\s*${this.guessedTag}`, 'g'), '')
-      .replace(new RegExp(`\\s*${this.notGuessedTag}`, 'g'), '')
-      .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
-      .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
-      .replace(new RegExp(`\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
-      .replace(new RegExp(`\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
-      .replace(/-miss(?= #actual-ai)/g, '')
-      .trim();
+    this.tagService = tagService;
+    this.ruleMatchHandler = ruleMatchHandler;
   }
 
   async processTransactions(): Promise<void> {
@@ -143,7 +134,7 @@ class TransactionService implements TransactionServiceI {
           const response = await this.llmService.ask(prompt);
 
           if (response.type === 'rule' && response.ruleName && response.categoryId) {
-            await this.handleRuleMatch(transaction, {
+            await this.ruleMatchHandler.handleRuleMatch(transaction, {
               ruleName: response.ruleName,
               categoryId: response.categoryId,
             }, categories);
@@ -161,14 +152,14 @@ class TransactionService implements TransactionServiceI {
             console.warn(`Unexpected response format: ${JSON.stringify(response)}`);
             await this.actualApiService.updateTransactionNotes(
               transaction.id,
-              this.appendTag(transaction.notes ?? '', this.notGuessedTag),
+              this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
             );
           }
         } catch (error) {
           console.error(`Error processing transaction ${globalIndex + 1}:`, error);
           await this.actualApiService.updateTransactionNotes(
             transaction.id,
-            this.appendTag(transaction.notes ?? '', this.notGuessedTag),
+            this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
           );
         }
       }, Promise.resolve());
@@ -253,7 +244,7 @@ class TransactionService implements TransactionServiceI {
                 suggestion.transactions.map(async (transaction) => {
                   await this.actualApiService.updateTransactionNotesAndCategory(
                     transaction.id,
-                    this.appendTag(transaction.notes ?? '', this.guessedTag),
+                    this.tagService.appendTag(transaction.notes ?? '', this.guessedTag),
                     newCategoryId,
                   );
                   console.log(`Assigned transaction ${transaction.id} to new category ${suggestion.name}`);
@@ -268,26 +259,6 @@ class TransactionService implements TransactionServiceI {
     }
   }
 
-  private async handleRuleMatch(
-    transaction: TransactionEntity,
-    response: { categoryId: string; ruleName: string },
-    categories: CategoryEntity[],
-  ) {
-    const category = categories.find((c) => c.id === response.categoryId);
-    const categoryName = category ? category.name : 'Unknown Category';
-
-    if (isFeatureEnabled('dryRun')) {
-      console.log(`DRY RUN: Would assign transaction ${transaction.id} to category "${categoryName}" (${response.categoryId}) via rule ${response.ruleName}`);
-      return;
-    }
-
-    await this.actualApiService.updateTransactionNotesAndCategory(
-      transaction.id,
-      this.appendTag(transaction.notes ?? '', `${this.guessedTag} (rule: ${response.ruleName})`),
-      response.categoryId,
-    );
-  }
-
   private async handleExistingCategory(
     transaction: TransactionEntity,
     response: { categoryId: string },
@@ -298,7 +269,7 @@ class TransactionService implements TransactionServiceI {
       // Add not guessed tag when category not found
       await this.actualApiService.updateTransactionNotes(
         transaction.id,
-        this.appendTag(transaction.notes ?? '', this.notGuessedTag),
+        this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
       );
       return;
     }
@@ -311,7 +282,7 @@ class TransactionService implements TransactionServiceI {
     console.log(`Using existing category: ${category.name}`);
     await this.actualApiService.updateTransactionNotesAndCategory(
       transaction.id,
-      this.appendTag(transaction.notes ?? '', this.guessedTag),
+      this.tagService.appendTag(transaction.notes ?? '', this.guessedTag),
       response.categoryId,
     );
   }

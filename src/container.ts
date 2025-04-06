@@ -37,6 +37,8 @@ import ToolService from './utils/tool-service';
 import SimilarityCalculator from './similarity-calculator';
 import CategorySuggestionOptimizer from './category-suggestion-optimizer';
 import NotesMigrator from './transaction/notes-migrator';
+import TagService from './transaction/tag-service';
+import RuleMatchHandler from './transaction/rule-match-handler';
 
 // Create tool service if API key is available and tools are enabled
 const toolService = valueSerpApiKey && getEnabledTools().length > 0
@@ -80,6 +82,10 @@ const llmService = new LlmService(
   toolService,
 );
 
+const tagService = new TagService(notGuessedTag, guessedTag);
+
+const ruleMatchHandler = new RuleMatchHandler(actualApiService, guessedTag, tagService);
+
 const transactionService = new TransactionService(
   actualApiService,
   llmService,
@@ -87,12 +93,15 @@ const transactionService = new TransactionService(
   new CategorySuggestionOptimizer(new SimilarityCalculator()),
   notGuessedTag,
   guessedTag,
+  tagService,
+  ruleMatchHandler,
 );
 
 const notesMigrator = new NotesMigrator(
   actualApiService,
   notGuessedTag,
   guessedTag,
+  tagService,
 );
 
 const actualAi = new ActualAiService(

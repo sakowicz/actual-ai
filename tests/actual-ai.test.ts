@@ -9,6 +9,8 @@ import SimilarityCalculator from '../src/similarity-calculator';
 import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
 import { CategorySuggestion, NotesMigratorI } from '../src/types';
 import NotesMigrator from '../src/transaction/notes-migrator';
+import TagService from '../src/transaction/tag-service';
+import RuleMatchHandler from '../src/transaction/rule-match-handler';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -42,6 +44,8 @@ describe('ActualAiService', () => {
     inMemoryApiService = new InMemoryActualApiService();
     mockedLlmService = new MockedLlmService();
     mockedPromptGenerator = new MockedPromptGenerator();
+    const tagService = new TagService(NOT_GUESSED_TAG, GUESSED_TAG);
+    const ruleMatchHandler = new RuleMatchHandler(inMemoryApiService, GUESSED_TAG, tagService);
     const categoryGroups = GivenActualData.createSampleCategoryGroups();
     const categories = GivenActualData.createSampleCategories();
     const payees = GivenActualData.createSamplePayees();
@@ -55,6 +59,8 @@ describe('ActualAiService', () => {
       new CategorySuggestionOptimizer(new SimilarityCalculator()),
       NOT_GUESSED_TAG,
       GUESSED_TAG,
+      tagService,
+      ruleMatchHandler,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);
@@ -62,7 +68,7 @@ describe('ActualAiService', () => {
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
     inMemoryApiService.setRules(rules);
-    notesMigrator = new NotesMigrator(inMemoryApiService, NOT_GUESSED_TAG, GUESSED_TAG);
+    notesMigrator = new NotesMigrator(inMemoryApiService, NOT_GUESSED_TAG, GUESSED_TAG, tagService);
   });
 
   afterEach(() => {
