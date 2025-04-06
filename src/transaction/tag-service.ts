@@ -1,5 +1,3 @@
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
-
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
 
@@ -17,21 +15,19 @@ class TagService {
   }
 
   public addNotGuessedTag(notes: string): string {
-    const clearedNotes = this.clearPreviousTags(notes);
-    return `${clearedNotes} ${this.notGuessedTag}`.trim();
+    return this.appendTag(notes, this.notGuessedTag);
   }
 
   public addGuessedTag(notes: string): string {
-    const clearedNotes = this.clearPreviousTags(notes);
-    return `${clearedNotes} ${this.guessedTag}`.trim();
+    return this.appendTag(notes, this.guessedTag);
   }
 
-  appendTag(notes: string, tag: string): string {
+  private appendTag(notes: string, tag: string): string {
     const clearedNotes = this.clearPreviousTags(notes);
     return `${clearedNotes} ${tag}`.trim();
   }
 
-  clearPreviousTags(notes: string): string {
+  public clearPreviousTags(notes: string): string {
     return notes
       .replace(new RegExp(`\\s*${this.guessedTag}`, 'g'), '')
       .replace(new RegExp(`\\s*${this.notGuessedTag}`, 'g'), '')
