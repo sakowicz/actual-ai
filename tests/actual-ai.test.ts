@@ -11,6 +11,7 @@ import { CategorySuggestion, NotesMigratorI } from '../src/types';
 import NotesMigrator from '../src/transaction/notes-migrator';
 import TagService from '../src/transaction/tag-service';
 import RuleMatchHandler from '../src/transaction/rule-match-handler';
+import ExistingCategoryHandler from '../src/transaction/existing-category-handler';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -46,6 +47,12 @@ describe('ActualAiService', () => {
     mockedPromptGenerator = new MockedPromptGenerator();
     const tagService = new TagService(NOT_GUESSED_TAG, GUESSED_TAG);
     const ruleMatchHandler = new RuleMatchHandler(inMemoryApiService, GUESSED_TAG, tagService);
+    const existingCategoryHandler = new ExistingCategoryHandler(
+      inMemoryApiService,
+      NOT_GUESSED_TAG,
+      GUESSED_TAG,
+      tagService,
+    );
     const categoryGroups = GivenActualData.createSampleCategoryGroups();
     const categories = GivenActualData.createSampleCategories();
     const payees = GivenActualData.createSamplePayees();
@@ -61,6 +68,7 @@ describe('ActualAiService', () => {
       GUESSED_TAG,
       tagService,
       ruleMatchHandler,
+      existingCategoryHandler,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);

@@ -1,5 +1,4 @@
 import type {
-  CategoryEntity,
   TransactionEntity,
 } from '@actual-app/api/@types/loot-core/types/models';
 import type {
@@ -13,6 +12,7 @@ import { isFeatureEnabled } from './config';
 import CategorySuggestionOptimizer from './category-suggestion-optimizer';
 import TagService from './transaction/tag-service';
 import RuleMatchHandler from './transaction/rule-match-handler';
+import ExistingCategoryHandler from './transaction/existing-category-handler';
 
 const BATCH_SIZE = 20;
 
@@ -33,6 +33,8 @@ class TransactionService implements TransactionServiceI {
 
   private readonly ruleMatchHandler: RuleMatchHandler;
 
+  private readonly existingCategoryHandler: ExistingCategoryHandler;
+
   constructor(
     actualApiClient: ActualApiServiceI,
     llmService: LlmServiceI,
@@ -42,6 +44,7 @@ class TransactionService implements TransactionServiceI {
     guessedTag: string,
     tagService: TagService,
     ruleMatchHandler: RuleMatchHandler,
+    existingCategoryHandler: ExistingCategoryHandler,
   ) {
     this.actualApiService = actualApiClient;
     this.llmService = llmService;
@@ -51,6 +54,7 @@ class TransactionService implements TransactionServiceI {
     this.guessedTag = guessedTag;
     this.tagService = tagService;
     this.ruleMatchHandler = ruleMatchHandler;
+    this.existingCategoryHandler = existingCategoryHandler;
   }
 
   async processTransactions(): Promise<void> {
@@ -139,7 +143,7 @@ class TransactionService implements TransactionServiceI {
               categoryId: response.categoryId,
             }, categories);
           } else if (response.type === 'existing' && response.categoryId) {
-            await this.handleExistingCategory(transaction, {
+            await this.existingCategoryHandler.handleExistingCategory(transaction, {
               categoryId: response.categoryId,
             }, categories);
           } else if (response.type === 'new' && response.newCategory) {
@@ -257,34 +261,6 @@ class TransactionService implements TransactionServiceI {
         );
       }
     }
-  }
-
-  private async handleExistingCategory(
-    transaction: TransactionEntity,
-    response: { categoryId: string },
-    categories: CategoryEntity[],
-  ) {
-    const category = categories.find((c) => c.id === response.categoryId);
-    if (!category) {
-      // Add not guessed tag when category not found
-      await this.actualApiService.updateTransactionNotes(
-        transaction.id,
-        this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
-      );
-      return;
-    }
-
-    if (isFeatureEnabled('dryRun')) {
-      console.log(`DRY RUN: Would assign transaction ${transaction.id} to existing category ${category.name}`);
-      return;
-    }
-
-    console.log(`Using existing category: ${category.name}`);
-    await this.actualApiService.updateTransactionNotesAndCategory(
-      transaction.id,
-      this.tagService.appendTag(transaction.notes ?? '', this.guessedTag),
-      response.categoryId,
-    );
   }
 
   private trackNewCategory(
