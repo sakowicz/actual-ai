@@ -13,6 +13,7 @@ import TagService from '../src/transaction/tag-service';
 import RuleMatchHandler from '../src/transaction/rule-match-handler';
 import ExistingCategoryHandler from '../src/transaction/existing-category-handler';
 import NewCategoryHandler from '../src/transaction/new-category-handler';
+import CategorySuggester from '../src/transaction/category-suggester';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -54,6 +55,12 @@ describe('ActualAiService', () => {
       GUESSED_TAG,
       tagService,
     );
+    const categorySuggester = new CategorySuggester(
+      inMemoryApiService,
+      new CategorySuggestionOptimizer(new SimilarityCalculator()),
+      GUESSED_TAG,
+      tagService,
+    );
     const categoryGroups = GivenActualData.createSampleCategoryGroups();
     const categories = GivenActualData.createSampleCategories();
     const payees = GivenActualData.createSamplePayees();
@@ -64,13 +71,12 @@ describe('ActualAiService', () => {
       inMemoryApiService,
       mockedLlmService,
       mockedPromptGenerator,
-      new CategorySuggestionOptimizer(new SimilarityCalculator()),
       NOT_GUESSED_TAG,
-      GUESSED_TAG,
       tagService,
       ruleMatchHandler,
       existingCategoryHandler,
       new NewCategoryHandler(),
+      categorySuggester,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);

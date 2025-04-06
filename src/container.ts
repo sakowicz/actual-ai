@@ -41,6 +41,7 @@ import TagService from './transaction/tag-service';
 import RuleMatchHandler from './transaction/rule-match-handler';
 import ExistingCategoryHandler from './transaction/existing-category-handler';
 import NewCategoryHandler from './transaction/new-category-handler';
+import CategorySuggester from './transaction/category-suggester';
 
 // Create tool service if API key is available and tools are enabled
 const toolService = valueSerpApiKey && getEnabledTools().length > 0
@@ -94,17 +95,23 @@ const existingCategoryHandler = new ExistingCategoryHandler(
   tagService,
 );
 
+const categorySuggester = new CategorySuggester(
+  actualApiService,
+  new CategorySuggestionOptimizer(new SimilarityCalculator()),
+  guessedTag,
+  tagService,
+);
+
 const transactionService = new TransactionService(
   actualApiService,
   llmService,
   promptGenerator,
-  new CategorySuggestionOptimizer(new SimilarityCalculator()),
   notGuessedTag,
-  guessedTag,
   tagService,
   ruleMatchHandler,
   existingCategoryHandler,
   new NewCategoryHandler(),
+  categorySuggester,
 );
 
 const notesMigrator = new NotesMigrator(
