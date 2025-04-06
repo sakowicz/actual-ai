@@ -9,21 +9,13 @@ const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
 class NotesMigrator implements NotesMigratorI {
   private readonly actualApiService: ActualApiServiceI;
 
-  private readonly notGuessedTag: string;
-
-  private readonly guessedTag: string;
-
   private readonly tagService: TagService;
 
   constructor(
-    actualApiClient: ActualApiServiceI,
-    notGuessedTag: string,
-    guessedTag: string,
+    actualApiService: ActualApiServiceI,
     tagService: TagService,
   ) {
-    this.actualApiService = actualApiClient;
-    this.notGuessedTag = notGuessedTag;
-    this.guessedTag = guessedTag;
+    this.actualApiService = actualApiService;
     this.tagService = tagService;
   }
 
@@ -45,9 +37,9 @@ class NotesMigrator implements NotesMigratorI {
       let newNotes = baseNotes;
 
       if (transaction.notes?.includes(LEGACY_NOTES_NOT_GUESSED)) {
-        newNotes = this.tagService.appendTag(baseNotes, this.notGuessedTag);
+        newNotes = this.tagService.addNotGuessedTag(baseNotes);
       } else if (transaction.notes?.includes(LEGACY_NOTES_GUESSED)) {
-        newNotes = this.tagService.appendTag(baseNotes, this.guessedTag);
+        newNotes = this.tagService.addGuessedTag(baseNotes);
       }
 
       if (newNotes !== transaction.notes) {

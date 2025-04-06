@@ -8,21 +8,13 @@ import TagService from './tag-service';
 class ExistingCategoryHandler {
   private readonly actualApiService: ActualApiServiceI;
 
-  private readonly notGuessedTag: string;
-
-  private readonly guessedTag: string;
-
   private readonly tagService: TagService;
 
   constructor(
     actualApiService: ActualApiServiceI,
-    notGuessedTag: string,
-    guessedTag: string,
     tagService: TagService,
   ) {
     this.actualApiService = actualApiService;
-    this.notGuessedTag = notGuessedTag;
-    this.guessedTag = guessedTag;
     this.tagService = tagService;
   }
 
@@ -36,7 +28,7 @@ class ExistingCategoryHandler {
       // Add not guessed tag when category not found
       await this.actualApiService.updateTransactionNotes(
         transaction.id,
-        this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
+        this.tagService.addNotGuessedTag(transaction.notes ?? ''),
       );
       return;
     }
@@ -49,7 +41,7 @@ class ExistingCategoryHandler {
     console.log(`Using existing category: ${category.name}`);
     await this.actualApiService.updateTransactionNotesAndCategory(
       transaction.id,
-      this.tagService.appendTag(transaction.notes ?? '', this.guessedTag),
+      this.tagService.addGuessedTag(transaction.notes ?? ''),
       response.categoryId,
     );
   }

@@ -8,17 +8,13 @@ import TagService from './tag-service';
 class RuleMatchHandler {
   private readonly actualApiService: ActualApiServiceI;
 
-  private readonly guessedTag: string;
-
   private readonly tagService: TagService;
 
   constructor(
     actualApiService: ActualApiServiceI,
-    guessedTag: string,
     tagService: TagService,
   ) {
     this.actualApiService = actualApiService;
-    this.guessedTag = guessedTag;
     this.tagService = tagService;
   }
 
@@ -35,9 +31,12 @@ class RuleMatchHandler {
       return;
     }
 
+    let updatedNotes = this.tagService.addGuessedTag(transaction.notes ?? '');
+    updatedNotes = `${updatedNotes} (rule: ${response.ruleName})`;
+
     await this.actualApiService.updateTransactionNotesAndCategory(
       transaction.id,
-      this.tagService.appendTag(transaction.notes ?? '', `${this.guessedTag} (rule: ${response.ruleName})`),
+      updatedNotes,
       response.categoryId,
     );
   }

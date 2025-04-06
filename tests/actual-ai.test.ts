@@ -49,17 +49,14 @@ describe('ActualAiService', () => {
     mockedLlmService = new MockedLlmService();
     mockedPromptGenerator = new MockedPromptGenerator();
     const tagService = new TagService(NOT_GUESSED_TAG, GUESSED_TAG);
-    const ruleMatchHandler = new RuleMatchHandler(inMemoryApiService, GUESSED_TAG, tagService);
+    const ruleMatchHandler = new RuleMatchHandler(inMemoryApiService, tagService);
     const existingCategoryHandler = new ExistingCategoryHandler(
       inMemoryApiService,
-      NOT_GUESSED_TAG,
-      GUESSED_TAG,
       tagService,
     );
     const categorySuggester = new CategorySuggester(
       inMemoryApiService,
       new CategorySuggestionOptimizer(new SimilarityCalculator()),
-      GUESSED_TAG,
       tagService,
     );
     const categoryGroups = GivenActualData.createSampleCategoryGroups();
@@ -72,7 +69,6 @@ describe('ActualAiService', () => {
       inMemoryApiService,
       mockedLlmService,
       mockedPromptGenerator,
-      NOT_GUESSED_TAG,
       tagService,
       ruleMatchHandler,
       existingCategoryHandler,
@@ -91,7 +87,7 @@ describe('ActualAiService', () => {
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
     inMemoryApiService.setRules(rules);
-    notesMigrator = new NotesMigrator(inMemoryApiService, NOT_GUESSED_TAG, GUESSED_TAG, tagService);
+    notesMigrator = new NotesMigrator(inMemoryApiService, tagService);
   });
 
   afterEach(() => {

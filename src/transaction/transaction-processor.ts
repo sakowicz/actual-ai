@@ -22,8 +22,6 @@ class TransactionProcessor {
 
   private readonly promptGenerator: PromptGeneratorI;
 
-  private readonly notGuessedTag: string;
-
   private readonly tagService: TagService;
 
   private readonly ruleMatchHandler: RuleMatchHandler;
@@ -36,7 +34,6 @@ class TransactionProcessor {
     actualApiClient: ActualApiServiceI,
     llmService: LlmServiceI,
     promptGenerator: PromptGeneratorI,
-    notGuessedTag: string,
     tagService: TagService,
     ruleMatchHandler: RuleMatchHandler,
     existingCategoryHandler: ExistingCategoryHandler,
@@ -45,7 +42,6 @@ class TransactionProcessor {
     this.actualApiService = actualApiClient;
     this.llmService = llmService;
     this.promptGenerator = promptGenerator;
-    this.notGuessedTag = notGuessedTag;
     this.tagService = tagService;
     this.ruleMatchHandler = ruleMatchHandler;
     this.existingCategoryHandler = existingCategoryHandler;
@@ -112,14 +108,14 @@ class TransactionProcessor {
             console.warn(`Unexpected response format: ${JSON.stringify(response)}`);
             await this.actualApiService.updateTransactionNotes(
               transaction.id,
-              this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
+              this.tagService.addNotGuessedTag(transaction.notes ?? ''),
             );
           }
         } catch (error) {
           console.error(`Error processing transaction ${globalIndex + 1}:`, error);
           await this.actualApiService.updateTransactionNotes(
             transaction.id,
-            this.tagService.appendTag(transaction.notes ?? '', this.notGuessedTag),
+            this.tagService.addNotGuessedTag(transaction.notes ?? ''),
           );
         }
       }, Promise.resolve());
