@@ -7,7 +7,14 @@ import GivenActualData from './test-doubles/given/given-actual-data';
 import * as config from '../src/config';
 import SimilarityCalculator from '../src/similarity-calculator';
 import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
-import { CategorySuggestion } from '../src/types';
+import { CategorySuggestion, NotesMigratorI } from '../src/types';
+import NotesMigrator from '../src/transaction/notes-migrator';
+import TagService from '../src/transaction/tag-service';
+import RuleMatchHandler from '../src/transaction/rule-match-handler';
+import ExistingCategoryHandler from '../src/transaction/existing-category-handler';
+import NewCategoryHandler from '../src/transaction/new-category-handler';
+import CategorySuggester from '../src/transaction/category-suggester';
+import TransactionProcessor from '../src/transaction/transaction-processor';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -26,6 +33,7 @@ describe('ActualAiService', () => {
   let inMemoryApiService: InMemoryActualApiService;
   let mockedLlmService: MockedLlmService;
   let mockedPromptGenerator: MockedPromptGenerator;
+  let notesMigrator: NotesMigratorI;
   const GUESSED_TAG = '#actual-ai';
   const NOT_GUESSED_TAG = '#actual-ai-miss';
 
@@ -40,19 +48,42 @@ describe('ActualAiService', () => {
     inMemoryApiService = new InMemoryActualApiService();
     mockedLlmService = new MockedLlmService();
     mockedPromptGenerator = new MockedPromptGenerator();
+    const tagService = new TagService(NOT_GUESSED_TAG, GUESSED_TAG);
+    const ruleMatchHandler = new RuleMatchHandler(inMemoryApiService, GUESSED_TAG, tagService);
+    const existingCategoryHandler = new ExistingCategoryHandler(
+      inMemoryApiService,
+      NOT_GUESSED_TAG,
+      GUESSED_TAG,
+      tagService,
+    );
+    const categorySuggester = new CategorySuggester(
+      inMemoryApiService,
+      new CategorySuggestionOptimizer(new SimilarityCalculator()),
+      GUESSED_TAG,
+      tagService,
+    );
     const categoryGroups = GivenActualData.createSampleCategoryGroups();
     const categories = GivenActualData.createSampleCategories();
     const payees = GivenActualData.createSamplePayees();
     const accounts = GivenActualData.createSampleAccounts();
     const rules = GivenActualData.createSampleRules();
 
-    transactionService = new TransactionService(
+    const transactionProcessor = new TransactionProcessor(
       inMemoryApiService,
       mockedLlmService,
       mockedPromptGenerator,
-      new CategorySuggestionOptimizer(new SimilarityCalculator()),
       NOT_GUESSED_TAG,
-      GUESSED_TAG,
+      tagService,
+      ruleMatchHandler,
+      existingCategoryHandler,
+      new NewCategoryHandler(),
+    );
+
+    transactionService = new TransactionService(
+      inMemoryApiService,
+      NOT_GUESSED_TAG,
+      categorySuggester,
+      transactionProcessor,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);
@@ -60,6 +91,7 @@ describe('ActualAiService', () => {
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
     inMemoryApiService.setRules(rules);
+    notesMigrator = new NotesMigrator(inMemoryApiService, NOT_GUESSED_TAG, GUESSED_TAG, tagService);
   });
 
   afterEach(() => {
@@ -81,6 +113,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -107,6 +140,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -132,6 +166,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -155,6 +190,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -178,6 +214,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -200,6 +237,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -230,6 +268,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -256,6 +295,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -289,6 +329,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -318,6 +359,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -370,6 +412,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -394,6 +437,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -424,6 +468,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
     await sut.classify();
 
@@ -468,6 +513,7 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
+      notesMigrator,
     );
 
     // Act

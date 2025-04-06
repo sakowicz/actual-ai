@@ -10,6 +10,7 @@ import {
   budgetId,
   dataDir,
   e2ePassword,
+  getEnabledTools,
   googleApiKey,
   googleBaseURL,
   googleModel,
@@ -28,7 +29,6 @@ import {
   promptTemplate,
   serverURL,
   valueSerpApiKey,
-  getEnabledTools,
 } from './config';
 import ActualAiService from './actual-ai';
 import PromptGenerator from './prompt-generator';
@@ -36,6 +36,13 @@ import LlmService from './llm-service';
 import ToolService from './utils/tool-service';
 import SimilarityCalculator from './similarity-calculator';
 import CategorySuggestionOptimizer from './category-suggestion-optimizer';
+import NotesMigrator from './transaction/notes-migrator';
+import TagService from './transaction/tag-service';
+import RuleMatchHandler from './transaction/rule-match-handler';
+import ExistingCategoryHandler from './transaction/existing-category-handler';
+import NewCategoryHandler from './transaction/new-category-handler';
+import CategorySuggester from './transaction/category-suggester';
+import TransactionProcessor from './transaction/transaction-processor';
 
 // Create tool service if API key is available and tools are enabled
 const toolService = valueSerpApiKey && getEnabledTools().length > 0
@@ -79,18 +86,52 @@ const llmService = new LlmService(
   toolService,
 );
 
-const transactionService = new TransactionService(
+const tagService = new TagService(notGuessedTag, guessedTag);
+
+const ruleMatchHandler = new RuleMatchHandler(actualApiService, guessedTag, tagService);
+const existingCategoryHandler = new ExistingCategoryHandler(
+  actualApiService,
+  notGuessedTag,
+  guessedTag,
+  tagService,
+);
+
+const categorySuggester = new CategorySuggester(
+  actualApiService,
+  new CategorySuggestionOptimizer(new SimilarityCalculator()),
+  guessedTag,
+  tagService,
+);
+
+const transactionProcessor = new TransactionProcessor(
   actualApiService,
   llmService,
   promptGenerator,
-  new CategorySuggestionOptimizer(new SimilarityCalculator()),
+  notGuessedTag,
+  tagService,
+  ruleMatchHandler,
+  existingCategoryHandler,
+  new NewCategoryHandler(),
+);
+
+const transactionService = new TransactionService(
+  actualApiService,
+  notGuessedTag,
+  categorySuggester,
+  transactionProcessor,
+);
+
+const notesMigrator = new NotesMigrator(
+  actualApiService,
   notGuessedTag,
   guessedTag,
+  tagService,
 );
 
 const actualAi = new ActualAiService(
   transactionService,
   actualApiService,
+  notesMigrator,
 );
 
 export default actualAi;
