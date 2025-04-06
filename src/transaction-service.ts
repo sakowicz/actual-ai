@@ -6,13 +6,13 @@ import type {
   LlmServiceI,
   PromptGeneratorI,
   TransactionServiceI,
-  CategorySuggestion,
 } from './types';
 import { isFeatureEnabled } from './config';
 import CategorySuggestionOptimizer from './category-suggestion-optimizer';
 import TagService from './transaction/tag-service';
 import RuleMatchHandler from './transaction/rule-match-handler';
 import ExistingCategoryHandler from './transaction/existing-category-handler';
+import NewCategoryHandler from './transaction/new-category-handler';
 
 const BATCH_SIZE = 20;
 
@@ -35,6 +35,8 @@ class TransactionService implements TransactionServiceI {
 
   private readonly existingCategoryHandler: ExistingCategoryHandler;
 
+  private readonly newCategoryHandler: NewCategoryHandler;
+
   constructor(
     actualApiClient: ActualApiServiceI,
     llmService: LlmServiceI,
@@ -45,6 +47,7 @@ class TransactionService implements TransactionServiceI {
     tagService: TagService,
     ruleMatchHandler: RuleMatchHandler,
     existingCategoryHandler: ExistingCategoryHandler,
+    newCategoryHandler: NewCategoryHandler,
   ) {
     this.actualApiService = actualApiClient;
     this.llmService = llmService;
@@ -55,6 +58,7 @@ class TransactionService implements TransactionServiceI {
     this.tagService = tagService;
     this.ruleMatchHandler = ruleMatchHandler;
     this.existingCategoryHandler = existingCategoryHandler;
+    this.newCategoryHandler = newCategoryHandler;
   }
 
   async processTransactions(): Promise<void> {
@@ -147,7 +151,7 @@ class TransactionService implements TransactionServiceI {
               categoryId: response.categoryId,
             }, categories);
           } else if (response.type === 'new' && response.newCategory) {
-            this.trackNewCategory(
+            this.newCategoryHandler.trackNewCategory(
               transaction,
               response.newCategory,
               suggestedCategories,
@@ -260,30 +264,6 @@ class TransactionService implements TransactionServiceI {
           }),
         );
       }
-    }
-  }
-
-  private trackNewCategory(
-    transaction: TransactionEntity,
-    newCategory: CategorySuggestion,
-    suggestedCategories: Map<string, {
-      name: string;
-      groupName: string;
-      groupIsNew: boolean;
-      groupId?: string;
-      transactions: TransactionEntity[];
-    }>,
-  ) {
-    const categoryKey = `${newCategory.groupName}:${newCategory.name}`;
-
-    const existing = suggestedCategories.get(categoryKey);
-    if (existing) {
-      existing.transactions.push(transaction);
-    } else {
-      suggestedCategories.set(categoryKey, {
-        ...newCategory,
-        transactions: [transaction],
-      });
     }
   }
 }

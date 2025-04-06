@@ -40,6 +40,7 @@ import NotesMigrator from './transaction/notes-migrator';
 import TagService from './transaction/tag-service';
 import RuleMatchHandler from './transaction/rule-match-handler';
 import ExistingCategoryHandler from './transaction/existing-category-handler';
+import NewCategoryHandler from './transaction/new-category-handler';
 
 // Create tool service if API key is available and tools are enabled
 const toolService = valueSerpApiKey && getEnabledTools().length > 0
@@ -103,6 +104,7 @@ const transactionService = new TransactionService(
   tagService,
   ruleMatchHandler,
   existingCategoryHandler,
+  new NewCategoryHandler(),
 );
 
 const notesMigrator = new NotesMigrator(
