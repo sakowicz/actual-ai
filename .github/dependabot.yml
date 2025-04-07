@@ -9,6 +9,12 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      ai-sdk:
+        patterns:
+          - "@ai-sdk/*"
+          - "ollama-ai-provider"
+          - "ai"
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
