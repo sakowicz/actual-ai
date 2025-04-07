@@ -38,10 +38,11 @@ import SimilarityCalculator from './similarity-calculator';
 import CategorySuggestionOptimizer from './category-suggestion-optimizer';
 import NotesMigrator from './transaction/notes-migrator';
 import TagService from './transaction/tag-service';
-import RuleMatchHandler from './transaction/rule-match-handler';
-import ExistingCategoryHandler from './transaction/existing-category-handler';
-import NewCategoryHandler from './transaction/new-category-handler';
+import RuleMatchStrategy from './transaction/processing-strategy/rule-match-strategy';
+import ExistingCategoryStrategy from './transaction/processing-strategy/existing-category-strategy';
+import NewCategoryStrategy from './transaction/processing-strategy/new-category-strategy';
 import CategorySuggester from './transaction/category-suggester';
+import BatchTransactionProcessor from './transaction/batch-transaction-processor';
 import TransactionProcessor from './transaction/transaction-processor';
 
 // Create tool service if API key is available and tools are enabled
@@ -88,8 +89,8 @@ const llmService = new LlmService(
 
 const tagService = new TagService(notGuessedTag, guessedTag);
 
-const ruleMatchHandler = new RuleMatchHandler(actualApiService, tagService);
-const existingCategoryHandler = new ExistingCategoryHandler(
+const ruleMatchStrategy = new RuleMatchStrategy(actualApiService, tagService);
+const existingCategoryStrategy = new ExistingCategoryStrategy(
   actualApiService,
   tagService,
 );
@@ -100,21 +101,26 @@ const categorySuggester = new CategorySuggester(
   tagService,
 );
 
+const newCategoryStrategy = new NewCategoryStrategy();
+
 const transactionProcessor = new TransactionProcessor(
   actualApiService,
   llmService,
   promptGenerator,
   tagService,
-  ruleMatchHandler,
-  existingCategoryHandler,
-  new NewCategoryHandler(),
+  [ruleMatchStrategy, existingCategoryStrategy, newCategoryStrategy],
+);
+
+const batchTransactionProcessor = new BatchTransactionProcessor(
+  transactionProcessor,
+  20,
 );
 
 const transactionService = new TransactionService(
   actualApiService,
   notGuessedTag,
   categorySuggester,
-  transactionProcessor,
+  batchTransactionProcessor,
 );
 
 const notesMigrator = new NotesMigrator(

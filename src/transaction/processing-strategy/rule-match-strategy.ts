@@ -1,11 +1,11 @@
 import type { CategoryEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import type {
-  ActualApiServiceI,
-} from '../types';
-import { isFeatureEnabled } from '../config';
-import TagService from './tag-service';
+  ActualApiServiceI, ProcessingStrategyI, UnifiedResponse,
+} from '../../types';
+import { isFeatureEnabled } from '../../config';
+import TagService from '../tag-service';
 
-class RuleMatchHandler {
+class RuleMatchStrategy implements ProcessingStrategyI {
   private readonly actualApiService: ActualApiServiceI;
 
   private readonly tagService: TagService;
@@ -18,11 +18,25 @@ class RuleMatchHandler {
     this.tagService = tagService;
   }
 
-  async handleRuleMatch(
+  isSatisfiedBy(response: UnifiedResponse): boolean {
+    if (response.categoryId === undefined) {
+      return false;
+    }
+    if (response.ruleName === undefined) {
+      return false;
+    }
+
+    return response.type === 'rule';
+  }
+
+  async process(
     transaction: TransactionEntity,
-    response: { categoryId: string; ruleName: string },
+    response: UnifiedResponse,
     categories: CategoryEntity[],
   ) {
+    if (response.categoryId === undefined) {
+      throw new Error('No categoryId in response');
+    }
     const category = categories.find((c) => c.id === response.categoryId);
     const categoryName = category ? category.name : 'Unknown Category';
 
@@ -42,4 +56,4 @@ class RuleMatchHandler {
   }
 }
 
-export default RuleMatchHandler;
+export default RuleMatchStrategy;

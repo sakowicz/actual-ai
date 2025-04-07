@@ -122,15 +122,18 @@ export interface SearchResult {
   link: string;
 }
 
-export interface LocalSearchServiceI {
-  initialize(): Promise<void>;
-  search(query: string): Promise<SearchResult[]>;
-  addMerchant(merchantData: {
-    name: string;
-    description?: string;
-    category?: string;
-    website?: string;
-    tags?: string[];
-  }): Promise<void>;
-  formatSearchResults(results: SearchResult[]): string;
+export interface ProcessingStrategyI {
+  process(
+      transaction: TransactionEntity,
+      response: UnifiedResponse,
+      categories: CategoryEntity[],
+      suggestedCategories: Map<string, {
+        name: string;
+        groupName: string;
+        groupIsNew: boolean;
+        groupId?: string;
+        transactions: TransactionEntity[];
+      }>
+  ): Promise<void>;
+  isSatisfiedBy(response: UnifiedResponse): boolean;
 }
