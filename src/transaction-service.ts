@@ -7,7 +7,7 @@ import type {
 } from './types';
 import { isFeatureEnabled } from './config';
 import CategorySuggester from './transaction/category-suggester';
-import TransactionProcessor from './transaction/transaction-processor';
+import BatchTransactionProcessor from './transaction/batch-transaction-processor';
 
 class TransactionService implements TransactionServiceI {
   private readonly actualApiService: ActualApiServiceI;
@@ -16,13 +16,13 @@ class TransactionService implements TransactionServiceI {
 
   private readonly categorySuggester: CategorySuggester;
 
-  private readonly transactionProcessor: TransactionProcessor;
+  private readonly transactionProcessor: BatchTransactionProcessor;
 
   constructor(
     actualApiClient: ActualApiServiceI,
     notGuessedTag: string,
     categorySuggester: CategorySuggester,
-    transactionProcessor: TransactionProcessor,
+    transactionProcessor: BatchTransactionProcessor,
   ) {
     this.actualApiService = actualApiClient;
     this.notGuessedTag = notGuessedTag;

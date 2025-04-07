@@ -42,6 +42,7 @@ import RuleMatchHandler from './transaction/rule-match-handler';
 import ExistingCategoryHandler from './transaction/existing-category-handler';
 import NewCategoryHandler from './transaction/new-category-handler';
 import CategorySuggester from './transaction/category-suggester';
+import BatchTransactionProcessor from './transaction/batch-transaction-processor';
 import TransactionProcessor from './transaction/transaction-processor';
 
 // Create tool service if API key is available and tools are enabled
@@ -110,11 +111,16 @@ const transactionProcessor = new TransactionProcessor(
   new NewCategoryHandler(),
 );
 
+const batchTransactionProcessor = new BatchTransactionProcessor(
+  transactionProcessor,
+  20,
+);
+
 const transactionService = new TransactionService(
   actualApiService,
   notGuessedTag,
   categorySuggester,
-  transactionProcessor,
+  batchTransactionProcessor,
 );
 
 const notesMigrator = new NotesMigrator(

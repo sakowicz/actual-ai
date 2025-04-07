@@ -14,6 +14,7 @@ import RuleMatchHandler from '../src/transaction/rule-match-handler';
 import ExistingCategoryHandler from '../src/transaction/existing-category-handler';
 import NewCategoryHandler from '../src/transaction/new-category-handler';
 import CategorySuggester from '../src/transaction/category-suggester';
+import BatchTransactionProcessor from '../src/transaction/batch-transaction-processor';
 import TransactionProcessor from '../src/transaction/transaction-processor';
 
 // Create a reusable mock for isFeatureEnabled
@@ -75,11 +76,16 @@ describe('ActualAiService', () => {
       new NewCategoryHandler(),
     );
 
+    const batchTransactionProcessor = new BatchTransactionProcessor(
+      transactionProcessor,
+      20,
+    );
+
     transactionService = new TransactionService(
       inMemoryApiService,
       NOT_GUESSED_TAG,
       categorySuggester,
-      transactionProcessor,
+      batchTransactionProcessor,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);
