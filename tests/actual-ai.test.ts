@@ -10,9 +10,9 @@ import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
 import { CategorySuggestion, NotesMigratorI } from '../src/types';
 import NotesMigrator from '../src/transaction/notes-migrator';
 import TagService from '../src/transaction/tag-service';
-import RuleMatchHandler from '../src/transaction/rule-match-handler';
-import ExistingCategoryHandler from '../src/transaction/existing-category-handler';
-import NewCategoryHandler from '../src/transaction/new-category-handler';
+import RuleMatchStrategy from '../src/transaction/processing-strategy/rule-match-strategy';
+import ExistingCategoryStrategy from '../src/transaction/processing-strategy/existing-category-strategy';
+import NewCategoryStrategy from '../src/transaction/processing-strategy/new-category-strategy';
 import CategorySuggester from '../src/transaction/category-suggester';
 import BatchTransactionProcessor from '../src/transaction/batch-transaction-processor';
 import TransactionProcessor from '../src/transaction/transaction-processor';
@@ -50,8 +50,8 @@ describe('ActualAiService', () => {
     mockedLlmService = new MockedLlmService();
     mockedPromptGenerator = new MockedPromptGenerator();
     const tagService = new TagService(NOT_GUESSED_TAG, GUESSED_TAG);
-    const ruleMatchHandler = new RuleMatchHandler(inMemoryApiService, tagService);
-    const existingCategoryHandler = new ExistingCategoryHandler(
+    const ruleMatchStrategy = new RuleMatchStrategy(inMemoryApiService, tagService);
+    const existingCategoryStrategy = new ExistingCategoryStrategy(
       inMemoryApiService,
       tagService,
     );
@@ -71,9 +71,7 @@ describe('ActualAiService', () => {
       mockedLlmService,
       mockedPromptGenerator,
       tagService,
-      ruleMatchHandler,
-      existingCategoryHandler,
-      new NewCategoryHandler(),
+      [ruleMatchStrategy, existingCategoryStrategy, new NewCategoryStrategy()],
     );
 
     const batchTransactionProcessor = new BatchTransactionProcessor(

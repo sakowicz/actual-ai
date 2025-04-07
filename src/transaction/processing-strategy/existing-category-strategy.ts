@@ -1,11 +1,11 @@
 import type { CategoryEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import type {
-  ActualApiServiceI,
-} from '../types';
-import { isFeatureEnabled } from '../config';
-import TagService from './tag-service';
+  ActualApiServiceI, ProcessingStrategyI, UnifiedResponse,
+} from '../../types';
+import { isFeatureEnabled } from '../../config';
+import TagService from '../tag-service';
 
-class ExistingCategoryHandler {
+class ExistingCategoryStrategy implements ProcessingStrategyI {
   private readonly actualApiService: ActualApiServiceI;
 
   private readonly tagService: TagService;
@@ -18,11 +18,22 @@ class ExistingCategoryHandler {
     this.tagService = tagService;
   }
 
-  public async handleExistingCategory(
+  public isSatisfiedBy(response: UnifiedResponse): boolean {
+    if (response.categoryId === undefined) {
+      return false;
+    }
+
+    return response.type === 'existing';
+  }
+
+  public async process(
     transaction: TransactionEntity,
-    response: { categoryId: string },
+    response: UnifiedResponse,
     categories: CategoryEntity[],
   ) {
+    if (response.categoryId === undefined) {
+      throw new Error('No categoryId in response');
+    }
     const category = categories.find((c) => c.id === response.categoryId);
     if (!category) {
       // Add not guessed tag when category not found
@@ -47,4 +58,4 @@ class ExistingCategoryHandler {
   }
 }
 
-export default ExistingCategoryHandler;
+export default ExistingCategoryStrategy;
