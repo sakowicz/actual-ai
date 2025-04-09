@@ -16,6 +16,7 @@ import NewCategoryStrategy from '../src/transaction/processing-strategy/new-cate
 import CategorySuggester from '../src/transaction/category-suggester';
 import BatchTransactionProcessor from '../src/transaction/batch-transaction-processor';
 import TransactionProcessor from '../src/transaction/transaction-processor';
+import TransactionFilterer from '../src/transaction/transaction-filterer';
 
 // Create a reusable mock for isFeatureEnabled
 const originalIsFeatureEnabled = config.isFeatureEnabled;
@@ -81,9 +82,9 @@ describe('ActualAiService', () => {
 
     transactionService = new TransactionService(
       inMemoryApiService,
-      NOT_GUESSED_TAG,
       categorySuggester,
       batchTransactionProcessor,
+      new TransactionFilterer(tagService),
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);

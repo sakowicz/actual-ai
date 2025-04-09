@@ -38,6 +38,10 @@ class TagService {
       .replace(/-miss(?= #actual-ai)/g, '')
       .trim();
   }
+
+  public isNotGuessed(notes: string): boolean {
+    return notes.includes(this.notGuessedTag);
+  }
 }
 
 export default TagService;

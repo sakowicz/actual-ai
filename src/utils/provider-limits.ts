@@ -13,7 +13,7 @@ export const PROVIDER_LIMITS: Record<string, ProviderLimits> = {
     tokensPerMinute: 100000,
     requestsPerMinute: 400,
   },
-  google: {
+  'google-generative-ai': {
     tokensPerMinute: 60000,
     requestsPerMinute: 300,
   },

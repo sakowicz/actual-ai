@@ -44,6 +44,7 @@ import NewCategoryStrategy from './transaction/processing-strategy/new-category-
 import CategorySuggester from './transaction/category-suggester';
 import BatchTransactionProcessor from './transaction/batch-transaction-processor';
 import TransactionProcessor from './transaction/transaction-processor';
+import TransactionFilterer from './transaction/transaction-filterer';
 
 // Create tool service if API key is available and tools are enabled
 const toolService = valueSerpApiKey && getEnabledTools().length > 0
@@ -116,11 +117,13 @@ const batchTransactionProcessor = new BatchTransactionProcessor(
   20,
 );
 
+const transactionFilterer = new TransactionFilterer(tagService);
+
 const transactionService = new TransactionService(
   actualApiService,
-  notGuessedTag,
   categorySuggester,
   batchTransactionProcessor,
+  transactionFilterer,
 );
 
 const notesMigrator = new NotesMigrator(
