@@ -41,44 +41,44 @@ class TransactionFilterer {
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => !transaction.category,
-      'no category',
+      'Already has a category',
     );
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => transaction.transfer_id === null || transaction.transfer_id === undefined,
-      'transfer_id is not null or undefined',
+      'Is a transfer',
     );
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => transaction.starting_balance_flag !== true,
-      'starting_balance_flag is true',
+      'Is starting balance',
     );
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => (transaction.imported_payee !== null && transaction.imported_payee !== '')
           || (transaction.payee !== null && transaction.payee !== ''),
-      'payee is null or empty',
+      'Has no payee / imported_payee',
     );
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => isFeatureEnabled('rerunMissedTransactions') || !this.tagService.isNotGuessed(transaction.notes ?? ''),
-      'transaction has notes with the notGuessedTag',
+      'It was not guessed before',
     );
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => !transaction.is_parent,
-      'transaction is a parent',
+      'Transaction is a parent',
     );
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => !accountsToSkip.includes(transaction.account),
-      'account is in the off-budget list',
+      'Account is not budget',
     );
 
     console.log(`Found ${filteredTransactions.length} uncategorized transactions`);
