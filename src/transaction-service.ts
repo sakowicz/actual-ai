@@ -8,26 +8,27 @@ import type {
 import { isFeatureEnabled } from './config';
 import CategorySuggester from './transaction/category-suggester';
 import BatchTransactionProcessor from './transaction/batch-transaction-processor';
+import TransactionFilterer from './transaction/transaction-filterer';
 
 class TransactionService implements TransactionServiceI {
   private readonly actualApiService: ActualApiServiceI;
-
-  private readonly notGuessedTag: string;
 
   private readonly categorySuggester: CategorySuggester;
 
   private readonly transactionProcessor: BatchTransactionProcessor;
 
+  private readonly transactionFilterer: TransactionFilterer;
+
   constructor(
     actualApiClient: ActualApiServiceI,
-    notGuessedTag: string,
     categorySuggester: CategorySuggester,
     transactionProcessor: BatchTransactionProcessor,
+    transactionFilterer: TransactionFilterer,
   ) {
     this.actualApiService = actualApiClient;
-    this.notGuessedTag = notGuessedTag;
     this.categorySuggester = categorySuggester;
     this.transactionProcessor = transactionProcessor;
+    this.transactionFilterer = transactionFilterer;
   }
 
   async processTransactions(): Promise<void> {
@@ -45,33 +46,18 @@ class TransactionService implements TransactionServiceI {
       this.actualApiService.getAccounts(),
       this.actualApiService.getRules(),
     ]);
-    const accountsToSkip = accounts?.filter((account) => account.offbudget)
-      .map((account) => account.id) ?? [];
     console.log(`Found ${rules.length} transaction categorization rules`);
-
     console.log('rerunMissedTransactions', isFeatureEnabled('rerunMissedTransactions'));
 
-    const uncategorizedTransactions = transactions.filter(
-      (transaction) => !transaction.category
-        && (transaction.transfer_id === null || transaction.transfer_id === undefined)
-        && transaction.starting_balance_flag !== true
-        && transaction.imported_payee !== null
-        && transaction.imported_payee !== ''
-        && (
-          isFeatureEnabled('rerunMissedTransactions')
-            ? true // Include all if rerun enabled
-            : !transaction.notes?.includes(this.notGuessedTag)
-        )
-        && !transaction.is_parent
-        && !accountsToSkip.includes(transaction.account),
+    const uncategorizedTransactions = this.transactionFilterer.filterUncategorized(
+      transactions,
+      accounts,
     );
 
     if (uncategorizedTransactions.length === 0) {
       console.log('No uncategorized transactions to process');
       return;
     }
-
-    console.log(`Found ${uncategorizedTransactions.length} uncategorized transactions`);
 
     // Track suggested new categories
     const suggestedCategories = new Map<string, {
