@@ -24,8 +24,10 @@ class ActualAiService implements ActualAiServiceI {
 
   public async classify() {
     console.log('Starting classification process');
+    let isBudgetOpen = false;
     try {
       await this.actualApiService.initializeApi();
+      isBudgetOpen = true;
 
       try {
         if (isFeatureEnabled('syncAccountsBeforeClassify')) {
@@ -62,7 +64,9 @@ class ActualAiService implements ActualAiServiceI {
       );
     } finally {
       try {
-        await this.actualApiService.shutdownApi();
+        if (isBudgetOpen) {
+          await this.actualApiService.shutdownApi();
+        }
       } catch (shutdownError) {
         console.error('Error during API shutdown:', formatError(shutdownError));
       }
