@@ -23,7 +23,7 @@
     "@types/jest": "^29.5.14",
     "ai": "^4.3.5",
     "axios": "^1.8.1",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "handlebars": "^4.7.8",
     "node-cron": "^3.0.3",
     "ollama-ai-provider": "^1.2.0",
