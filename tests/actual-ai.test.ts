@@ -25,7 +25,6 @@ const mockIsFeatureEnabled = jest.spyOn(config, 'isFeatureEnabled');
 // Default to having rerunMissedTransactions off for most tests
 mockIsFeatureEnabled.mockImplementation((feature: string) => {
   if (feature === 'rerunMissedTransactions') return false;
-  if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
   return originalIsFeatureEnabled(feature);
 });
 
@@ -43,7 +42,6 @@ describe('ActualAiService', () => {
     // Reset mock implementation before each test
     mockIsFeatureEnabled.mockImplementation((feature: string) => {
       if (feature === 'rerunMissedTransactions') return false;
-      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
       return originalIsFeatureEnabled(feature);
     });
 
@@ -85,6 +83,7 @@ describe('ActualAiService', () => {
       categorySuggester,
       batchTransactionProcessor,
       new TransactionFilterer(tagService),
+      false,
     );
 
     inMemoryApiService.setCategoryGroups(categoryGroups);
@@ -261,7 +260,6 @@ describe('ActualAiService', () => {
     // Ensure rerunMissedTransactions is false for this test
     mockIsFeatureEnabled.mockImplementation((feature: string) => {
       if (feature === 'rerunMissedTransactions') return false;
-      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
       return originalIsFeatureEnabled(feature);
     });
 
@@ -405,7 +403,6 @@ describe('ActualAiService', () => {
     // Ensure rerunMissedTransactions is false for this test
     mockIsFeatureEnabled.mockImplementation((feature: string) => {
       if (feature === 'rerunMissedTransactions') return false;
-      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
       return originalIsFeatureEnabled(feature);
     });
 
@@ -430,7 +427,6 @@ describe('ActualAiService', () => {
     mockIsFeatureEnabled.mockImplementation((feature: string) => {
       if (feature === 'syncAccountsBeforeClassify') return true;
       if (feature === 'rerunMissedTransactions') return false;
-      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
       return originalIsFeatureEnabled(feature);
     });
 
@@ -461,7 +457,6 @@ describe('ActualAiService', () => {
     // Set rerunMissedTransactions to true for this test
     mockIsFeatureEnabled.mockImplementation((feature: string) => {
       if (feature === 'rerunMissedTransactions') return true;
-      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
       return originalIsFeatureEnabled(feature);
     });
 
@@ -504,7 +499,6 @@ describe('ActualAiService', () => {
     mockIsFeatureEnabled.mockImplementation((feature: string) => {
       if (feature === 'suggestNewCategories') return true;
       if (feature === 'rerunMissedTransactions') return false;
-      if (feature === 'dryRun' || feature === 'dryRunNewCategories') return false;
       return originalIsFeatureEnabled(feature);
     });
 

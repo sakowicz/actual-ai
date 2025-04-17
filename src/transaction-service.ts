@@ -19,20 +19,24 @@ class TransactionService implements TransactionServiceI {
 
   private readonly transactionFilterer: TransactionFilterer;
 
+  private readonly isDryRun: boolean;
+
   constructor(
     actualApiClient: ActualApiServiceI,
     categorySuggester: CategorySuggester,
     transactionProcessor: BatchTransactionProcessor,
     transactionFilterer: TransactionFilterer,
+    isDryRun: boolean,
   ) {
     this.actualApiService = actualApiClient;
     this.categorySuggester = categorySuggester;
     this.transactionProcessor = transactionProcessor;
     this.transactionFilterer = transactionFilterer;
+    this.isDryRun = isDryRun;
   }
 
   async processTransactions(): Promise<void> {
-    if (isFeatureEnabled('dryRun')) {
+    if (this.isDryRun) {
       console.log('=== DRY RUN MODE ===');
       console.log('No changes will be made to transactions or categories');
       console.log('=====================');

@@ -2,7 +2,6 @@ import type { CategoryEntity, TransactionEntity } from '@actual-app/api/@types/l
 import type {
   ActualApiServiceI, ProcessingStrategyI, UnifiedResponse,
 } from '../../types';
-import { isFeatureEnabled } from '../../config';
 import TagService from '../tag-service';
 
 class RuleMatchStrategy implements ProcessingStrategyI {
@@ -32,19 +31,10 @@ class RuleMatchStrategy implements ProcessingStrategyI {
   async process(
     transaction: TransactionEntity,
     response: UnifiedResponse,
-    categories: CategoryEntity[],
   ) {
     if (response.categoryId === undefined) {
       throw new Error('No categoryId in response');
     }
-    const category = categories.find((c) => c.id === response.categoryId);
-    const categoryName = category ? category.name : 'Unknown Category';
-
-    if (isFeatureEnabled('dryRun')) {
-      console.log(`DRY RUN: Would assign transaction ${transaction.id} to category "${categoryName}" (${response.categoryId}) via rule ${response.ruleName}`);
-      return;
-    }
-
     let updatedNotes = this.tagService.addGuessedTag(transaction.notes ?? '');
     updatedNotes = `${updatedNotes} (rule: ${response.ruleName})`;
 

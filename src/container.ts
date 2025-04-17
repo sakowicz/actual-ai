@@ -17,7 +17,7 @@ import {
   groqApiKey,
   groqBaseURL,
   groqModel,
-  guessedTag,
+  guessedTag, isFeatureEnabled,
   llmProvider,
   notGuessedTag,
   ollamaBaseURL,
@@ -51,6 +51,9 @@ const toolService = valueSerpApiKey && getEnabledTools().length > 0
   ? new ToolService(valueSerpApiKey)
   : undefined;
 
+const isDryRun = isFeatureEnabled('dryRun');
+const isDryRunNewCategories = isFeatureEnabled('dryRunNewCategories');
+
 const llmModelFactory = new LlmModelFactory(
   llmProvider,
   openaiApiKey,
@@ -77,6 +80,8 @@ const actualApiService = new ActualApiService(
   password,
   budgetId,
   e2ePassword,
+  isDryRun,
+  isDryRunNewCategories,
 );
 
 const promptGenerator = new PromptGenerator(
@@ -124,6 +129,7 @@ const transactionService = new TransactionService(
   categorySuggester,
   batchTransactionProcessor,
   transactionFilterer,
+  isDryRun,
 );
 
 const notesMigrator = new NotesMigrator(

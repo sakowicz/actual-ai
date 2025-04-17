@@ -2,7 +2,6 @@ import type { CategoryEntity, TransactionEntity } from '@actual-app/api/@types/l
 import type {
   ActualApiServiceI, ProcessingStrategyI, UnifiedResponse,
 } from '../../types';
-import { isFeatureEnabled } from '../../config';
 import TagService from '../tag-service';
 
 class ExistingCategoryStrategy implements ProcessingStrategyI {
@@ -41,11 +40,6 @@ class ExistingCategoryStrategy implements ProcessingStrategyI {
         transaction.id,
         this.tagService.addNotGuessedTag(transaction.notes ?? ''),
       );
-      return;
-    }
-
-    if (isFeatureEnabled('dryRun')) {
-      console.log(`DRY RUN: Would assign transaction ${transaction.id} to existing category ${category.name}`);
       return;
     }
 
