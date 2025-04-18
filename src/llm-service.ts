@@ -1,4 +1,4 @@
-import { generateObject, generateText, LanguageModel } from 'ai';
+import { generateText, LanguageModel } from 'ai';
 import {
   LlmModelFactoryI, LlmServiceI, ToolServiceI, UnifiedResponse,
 } from './types';
@@ -7,8 +7,6 @@ import { PROVIDER_LIMITS } from './utils/provider-limits';
 import { parseLlmResponse } from './utils/json-utils';
 
 export default class LlmService implements LlmServiceI {
-  private readonly llmModelFactory: LlmModelFactoryI;
-
   private readonly model: LanguageModel;
 
   private readonly rateLimiter: RateLimiter;
@@ -23,10 +21,10 @@ export default class LlmService implements LlmServiceI {
     llmModelFactory: LlmModelFactoryI,
     toolService?: ToolServiceI,
   ) {
-    this.llmModelFactory = llmModelFactory;
-    this.model = llmModelFactory.create();
-    this.isFallbackMode = llmModelFactory.isFallbackMode();
-    this.provider = llmModelFactory.getProvider();
+    const factory = llmModelFactory;
+    this.model = factory.create();
+    this.isFallbackMode = factory.isFallbackMode();
+    this.provider = factory.getProvider();
     this.rateLimiter = new RateLimiter(true);
     this.toolService = toolService;
 
@@ -59,23 +57,21 @@ export default class LlmService implements LlmServiceI {
     }
   }
 
-  public async ask(prompt: string, categoryIds?: string[]): Promise<UnifiedResponse> {
+  public async ask(prompt: string): Promise<UnifiedResponse> {
     try {
       console.log(`Making LLM request to ${this.provider}${this.isFallbackMode ? ' (fallback mode)' : ''}`);
 
       if (this.isFallbackMode) {
-        const result = await this.askUsingFallbackModel(prompt);
+        const response = await this.askUsingFallbackModel(prompt);
+        const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+        if (!uuidRegex.test(response)) {
+          console.warn('If you are using ollama and you see it all the time, check the ollama api logs.'
+              + 'Maybe you need to use bigger context window');
+          throw new Error(`Could not foud category in LLM response: ${response}`);
+        }
         return {
           type: 'existing',
-          categoryId: result.replace(/(\r\n|\n|\r|"|')/gm, ''),
-        };
-      }
-
-      if (categoryIds && categoryIds.length > 0) {
-        const result = await this.askWithEnum(prompt, categoryIds);
-        return {
-          type: 'existing',
-          categoryId: result,
+          categoryId: response,
         };
       }
 
@@ -100,24 +96,6 @@ export default class LlmService implements LlmServiceI {
       console.error(`Error during LLM request to ${this.provider}: ${errorMsg}`);
       throw error;
     }
-  }
-
-  public async askWithEnum(prompt: string, categoryIds: string[]): Promise<string> {
-    return this.rateLimiter.executeWithRateLimiting(
-      this.provider,
-      async () => {
-        console.log(`Sending enum request to ${this.provider} with ${categoryIds.length} options`);
-        const { object } = await generateObject({
-          model: this.model,
-          output: 'enum',
-          enum: categoryIds,
-          prompt,
-          temperature: 0.1,
-        });
-
-        return object.replace(/(\r\n|\n|\r|"|')/gm, '');
-      },
-    );
   }
 
   public async askUsingFallbackModel(prompt: string): Promise<string> {

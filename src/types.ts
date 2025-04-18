@@ -100,7 +100,7 @@ export interface UnifiedResponse {
 }
 
 export interface LlmServiceI {
-  ask(prompt: string, categoryIds?: string[]): Promise<UnifiedResponse>;
+  ask(prompt: string): Promise<UnifiedResponse>;
 }
 
 export interface ToolServiceI {
