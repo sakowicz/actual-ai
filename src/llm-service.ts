@@ -2,7 +2,7 @@ import { generateText, LanguageModel } from 'ai';
 import {
   LlmModelFactoryI, LlmServiceI, ToolServiceI, UnifiedResponse,
 } from './types';
-import { RateLimiter } from './utils/rate-limiter';
+import RateLimiter from './utils/rate-limiter';
 import { PROVIDER_LIMITS } from './utils/provider-limits';
 import { parseLlmResponse } from './utils/json-utils';
 
@@ -19,22 +19,24 @@ export default class LlmService implements LlmServiceI {
 
   constructor(
     llmModelFactory: LlmModelFactoryI,
+    rateLimiter: RateLimiter,
+    isRateLimitDisabled: boolean,
     toolService?: ToolServiceI,
   ) {
     const factory = llmModelFactory;
     this.model = factory.create();
     this.isFallbackMode = factory.isFallbackMode();
     this.provider = factory.getProvider();
-    this.rateLimiter = new RateLimiter(true);
+    this.rateLimiter = rateLimiter;
     this.toolService = toolService;
 
     // Set rate limits for the provider
     const limits = PROVIDER_LIMITS[this.provider];
-    if (limits) {
+    if (!isRateLimitDisabled && limits) {
       this.rateLimiter.setProviderLimit(this.provider, limits.requestsPerMinute);
       console.log(`Set ${this.provider} rate limits: ${limits.requestsPerMinute} requests/minute, ${limits.tokensPerMinute} tokens/minute`);
     } else {
-      console.warn(`No rate limits configured for provider: ${this.provider}`);
+      console.warn(`No rate limits configured for provider: ${this.provider} or Rate Limiter is disabled`);
     }
   }
 

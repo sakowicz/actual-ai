@@ -110,6 +110,7 @@ Available features:
 - `syncAccountsBeforeClassify` - Sync accounts before running classification
 - `dryRun` - Run in dry run mode (enabled by default)
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
+- `disableRateLimiter` - Disable Rate Limiter
 
 ## Customizing the Prompt
 

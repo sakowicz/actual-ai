@@ -18,7 +18,7 @@ interface TokenBucket {
   resetTimestamp: number;
 }
 
-export class RateLimiter {
+class RateLimiter {
   private requestCounts = new Map<string, number>();
 
   private lastRequestTime = new Map<string, number>();

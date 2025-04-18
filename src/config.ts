@@ -30,7 +30,6 @@ export const groqApiKey = process.env.GROQ_API_KEY ?? '';
 export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
 export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
-
 export interface FeatureFlag {
   enabled: boolean;
   defaultValue: boolean;
@@ -85,6 +84,12 @@ function registerStandardFeatures() {
     enabled: enabledFeatures.includes('syncAccountsBeforeClassify') || process.env.SYNC_ACCOUNTS_BEFORE_CLASSIFY === 'true',
     defaultValue: false,
     description: 'Sync accounts before running classification',
+  };
+
+  features.disableRateLimiter = {
+    enabled: enabledFeatures.includes('disableRateLimiter'),
+    defaultValue: false,
+    description: 'Disable Rate Limiter',
   };
 }
 

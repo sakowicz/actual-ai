@@ -17,7 +17,8 @@ import {
   groqApiKey,
   groqBaseURL,
   groqModel,
-  guessedTag, isFeatureEnabled,
+  guessedTag,
+  isFeatureEnabled,
   llmProvider,
   notGuessedTag,
   ollamaBaseURL,
@@ -45,6 +46,7 @@ import CategorySuggester from './transaction/category-suggester';
 import BatchTransactionProcessor from './transaction/batch-transaction-processor';
 import TransactionProcessor from './transaction/transaction-processor';
 import TransactionFilterer from './transaction/transaction-filterer';
+import RateLimiter from './utils/rate-limiter';
 
 // Create tool service if API key is available and tools are enabled
 const toolService = valueSerpApiKey && getEnabledTools().length > 0
@@ -88,6 +90,8 @@ const promptGenerator = new PromptGenerator(
 
 const llmService = new LlmService(
   llmModelFactory,
+  new RateLimiter(true),
+  isFeatureEnabled('disableRateLimiter'),
   toolService,
 );
 
