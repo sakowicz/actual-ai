@@ -52,7 +52,6 @@ const toolService = valueSerpApiKey && getEnabledTools().length > 0
   : undefined;
 
 const isDryRun = isFeatureEnabled('dryRun');
-const isDryRunNewCategories = isFeatureEnabled('dryRunNewCategories');
 
 const llmModelFactory = new LlmModelFactory(
   llmProvider,
@@ -81,7 +80,6 @@ const actualApiService = new ActualApiService(
   budgetId,
   e2ePassword,
   isDryRun,
-  isDryRunNewCategories,
 );
 
 const promptGenerator = new PromptGenerator(

@@ -69,12 +69,6 @@ function registerStandardFeatures() {
     description: 'Run in dry mode without actually making changes',
   };
 
-  features.dryRunNewCategories = {
-    enabled: enabledFeatures.includes('dryRunNewCategories'),
-    defaultValue: true,
-    description: 'Only log suggested categories without creating them',
-  };
-
   features.rerunMissedTransactions = {
     enabled: enabledFeatures.includes('rerunMissedTransactions'),
     defaultValue: false,

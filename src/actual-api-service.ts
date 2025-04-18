@@ -24,8 +24,6 @@ class ActualApiService implements ActualApiServiceI {
 
   private readonly isDryRun: boolean;
 
-  private readonly isDryRunCategories: boolean;
-
   constructor(
     actualApiClient: typeof import('@actual-app/api'),
     fs: typeof import('fs'),
@@ -35,7 +33,6 @@ class ActualApiService implements ActualApiServiceI {
     budgetId: string,
     e2ePassword: string,
     isDryRun: boolean,
-    isDryRunCategories: boolean,
   ) {
     this.actualApiClient = actualApiClient;
     this.fs = fs;
@@ -45,7 +42,6 @@ class ActualApiService implements ActualApiServiceI {
     this.budgetId = budgetId;
     this.e2ePassword = e2ePassword;
     this.isDryRun = isDryRun;
-    this.isDryRunCategories = isDryRunCategories;
   }
 
   public async initializeApi() {
@@ -151,7 +147,7 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async createCategory(name: string, groupId: string): Promise<string> {
-    if (this.isDryRunCategories) {
+    if (this.isDryRun) {
       console.log(`DRY RUN: Would create category name: ${name} groupId: ${groupId}`);
       return 'dry run';
     }
@@ -164,7 +160,7 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async createCategoryGroup(name: string): Promise<string> {
-    if (this.isDryRunCategories) {
+    if (this.isDryRun) {
       console.log(`DRY RUN: Would create category group: ${name}`);
       return 'dry run';
     }
@@ -174,7 +170,7 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async updateCategoryGroup(id: string, name: string): Promise<void> {
-    if (this.isDryRunCategories) {
+    if (this.isDryRun) {
       console.log(`DRY RUN: Would update category group name: ${name} groupId: ${id}`);
       return;
     }

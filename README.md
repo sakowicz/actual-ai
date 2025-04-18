@@ -109,7 +109,6 @@ Available features:
 - `classifyOnStartup` - Run classification when the application starts
 - `syncAccountsBeforeClassify` - Sync accounts before running classification
 - `dryRun` - Run in dry run mode (enabled by default)
-- `dryRunNewCategories` - Only log suggested categories without creating them (enabled by default)
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
 
 ## Customizing the Prompt
@@ -145,7 +144,7 @@ When `suggestNewCategories` feature is enabled, the system will:
 1. First try to classify transactions using existing categories
 2. For transactions that can't be classified, request a new category suggestion from the LLM
 3. Check if similar categories already exist
-4. If in dry run mode (`dryRunNewCategories` is enabled), just log the suggestions
+4. If in dry run mode (`dryRun` is enabled), just log the suggestions
 5. If not in dry run mode, create the new categories and assign transactions to them
 
 This feature is particularly useful when you have transactions that don't fit your current category structure and you want the LLM to help expand your categories intelligently.
