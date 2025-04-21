@@ -41,7 +41,11 @@ Using the ValueSerp API, the system can search the web for information about unf
 
 #### 🔎 Free web search alternative
 
-A self-hosted alternative to ValueSerp that uses free public search API (DuckDuckGo) to search for merchant information without requiring an API key.
+A self-hosted alternative to ValueSerp that uses free public search API (DuckDuckGo) to search for merchant information without requiring an API key or deploying any additional app/service. Just add `freeWebSearch` to your FEATURES array:
+
+```
+FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "freeWebSearch"]'
+```
 
 #### 🔄 Re-run missed transactions
 
@@ -165,7 +169,7 @@ The webSearch tool uses the ValueSerp API to search for information about mercha
 
 To use this tool:
 1. Include `webSearch` in your `FEATURES` array or `ENABLED_TOOLS` list
-2. Provide your ValueSerp API key as `VALUESERP_API_KEY`
+2. Provide your ValueSerp API key as `VALUESERP_API_KEY` (required)
 
 This is especially helpful for:
 - New or uncommon merchants

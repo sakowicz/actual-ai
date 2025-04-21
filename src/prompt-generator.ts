@@ -46,7 +46,8 @@ class PromptGenerator implements PromptGeneratorI {
     );
 
     try {
-      const webSearchEnabled = typeof isToolEnabled('webSearch') === 'boolean' ? isToolEnabled('webSearch') : false;
+      const webSearchEnabled = (typeof isToolEnabled('webSearch') === 'boolean' && isToolEnabled('webSearch'))
+        || (typeof isToolEnabled('freeWebSearch') === 'boolean' && isToolEnabled('freeWebSearch'));
       return template({
         categoryGroups: groupsWithCategories,
         rules: rulesDescription,
