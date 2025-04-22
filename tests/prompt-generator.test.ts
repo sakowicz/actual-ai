@@ -167,10 +167,13 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
     expect(prompt).toContain('* Date: 2021-01-01');
   });
 
-  // Add test cases for web search tool
   describe('web search tool', () => {
-    it('should include web search tool message when enabled', () => {
-      jest.spyOn(config, 'isToolEnabled').mockReturnValue(true);
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should include web search tool message when webSearch is enabled', () => {
+      jest.spyOn(config, 'isToolEnabled').mockImplementation((tool) => tool === 'webSearch');
 
       const transaction = GivenActualData.createTransaction(
         '1',
@@ -191,8 +194,30 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
       expect(prompt).toContain('You can use the web search tool to find more information about the transaction.');
     });
 
-    it('should not include web search tool message when disabled', () => {
-      jest.spyOn(config, 'isToolEnabled').mockReturnValue(false);
+    it('should include web search tool message when freeWebSearch is enabled', () => {
+      jest.spyOn(config, 'isToolEnabled').mockImplementation((tool) => tool === 'freeWebSearch');
+
+      const transaction = GivenActualData.createTransaction(
+        '1',
+        -1000,
+        'Carrefour 2137',
+        '',
+        GivenActualData.PAYEE_CARREFOUR,
+        undefined,
+        '2021-01-01',
+      );
+
+      const categoryGroups = GivenActualData.createSampleCategoryGroups();
+      const payees = GivenActualData.createSamplePayees();
+
+      const promptGenerator = new PromptGenerator(promptTemplate);
+      const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
+
+      expect(prompt).toContain('You can use the web search tool to find more information about the transaction.');
+    });
+
+    it('should not include web search tool message when both are disabled', () => {
+      jest.spyOn(config, 'isToolEnabled').mockImplementation((_tool) => false);
 
       const transaction = GivenActualData.createTransaction(
         '1',
