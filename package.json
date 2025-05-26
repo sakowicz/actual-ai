@@ -25,7 +25,7 @@
     "axios": "^1.8.1",
     "dotenv": "^16.5.0",
     "handlebars": "^4.7.8",
-    "node-cron": "^3.0.3",
+    "node-cron": "^4.0.7",
     "ollama-ai-provider": "^1.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
