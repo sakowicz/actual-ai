@@ -126,7 +126,7 @@ export interface ProcessingStrategyI {
   process(
       transaction: TransactionEntity,
       response: UnifiedResponse,
-      categories: CategoryEntity[],
+      categories: (APICategoryEntity | APICategoryGroupEntity)[],
       suggestedCategories: Map<string, {
         name: string;
         groupName: string;

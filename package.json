@@ -1,6 +1,6 @@
 {
   "name": "@sakowicz/actual-ai",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Transaction AI classification for Actual Budget app.",
   "main": "app.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "author": "Szymon Sakowicz <info@sakowi.cz>",
   "license": "MIT",
   "dependencies": {
-    "@actual-app/api": "^25.4.0",
+    "@actual-app/api": "^25.6.1",
     "@ai-sdk/anthropic": "^1.2.9",
     "@ai-sdk/google": "^1.2.12",
     "@ai-sdk/groq": "^1.2.7",
@@ -43,5 +43,8 @@
     "jest": "^29.7.0",
     "nodemon": "^3.1.7",
     "ts-jest": "^29.3.2"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

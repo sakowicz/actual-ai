@@ -1,8 +1,8 @@
-import { APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
+import { APIPayeeEntity, APICategoryGroupEntity } from '@actual-app/api/@types/loot-core/server/api-models';
 import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
 import handlebars from './handlebars-helpers';
 import {
-  PromptGeneratorI, APICategoryGroupEntity,
+  PromptGeneratorI,
 } from './types';
 import PromptTemplateException from './exceptions/prompt-template-exception';
 import { isToolEnabled } from './config';
