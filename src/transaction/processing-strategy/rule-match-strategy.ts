@@ -1,4 +1,4 @@
-import type { CategoryEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import type { CategoryEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import type {
   ActualApiServiceI, ProcessingStrategyI, UnifiedResponse,
 } from '../../types';

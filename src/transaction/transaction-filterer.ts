@@ -1,5 +1,5 @@
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
-import { APIAccountEntity } from '@actual-app/api/@types/loot-core/server/api-models';
+import { TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
+import { APIAccountEntity } from '@actual-app/api/@types/loot-core/src/server/api-models';
 import { isFeatureEnabled } from '../config';
 import TagService from './tag-service';
 

@@ -1,5 +1,5 @@
-import { APIPayeeEntity, APICategoryGroupEntity } from '@actual-app/api/@types/loot-core/server/api-models';
-import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { APIPayeeEntity, APICategoryGroupEntity } from '@actual-app/api/@types/loot-core/src/server/api-models';
+import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import handlebars from './handlebars-helpers';
 import {
   PromptGeneratorI,

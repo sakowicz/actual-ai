@@ -1,8 +1,8 @@
 import {
   RuleEntity,
   TransactionEntity,
-} from '@actual-app/api/@types/loot-core/types/models';
-import { APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
+} from '@actual-app/api/@types/loot-core/src/types/models';
+import { APIPayeeEntity } from '@actual-app/api/@types/loot-core/src/server/api-models';
 import {
   ActualApiServiceI, APICategoryEntity, APICategoryGroupEntity,
   LlmServiceI, ProcessingStrategyI,

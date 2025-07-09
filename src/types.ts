@@ -4,10 +4,10 @@ import {
   APICategoryEntity as ImportedAPICategoryEntity,
   APICategoryGroupEntity as ImportedAPICategoryGroupEntity,
   APIPayeeEntity,
-} from '@actual-app/api/@types/loot-core/server/api-models';
+} from '@actual-app/api/@types/loot-core/src/server/api-models';
 import {
   TransactionEntity, RuleEntity, CategoryEntity, CategoryGroupEntity,
-} from '@actual-app/api/@types/loot-core/types/models';
+} from '@actual-app/api/@types/loot-core/src/types/models';
 
 export type APICategoryEntity = ImportedAPICategoryEntity | CategoryEntity;
 export type APICategoryGroupEntity = ImportedAPICategoryGroupEntity | CategoryGroupEntity;

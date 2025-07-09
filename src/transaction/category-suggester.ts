@@ -1,4 +1,4 @@
-import type { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import type { TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import type { ActualApiServiceI } from '../types';
 import { APICategoryGroupEntity } from '../types';
 import CategorySuggestionOptimizer from '../category-suggestion-optimizer';

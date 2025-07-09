@@ -1,5 +1,5 @@
-import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/types/models';
-import type { APICategoryGroupEntity } from '@actual-app/api/@types/loot-core/server/api-models';
+import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/src/types/models';
+import type { APICategoryGroupEntity } from '@actual-app/api/@types/loot-core/src/server/api-models';
 import fs from 'fs';
 import PromptGenerator from '../src/prompt-generator';
 import GivenActualData from './test-doubles/given/given-actual-data';

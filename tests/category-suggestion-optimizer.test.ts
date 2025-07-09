@@ -1,4 +1,4 @@
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import SimilarityCalculator from '../src/similarity-calculator';
 import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
 import GivenActualData from './test-doubles/given/given-actual-data';

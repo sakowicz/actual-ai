@@ -1,5 +1,5 @@
-import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/server/api-models';
-import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/types/models';
+import { APICategoryGroupEntity, APIPayeeEntity } from '@actual-app/api/@types/loot-core/src/server/api-models';
+import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import { PromptGeneratorI } from '../../src/types';
 
 export default class MockedPromptGenerator implements PromptGeneratorI {
