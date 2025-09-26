@@ -2,6 +2,7 @@ import { generateText, LanguageModel } from 'ai';
 import {
   LlmModelFactoryI, LlmServiceI, ToolServiceI, UnifiedResponse,
 } from './types';
+import { requestsPerMinute, tokensPerMinute } from './config';
 import RateLimiter from './utils/rate-limiter';
 import { PROVIDER_LIMITS } from './utils/provider-limits';
 import { parseLlmResponse } from './utils/json-utils';
