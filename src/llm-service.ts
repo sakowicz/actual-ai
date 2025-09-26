@@ -30,8 +30,10 @@ export default class LlmService implements LlmServiceI {
     this.rateLimiter = rateLimiter;
     this.toolService = toolService;
 
-    // Set rate limits for the provider
-    const limits = PROVIDER_LIMITS[this.provider];
+    // Set rate limits for the provider or use ENV variables if set
+    const limits = Number(requestsPerMinute) > 0 ?
+      { tokensPerMinute: Number(tokensPerMinute), requestsPerMinute: Number(requestsPerMinute) } :
+      PROVIDER_LIMITS[this.provider];
     if (!isRateLimitDisabled && limits) {
       this.rateLimiter.setProviderLimit(this.provider, limits.requestsPerMinute);
       console.log(`Set ${this.provider} rate limits: ${limits.requestsPerMinute} requests/minute, ${limits.tokensPerMinute} tokens/minute`);
