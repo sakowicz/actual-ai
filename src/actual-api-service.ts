@@ -108,8 +108,15 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async getTransactions(): Promise<TransactionEntity[]> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.actualApiClient.getTransactions(undefined, undefined, undefined);
+    let transactions: TransactionEntity[] = [];
+    const accounts = await this.getAccounts();
+    // eslint-disable-next-line no-restricted-syntax
+    for (const account of accounts) {
+      transactions = transactions.concat(
+        await this.actualApiClient.getTransactions(account.id, '1990-01-01', '2030-01-01'),
+      );
+    }
+    return transactions;
   }
 
   public async getRules(): Promise<RuleEntity[]> {
