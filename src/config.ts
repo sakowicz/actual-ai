@@ -30,6 +30,8 @@ export const groqApiKey = process.env.GROQ_API_KEY ?? '';
 export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
 export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
+export const tokensPerMinute = process.env.TOKENS_PER_MINUTE ?? '0';
+export const requestsPerMinute = process.env.REQUESTS_PER_MINUTE ?? '0';
 export interface FeatureFlag {
   enabled: boolean;
   defaultValue: boolean;
