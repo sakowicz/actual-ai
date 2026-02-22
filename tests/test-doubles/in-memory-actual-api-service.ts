@@ -98,6 +98,23 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
     });
   }
 
+  async updateTransaction(
+    id: string,
+    updates: Partial<TransactionEntity>,
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      const transaction = this.transactions.find((t) => t.id === id);
+      if (!transaction) {
+        throw new Error(`Transaction with id ${id} not found`);
+      }
+
+      // Apply all updates to the transaction
+      Object.assign(transaction, updates);
+
+      resolve();
+    });
+  }
+
   async runBankSync(): Promise<void> {
     this.wasBankSyncRan = true;
     return Promise.resolve();
@@ -166,6 +183,12 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
 
   async getPayeeRules(_payeeId: string): Promise<RuleEntity[]> {
     return Promise.resolve([]);
+  }
+
+  async createRule(rule: Omit<RuleEntity, 'id'>): Promise<string> {
+    const id = `rule-${Date.now()}`;
+    this.rules.push({ id, ...rule });
+    return Promise.resolve(id);
   }
 
   setRules(rules: RuleEntity[]): void {
