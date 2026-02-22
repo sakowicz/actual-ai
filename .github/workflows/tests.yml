@@ -1,10 +1,14 @@
 name: Tests
-on: push
+on:
+  push:
+  pull_request_target:
 jobs:
   eslint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Install modules
         run: npm ci
       - name: Run ESLint
@@ -14,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Install modules
         run: npm ci
       - name: Run Unit Tests (jest)
