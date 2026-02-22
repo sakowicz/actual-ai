@@ -10,10 +10,15 @@ export const password = process.env.ACTUAL_PASSWORD ?? '';
 export const budgetId = process.env.ACTUAL_BUDGET_ID ?? '';
 export const e2ePassword = process.env.ACTUAL_E2E_PASSWORD ?? '';
 export const cronSchedule = process.env.CLASSIFICATION_SCHEDULE_CRON ?? '';
-export const llmProvider = process.env.LLM_PROVIDER ?? 'openai';
+export const openrouterApiKey = process.env.OPENROUTER_API_KEY ?? '';
+export const llmProvider = process.env.LLM_PROVIDER ?? (openrouterApiKey ? 'openrouter' : 'openai');
 export const openaiBaseURL = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
 export const openaiApiKey = process.env.OPENAI_API_KEY ?? '';
-export const openaiModel = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
+export const openaiModel = process.env.OPENAI_MODEL ?? 'gpt-5-mini';
+export const openrouterBaseURL = process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1';
+export const openrouterModel = process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v3.2';
+export const openrouterReferrer = process.env.OPENROUTER_REFERRER ?? process.env.OPENROUTER_REFERER ?? '';
+export const openrouterTitle = process.env.OPENROUTER_TITLE ?? 'actual-ai';
 export const anthropicApiKey = process.env.ANTHROPIC_API_KEY ?? '';
 export const anthropicBaseURL = process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com/v1';
 export const anthropicModel = process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-latest';
@@ -50,12 +55,30 @@ try {
     } else {
       console.warn('FEATURES environment variable is not a valid JSON array, ignoring');
     }
+  } else if (process.env.ENABLED_FEATURES) {
+    const raw = process.env.ENABLED_FEATURES.trim();
+    if (raw.startsWith('[')) {
+      const parsedFeatures = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsedFeatures)) {
+        enabledFeatures = parsedFeatures as string[];
+      } else {
+        console.warn('ENABLED_FEATURES must be a comma list or JSON array, ignoring');
+      }
+    } else {
+      enabledFeatures = raw.split(',').map((s) => s.trim()).filter(Boolean);
+    }
   }
 } catch (e) {
-  console.warn('Failed to parse FEATURES environment variable, ignoring', e);
+  console.warn('Failed to parse FEATURES/ENABLED_FEATURES environment variable, ignoring', e);
 }
 
 function registerStandardFeatures() {
+  features.disableDuplicateFinding = {
+    enabled: enabledFeatures.includes('disableDuplicateFinding'),
+    defaultValue: false,
+    description: 'Disable finding of duplicate transactions',
+  };
+
   features.suggestNewCategories = {
     enabled: enabledFeatures.includes('suggestNewCategories'),
     defaultValue: false,
@@ -90,6 +113,42 @@ function registerStandardFeatures() {
     enabled: enabledFeatures.includes('disableRateLimiter'),
     defaultValue: false,
     description: 'Disable Rate Limiter',
+  };
+
+  features.prePromptWebSearch = {
+    enabled: enabledFeatures.includes('prePromptWebSearch'),
+    defaultValue: false,
+    description: 'Perform a web search before sending the prompt to the LLM and append results to the prompt',
+  };
+
+  features.skipTransferLike = {
+    enabled: enabledFeatures.includes('skipTransferLike'),
+    defaultValue: false,
+    description: 'Skip categorization for transactions that look like transfers/credit-card payments (to avoid false positives)',
+  };
+
+  features.omitRulesFromPrompt = {
+    enabled: enabledFeatures.includes('omitRulesFromPrompt'),
+    defaultValue: false,
+    description: 'Do not include rule descriptions in the LLM prompt (reduces tokens and avoids rate limits)',
+  };
+
+  features.compactCategoryIds = {
+    enabled: enabledFeatures.includes('compactCategoryIds'),
+    defaultValue: false,
+    description: 'Use short category codes in prompts to reduce token usage (codes are mapped back to IDs internally)',
+  };
+
+  features.historyCategoryGuessing = {
+    enabled: enabledFeatures.includes('historyCategoryGuessing'),
+    defaultValue: false,
+    description: 'Try to categorize from past transactions with the same payee/imported payee before calling the LLM',
+  };
+
+  features.historyOnly = {
+    enabled: enabledFeatures.includes('historyOnly'),
+    defaultValue: false,
+    description: 'Only categorize using history-based guessing; skip LLM categorization when no reliable history match exists',
   };
 }
 

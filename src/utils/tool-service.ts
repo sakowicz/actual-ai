@@ -20,9 +20,56 @@ export default class ToolService implements ToolServiceI {
 
   private readonly freeWebSearchService: FreeWebSearchService;
 
+  private readonly webSearchCache = new Map<string, string>();
+
+  private readonly freeWebSearchCache = new Map<string, string>();
+
+  private freeWebSearchDisabledMessage = '';
+
   constructor(valueSerpApiKey: string) {
     this.valueSerpApiKey = valueSerpApiKey;
     this.freeWebSearchService = new FreeWebSearchService();
+  }
+
+  /**
+   * Run a single search outside of model tool-calling. This is useful for providers/models
+   * that do not reliably support function/tool calling.
+   */
+  public async search(query: string): Promise<string> {
+    const q = query.trim();
+    if (!q) return 'Search unavailable';
+
+    if (getEnabledTools().includes('webSearch')) {
+      const cacheKey = q.toLowerCase();
+      const cached = this.webSearchCache.get(cacheKey);
+      if (cached) return cached;
+      if (!this.valueSerpApiKey) return 'Search unavailable';
+      console.log(`Performing web search for ${q}`);
+      const results = await this.performSearch(q);
+      const formatted = this.formatSearchResults(results);
+      this.webSearchCache.set(cacheKey, formatted);
+      return formatted;
+    }
+
+    if (getEnabledTools().includes('freeWebSearch')) {
+      const cacheKey = q.toLowerCase();
+      const cached = this.freeWebSearchCache.get(cacheKey);
+      if (cached) return cached;
+      if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
+      console.log(`Performing free web search for ${q}`);
+      try {
+        const results = await this.freeWebSearchService.search(q);
+        const formatted = this.freeWebSearchService.formatSearchResults(results);
+        this.freeWebSearchCache.set(cacheKey, formatted);
+        return formatted;
+      } catch (error) {
+        this.maybeDisableFreeWebSearch(error);
+        console.error('Error during free web search:', error);
+        return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
+      }
+    }
+
+    return 'Search unavailable';
   }
 
   public getTools() {
@@ -38,10 +85,15 @@ export default class ToolService implements ToolServiceI {
           ),
         }),
         execute: async ({ query }: { query: string }): Promise<string> => {
+          const cacheKey = query.trim().toLowerCase();
+          const cached = this.webSearchCache.get(cacheKey);
+          if (cached) return cached;
           if (!this.valueSerpApiKey) return 'Search unavailable';
           console.log(`Performing web search for ${query}`);
           const results = await this.performSearch(query);
-          return this.formatSearchResults(results);
+          const formatted = this.formatSearchResults(results);
+          this.webSearchCache.set(cacheKey, formatted);
+          return formatted;
         },
       });
     }
@@ -56,19 +108,36 @@ export default class ToolService implements ToolServiceI {
           ),
         }),
         execute: async ({ query }: { query: string }): Promise<string> => {
+          const cacheKey = query.trim().toLowerCase();
+          const cached = this.freeWebSearchCache.get(cacheKey);
+          if (cached) return cached;
+          if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
           console.log(`Performing free web search for ${query}`);
           try {
             const results = await this.freeWebSearchService.search(query);
-            return this.freeWebSearchService.formatSearchResults(results);
+            const formatted = this.freeWebSearchService.formatSearchResults(results);
+            this.freeWebSearchCache.set(cacheKey, formatted);
+            return formatted;
           } catch (error) {
+            this.maybeDisableFreeWebSearch(error);
             console.error('Error during free web search:', error);
-            return 'Web search failed. Please try again later.';
+            return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
           }
         },
       });
     }
 
     return tools;
+  }
+
+  private maybeDisableFreeWebSearch(error: unknown): void {
+    if (this.freeWebSearchDisabledMessage) return;
+    const message = error instanceof Error ? error.message : String(error ?? '');
+    const statusMatch = /status code[: ]+(\d{3})/i.exec(message);
+    const status = statusMatch ? Number.parseInt(statusMatch[1], 10) : NaN;
+    if (status === 403 || status === 429) {
+      this.freeWebSearchDisabledMessage = `Free web search is temporarily unavailable (HTTP ${status}).`;
+    }
   }
 
   private async performSearch(query: string): Promise<OrganicResults> {
@@ -129,19 +198,26 @@ export default class ToolService implements ToolServiceI {
     const processedResults: SearchResult[] = [];
 
     // Deduplication logic with first occurrence preference
-    results.organic_results.forEach((result) => {
+    results.organic_results.forEach((result: any) => {
+      // ValueSerp occasionally omits fields (e.g. snippet) depending on result type.
+      // Normalize to strings so formatting never throws.
+      const normalized: SearchResult = {
+        title: typeof result?.title === 'string' ? result.title : '',
+        snippet: typeof result?.snippet === 'string' ? result.snippet : '',
+        link: typeof result?.link === 'string' ? result.link : '',
+      };
       const isDuplicate = processedResults.some(
-        (pr) => this.getSimilarity(pr.title, result.title) > 0.8,
+        (pr) => this.getSimilarity(pr.title, normalized.title) > 0.8,
       );
       if (!isDuplicate) {
-        processedResults.push(result);
+        processedResults.push(normalized);
       }
     });
 
     // Format first 3 unique results
     const formattedResults = processedResults.slice(0, 3)
       .map((result, index) => `[Source ${index + 1}] ${result.title}\n`
-        + `${result.snippet.replace(/(\r\n|\n|\r)/gm, ' ').substring(0, 150)}...\n`
+        + `${(result.snippet || '').replace(/(\r\n|\n|\r)/gm, ' ').substring(0, 150)}...\n`
         + `URL: ${result.link}`).join('\n\n');
 
     return `SEARCH RESULTS:\n${formattedResults}`;

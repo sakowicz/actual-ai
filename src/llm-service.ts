@@ -40,6 +40,13 @@ export default class LlmService implements LlmServiceI {
     }
   }
 
+  private getTimeoutMs(): number {
+    const raw = process.env.LLM_TIMEOUT_MS;
+    const parsed = raw ? Number(raw) : NaN;
+    // Default is generous; "hanging forever" is worse than a retry.
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 120_000;
+  }
+
   public async searchWeb(query: string): Promise<string> {
     if (!this.toolService) {
       return 'Search functionality is not available.';
@@ -47,10 +54,9 @@ export default class LlmService implements LlmServiceI {
 
     try {
       console.log(`Performing web search for: "${query}"`);
-      if ('search' in this.toolService) {
-        type SearchFunction = (q: string) => Promise<string>;
-        const searchFn = this.toolService.search as SearchFunction;
-        return await searchFn(query);
+      if (typeof this.toolService.search === 'function') {
+        // Call as a method to preserve `this` for implementations that rely on instance fields.
+        return await this.toolService.search(query);
       }
       return 'Search tool is not available.';
     } catch (error) {
@@ -78,19 +84,33 @@ export default class LlmService implements LlmServiceI {
       }
 
       return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
+        const controller = new AbortController();
+        const timeoutMs = this.getTimeoutMs();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        // Some OpenAI-compatible gateways/models (notably via OpenRouter) don't reliably support
+        // tool/function-calling. We still keep ToolService around for manual/pre-prompt searches,
+        // but disable model tool-calling to avoid malformed outputs.
+        const tools = this.provider === 'openrouter' ? undefined : this.toolService?.getTools();
         try {
           const { text } = await generateText({
             model: this.model,
             prompt,
             temperature: 0.2,
-            tools: this.toolService?.getTools(),
-            maxSteps: 3,
+            tools,
+            maxSteps: tools ? 3 : 1,
+            abortSignal: controller.signal,
           });
 
-          return parseLlmResponse(text);
-        } catch (error) {
-          console.error('LLM response validation failed:', error);
-          throw new Error('Invalid response format from LLM');
+          // Only wrap parsing/validation errors; transport/provider errors must bubble up so the
+          // RateLimiter can apply provider-specific backoff/retry behavior.
+          try {
+            return parseLlmResponse(text);
+          } catch (error) {
+            console.error('LLM response validation failed:', error);
+            throw new Error('Invalid response format from LLM');
+          }
+        } finally {
+          clearTimeout(timer);
         }
       });
     } catch (error) {
@@ -104,14 +124,22 @@ export default class LlmService implements LlmServiceI {
     return this.rateLimiter.executeWithRateLimiting(
       this.provider,
       async () => {
+        const controller = new AbortController();
+        const timeoutMs = this.getTimeoutMs();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
         console.log(`Sending text generation request to ${this.provider}`);
-        const { text } = await generateText({
-          model: this.model,
-          prompt,
-          temperature: 0.1,
-        });
+        try {
+          const { text } = await generateText({
+            model: this.model,
+            prompt,
+            temperature: 0.1,
+            abortSignal: controller.signal,
+          });
 
-        return text.replace(/(\r\n|\n|\r|"|')/gm, '');
+          return text.replace(/(\r\n|\n|\r|"|')/gm, '');
+        } finally {
+          clearTimeout(timer);
+        }
       },
     );
   }
