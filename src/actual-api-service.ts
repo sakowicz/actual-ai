@@ -6,6 +6,8 @@ import {
 } from '@actual-app/api/@types/loot-core/src/server/api-models';
 import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import { ActualApiServiceI } from './types';
+import { formatError } from './utils/error-utils';
+import path from 'path';
 
 class ActualApiService implements ActualApiServiceI {
   private actualApiClient: typeof import('@actual-app/api');
@@ -23,6 +25,10 @@ class ActualApiService implements ActualApiServiceI {
   private readonly e2ePassword: string;
 
   private readonly isDryRun: boolean;
+
+  private lockFd: number | null = null;
+
+  private readonly lockPath: string;
 
   constructor(
     actualApiClient: typeof import('@actual-app/api'),
@@ -42,12 +48,65 @@ class ActualApiService implements ActualApiServiceI {
     this.budgetId = budgetId;
     this.e2ePassword = e2ePassword;
     this.isDryRun = isDryRun;
+    this.lockPath = path.join(this.dataDir, '.actual-ai.lock');
+  }
+
+  private acquireDataDirLock() {
+    // Prevent multiple concurrent runs from sharing the same dataDir. The underlying
+    // Actual sqlite DB is not safe for concurrent writers and can end up "out-of-sync".
+    if (!this.fs.existsSync(this.dataDir)) {
+      this.fs.mkdirSync(this.dataDir, { recursive: true });
+    }
+
+    if (this.fs.existsSync(this.lockPath)) {
+      try {
+        const raw = this.fs.readFileSync(this.lockPath, 'utf8');
+        const parsed = JSON.parse(raw) as { pid?: number; startedAt?: string };
+        const pid = parsed?.pid;
+        if (typeof pid === 'number') {
+          try {
+            process.kill(pid, 0);
+            throw new Error(`Another actual-ai run appears active (pid=${pid}). Refusing to use shared dataDir: ${this.dataDir}`);
+          } catch (e: any) {
+            if (e && e.code === 'ESRCH') {
+              // Stale lock from a crashed process; remove it.
+              this.fs.unlinkSync(this.lockPath);
+            } else if (e instanceof Error) {
+              // process.kill threw, but it's not ESRCH; rethrow.
+              throw e;
+            }
+          }
+        } else {
+          // Unparseable/stale lock; remove it.
+          this.fs.unlinkSync(this.lockPath);
+        }
+      } catch (e) {
+        // If anything goes wrong reading the lock, fail safe.
+        throw e instanceof Error ? e : new Error('Failed to read dataDir lock');
+      }
+    }
+
+    // 'wx' creates exclusively; throws if exists.
+    this.lockFd = this.fs.openSync(this.lockPath, 'wx');
+    this.fs.writeFileSync(this.lockFd, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }));
+  }
+
+  private releaseDataDirLock() {
+    try {
+      if (this.lockFd !== null) {
+        this.fs.closeSync(this.lockFd);
+        this.lockFd = null;
+      }
+      if (this.fs.existsSync(this.lockPath)) {
+        this.fs.unlinkSync(this.lockPath);
+      }
+    } catch {
+      // Best-effort cleanup.
+    }
   }
 
   public async initializeApi() {
-    if (!this.fs.existsSync(this.dataDir)) {
-      this.fs.mkdirSync(this.dataDir);
-    }
+    this.acquireDataDirLock();
 
     await this.actualApiClient.init({
       dataDir: this.dataDir,
@@ -75,6 +134,9 @@ class ActualApiService implements ActualApiServiceI {
       console.error(errorMessage);
       console.error('Full error details:', error);
 
+      await this.actualApiClient.shutdown();
+      this.releaseDataDirLock();
+
       throw new Error(`Budget download failed. Verify that:
 1. Budget ID "${this.budgetId}" is correct
 2. Server URL "${this.serverURL}" is reachable
@@ -85,6 +147,7 @@ class ActualApiService implements ActualApiServiceI {
 
   public async shutdownApi() {
     await this.actualApiClient.shutdown();
+    this.releaseDataDirLock();
   }
 
   public async getCategoryGroups(): Promise<APICategoryGroupEntity[]> {
@@ -129,6 +192,15 @@ class ActualApiService implements ActualApiServiceI {
     return this.actualApiClient.getPayeeRules(payeeId);
   }
 
+  public async createRule(rule: Omit<RuleEntity, 'id'>): Promise<string> {
+    if (this.isDryRun) {
+      console.log(`DRY RUN: Would create rule: ${JSON.stringify(rule)}`);
+      return 'dry run';
+    }
+    const result = await this.actualApiClient.createRule(rule);
+    return result.id;
+  }
+
   public async updateTransactionNotes(id: string, notes: string): Promise<void> {
     if (this.isDryRun) {
       console.log(`DRY RUN: Would update transaction notes of ${id} to: ${notes}`);
@@ -147,6 +219,22 @@ class ActualApiService implements ActualApiServiceI {
       return;
     }
     await this.actualApiClient.updateTransaction(id, { notes, category: categoryId });
+  }
+
+  public async updateTransaction(
+    id: string,
+    updates: Partial<TransactionEntity>,
+  ): Promise<void> {
+    if (this.isDryRun) {
+      console.log(`DRY RUN: Would update transaction ${id} with: ${JSON.stringify(updates)}`);
+      return;
+    }
+
+    try {
+      await this.actualApiClient.updateTransaction(id, updates);
+    } catch (error) {
+      console.error(`Error updating transaction ${id}:`, formatError(error));
+    }
   }
 
   public async runBankSync(): Promise<void> {
