@@ -4,10 +4,14 @@ import {
   APICategoryGroupEntity,
   APIPayeeEntity,
 } from '@actual-app/api/@types/loot-core/src/server/api-models';
+import path from 'path';
 import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import { ActualApiServiceI } from './types';
 import { formatError } from './utils/error-utils';
-import path from 'path';
+
+function isErrnoException(error: unknown): error is Error & { code?: string } {
+  return error instanceof Error;
+}
 
 class ActualApiService implements ActualApiServiceI {
   private actualApiClient: typeof import('@actual-app/api');
@@ -66,14 +70,17 @@ class ActualApiService implements ActualApiServiceI {
         if (typeof pid === 'number') {
           try {
             process.kill(pid, 0);
-            throw new Error(`Another actual-ai run appears active (pid=${pid}). Refusing to use shared dataDir: ${this.dataDir}`);
-          } catch (e: any) {
-            if (e && e.code === 'ESRCH') {
+            throw new Error(
+              `Another actual-ai run appears active (pid=${pid}). `
+              + `Refusing to use shared dataDir: ${this.dataDir}`,
+            );
+          } catch (error: unknown) {
+            if (isErrnoException(error) && error.code === 'ESRCH') {
               // Stale lock from a crashed process; remove it.
               this.fs.unlinkSync(this.lockPath);
-            } else if (e instanceof Error) {
+            } else if (error instanceof Error) {
               // process.kill threw, but it's not ESRCH; rethrow.
-              throw e;
+              throw error;
             }
           }
         } else {
@@ -88,7 +95,10 @@ class ActualApiService implements ActualApiServiceI {
 
     // 'wx' creates exclusively; throws if exists.
     this.lockFd = this.fs.openSync(this.lockPath, 'wx');
-    this.fs.writeFileSync(this.lockFd, JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }));
+    this.fs.writeFileSync(
+      this.lockFd,
+      JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }),
+    );
   }
 
   private releaseDataDirLock() {

@@ -47,10 +47,10 @@ export default class LlmService implements LlmServiceI {
 
     try {
       console.log(`Performing web search for: "${query}"`);
-      if ('search' in this.toolService) {
-        type SearchFunction = (q: string) => Promise<string>;
-        const searchFn = this.toolService.search as SearchFunction;
-        return await searchFn(query);
+      // Keep method bound to the instance; some implementations read instance state.
+      const searchResult = await this.toolService.search?.(query);
+      if (searchResult !== undefined) {
+        return searchResult;
       }
       return 'Search tool is not available.';
     } catch (error) {

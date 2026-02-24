@@ -1,3 +1,12 @@
+/*
+ * These tests intentionally use compact fixture objects for external API entity types.
+ * Building fully-typed entities here would add a lot of unrelated boilerplate and
+ * make matcher/linker behavior harder to review.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import { findCcPaymentTransferCandidates } from '../src/transfer/cc-payment-transfer-matcher';
 import { buildTransferLinkPlan } from '../src/transfer/transfer-linker';
 
@@ -197,10 +206,14 @@ describe('CC payment transfer matching', () => {
       imported_payee: 'PAYMENT RECEIVED',
     });
 
-    const candidates = findCcPaymentTransferCandidates([outflow, inflow2, inflow1] as any, accounts as any, {
-      windowDays: 10,
-      minScore: 0.9,
-    });
+    const candidates = findCcPaymentTransferCandidates(
+      [outflow, inflow2, inflow1] as any,
+      accounts as any,
+      {
+        windowDays: 10,
+        minScore: 0.9,
+      },
+    );
 
     expect(candidates).toHaveLength(1);
     expect(candidates[0].inflow.id).toBe('i1');
@@ -263,10 +276,16 @@ describe('transfer link plan', () => {
       notes: 'posted next day',
     });
 
-    const plan = buildTransferLinkPlan(outflow as any, inflow as any, payees as any, accounts as any, {
-      tag: '#cc-payment-transfer',
-      datePreference: 'outflow',
-    });
+    const plan = buildTransferLinkPlan(
+      outflow as any,
+      inflow as any,
+      payees as any,
+      accounts as any,
+      {
+        tag: '#cc-payment-transfer',
+        datePreference: 'outflow',
+      },
+    );
 
     expect(plan.outflowUpdate.payee).toBe('p-cc');
     expect(plan.outflowUpdate.transfer_id).toBe('i1');

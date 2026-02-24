@@ -11,10 +11,11 @@ describe('ActualApiService dataDir lock', () => {
   test('prevents concurrent runs from sharing the same dataDir', async () => {
     const dataDir = makeTmpDir();
 
+    const asyncNoop = jest.fn(async () => Promise.resolve());
     const client = {
-      init: jest.fn(async () => {}),
-      downloadBudget: jest.fn(async () => {}),
-      shutdown: jest.fn(async () => {}),
+      init: asyncNoop,
+      downloadBudget: asyncNoop,
+      shutdown: asyncNoop,
       getCategoryGroups: jest.fn(),
       getCategories: jest.fn(),
       getPayees: jest.fn(),
@@ -28,11 +29,11 @@ describe('ActualApiService dataDir lock', () => {
       createCategory: jest.fn(),
       createCategoryGroup: jest.fn(),
       updateCategoryGroup: jest.fn(),
-    } as any;
+    } as unknown as typeof import('@actual-app/api');
 
     const s1 = new ActualApiService(
       client,
-      fs as any,
+      fs,
       dataDir,
       'http://example.com',
       'pw',
@@ -42,7 +43,7 @@ describe('ActualApiService dataDir lock', () => {
     );
     const s2 = new ActualApiService(
       client,
-      fs as any,
+      fs,
       dataDir,
       'http://example.com',
       'pw',
@@ -62,4 +63,3 @@ describe('ActualApiService dataDir lock', () => {
     await s2.shutdownApi();
   });
 });
-

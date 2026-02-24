@@ -1,7 +1,13 @@
 import { config } from 'dotenv';
 import fs from 'fs';
 import ActualApiService from './actual-api-service';
-import { budgetId, dataDir, e2ePassword, password, serverURL } from './config';
+import {
+  budgetId,
+  dataDir,
+  e2ePassword,
+  password,
+  serverURL,
+} from './config';
 import { findCcPaymentTransferCandidates } from './transfer/cc-payment-transfer-matcher';
 import { linkTransferPair } from './transfer/transfer-linker';
 
@@ -138,7 +144,12 @@ async function main() {
 
       const inflowAccountName = accountsById.get(inflow.account) ?? '';
       const inflowLooksCc = /\b(visa|mastercard|amex|credit|card|cc)\b/i.test(inflowAccountName);
-      if (!opts.force && !inflowLooksCc && opts.ccAccountIds.length === 0 && !opts.ccAccountNameRegex) {
+      if (
+        !opts.force
+        && !inflowLooksCc
+        && opts.ccAccountIds.length === 0
+        && !opts.ccAccountNameRegex
+      ) {
         throw new Error(
           `Refusing to apply without an explicit CC account hint; re-run with --cc-account <id> or --cc-account-name-regex, or override with --force. (inflow account: "${inflowAccountName}")`,
         );
@@ -176,8 +187,14 @@ async function main() {
 
     candidates.forEach((c, idx) => {
       console.log(`\n#${idx + 1} score=${c.score.toFixed(2)} amount=${Math.abs(c.outflow.amount)}`);
-      console.log(`  Outflow: ${c.outflow.date} - ${accountsById.get(c.outflow.account) ?? c.outflow.account} - ${c.outflow.imported_payee ?? 'No payee'} (id=${c.outflow.id})`);
-      console.log(`  Inflow:  ${c.inflow.date} - ${accountsById.get(c.inflow.account) ?? c.inflow.account} - ${c.inflow.imported_payee ?? 'No payee'} (id=${c.inflow.id})`);
+      console.log(
+        `  Outflow: ${c.outflow.date} - ${accountsById.get(c.outflow.account) ?? c.outflow.account}`
+        + ` - ${c.outflow.imported_payee ?? 'No payee'} (id=${c.outflow.id})`,
+      );
+      console.log(
+        `  Inflow:  ${c.inflow.date} - ${accountsById.get(c.inflow.account) ?? c.inflow.account}`
+        + ` - ${c.inflow.imported_payee ?? 'No payee'} (id=${c.inflow.id})`,
+      );
       console.log(`  Reasons: ${c.reasons.join(', ')}`);
     });
 
@@ -189,14 +206,20 @@ async function main() {
         console.log(`  npm run find-cc-payments -- --apply --pair ${candidates[0].outflow.id},${candidates[0].inflow.id}`);
       }
       return;
-    } else if (opts.limit > 0) {
-      for (const c of candidates.slice(0, opts.limit)) {
-        // eslint-disable-next-line no-await-in-loop
-        await assertAndLink(c.outflow.id, c.inflow.id);
-      }
-    } else {
+    }
+
+    if (opts.limit <= 0) {
       throw new Error('Refusing to apply without an explicit selection. Use --pair <outflowId>,<inflowId> or --limit N.');
     }
+
+    await candidates
+      .slice(0, opts.limit)
+      .reduce(
+        (promise, candidate) => promise.then(
+          () => assertAndLink(candidate.outflow.id, candidate.inflow.id),
+        ),
+        Promise.resolve(),
+      );
 
     console.log('\nDone. Linked candidates as transfers.');
   } finally {
