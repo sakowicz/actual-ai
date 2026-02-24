@@ -19,13 +19,19 @@ describe('ToolService freeWebSearch disable-on-403', () => {
     const ToolService = (await import('../src/utils/tool-service')).default;
     const toolService = new ToolService('');
     const tools = toolService.getTools();
+    const freeWebSearchTool = tools.freeWebSearch;
+    if (!freeWebSearchTool?.execute) {
+      throw new Error('freeWebSearch tool is unavailable');
+    }
+    const execute = freeWebSearchTool.execute.bind(freeWebSearchTool);
 
-    const first = await (tools.freeWebSearch as any).execute({ query: 'Example' });
-    const second = await (tools.freeWebSearch as any).execute({ query: 'Another Query' });
+    await expect(
+      execute({ query: 'Example' }, { toolCallId: 't1', messages: [] } as never),
+    ).resolves.toBe('Free web search is temporarily unavailable (HTTP 403).');
+    await expect(
+      execute({ query: 'Another Query' }, { toolCallId: 't2', messages: [] } as never),
+    ).resolves.toBe('Free web search is temporarily unavailable (HTTP 403).');
 
-    expect(first).toBe('Free web search is temporarily unavailable (HTTP 403).');
-    expect(second).toBe('Free web search is temporarily unavailable (HTTP 403).');
     expect(searchSpy).toHaveBeenCalledTimes(1);
   });
 });
-

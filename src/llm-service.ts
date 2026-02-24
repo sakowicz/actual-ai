@@ -54,9 +54,10 @@ export default class LlmService implements LlmServiceI {
 
     try {
       console.log(`Performing web search for: "${query}"`);
-      if (typeof this.toolService.search === 'function') {
-        // Call as a method to preserve `this` for implementations that rely on instance fields.
-        return await this.toolService.search(query);
+      // Keep method bound to the instance; some implementations read instance state.
+      const searchResult = await this.toolService.search?.(query);
+      if (searchResult !== undefined) {
+        return searchResult;
       }
       return 'Search tool is not available.';
     } catch (error) {

@@ -21,4 +21,3 @@ describe('container tool service wiring', () => {
     expect(toolService!.getTools()).toHaveProperty('freeWebSearch');
   });
 });
-

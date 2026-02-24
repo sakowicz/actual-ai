@@ -22,14 +22,19 @@ describe('ToolService caching', () => {
     const ToolService = (await import('../src/utils/tool-service')).default;
     const toolService = new ToolService('');
     const tools = toolService.getTools();
+    const freeWebSearchTool = tools.freeWebSearch;
+    if (!freeWebSearchTool?.execute) {
+      throw new Error('freeWebSearch tool is unavailable');
+    }
+    const execute = freeWebSearchTool.execute.bind(freeWebSearchTool);
 
     // Call tool twice with identical query; underlying search should execute once.
-    const first = await (tools.freeWebSearch as any).execute({ query: 'Example' });
-    const second = await (tools.freeWebSearch as any).execute({ query: 'Example' });
-
-    expect(first).toBe('SEARCH RESULTS:\n[Source 1] T');
-    expect(second).toBe('SEARCH RESULTS:\n[Source 1] T');
+    await expect(
+      execute({ query: 'Example' }, { toolCallId: 't1', messages: [] } as never),
+    ).resolves.toBe('SEARCH RESULTS:\n[Source 1] T');
+    await expect(
+      execute({ query: 'Example' }, { toolCallId: 't2', messages: [] } as never),
+    ).resolves.toBe('SEARCH RESULTS:\n[Source 1] T');
     expect(searchSpy).toHaveBeenCalledTimes(1);
   });
 });
-

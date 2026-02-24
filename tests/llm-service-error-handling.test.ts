@@ -1,3 +1,7 @@
+import { LanguageModel } from 'ai';
+import { LlmModelFactoryI } from '../src/types';
+import RateLimiter from '../src/utils/rate-limiter';
+
 describe('LlmService error handling', () => {
   const ORIGINAL_ENV = process.env;
 
@@ -19,15 +23,18 @@ describe('LlmService error handling', () => {
 
     const LlmService = (await import('../src/llm-service')).default;
 
-    const llmModelFactory = {
-      create: () => ({}),
+    const llmModelFactory: LlmModelFactoryI = {
+      create: () => ({}) as LanguageModel,
       getProvider: () => 'groq',
+      getModelProvider: () => 'groq',
       isFallbackMode: () => false,
-    } as any;
+    };
 
-    const rateLimiter = {
-      executeWithRateLimiting: async (_provider: string, op: () => Promise<any>) => op(),
-    } as any;
+    const rateLimiter = new RateLimiter();
+    rateLimiter.executeWithRateLimiting = async <T>(
+      _provider: string,
+      op: () => Promise<T>,
+    ): Promise<T> => op();
 
     const svc = new LlmService(llmModelFactory, rateLimiter, true, undefined);
 
@@ -42,19 +49,21 @@ describe('LlmService error handling', () => {
 
     const LlmService = (await import('../src/llm-service')).default;
 
-    const llmModelFactory = {
-      create: () => ({}),
+    const llmModelFactory: LlmModelFactoryI = {
+      create: () => ({}) as LanguageModel,
       getProvider: () => 'groq',
+      getModelProvider: () => 'groq',
       isFallbackMode: () => false,
-    } as any;
+    };
 
-    const rateLimiter = {
-      executeWithRateLimiting: async (_provider: string, op: () => Promise<any>) => op(),
-    } as any;
+    const rateLimiter = new RateLimiter();
+    rateLimiter.executeWithRateLimiting = async <T>(
+      _provider: string,
+      op: () => Promise<T>,
+    ): Promise<T> => op();
 
     const svc = new LlmService(llmModelFactory, rateLimiter, true, undefined);
 
     await expect(svc.ask('prompt')).rejects.toThrow('Invalid response format from LLM');
   });
 });
-
