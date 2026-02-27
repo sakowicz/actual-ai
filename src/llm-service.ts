@@ -17,11 +17,19 @@ export default class LlmService implements LlmServiceI {
 
   private readonly isFallbackMode;
 
+  private readonly timeoutMs: number;
+
+  private readonly openrouterEnableToolCalling: boolean;
+
   constructor(
     llmModelFactory: LlmModelFactoryI,
     rateLimiter: RateLimiter,
     isRateLimitDisabled: boolean,
     toolService?: ToolServiceI,
+    options?: {
+      timeoutMs?: number;
+      openrouterEnableToolCalling?: boolean;
+    },
   ) {
     const factory = llmModelFactory;
     this.model = factory.create();
@@ -29,6 +37,8 @@ export default class LlmService implements LlmServiceI {
     this.provider = factory.getProvider();
     this.rateLimiter = rateLimiter;
     this.toolService = toolService;
+    this.timeoutMs = options?.timeoutMs ?? 120_000;
+    this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
 
     // Set rate limits for the provider
     const limits = PROVIDER_LIMITS[this.provider];
@@ -47,10 +57,10 @@ export default class LlmService implements LlmServiceI {
 
     try {
       console.log(`Performing web search for: "${query}"`);
-      if ('search' in this.toolService) {
-        type SearchFunction = (q: string) => Promise<string>;
-        const searchFn = this.toolService.search as SearchFunction;
-        return await searchFn(query);
+      // Keep method bound to the instance; some implementations read instance state.
+      const searchResult = await this.toolService.search?.(query);
+      if (searchResult !== undefined) {
+        return searchResult;
       }
       return 'Search tool is not available.';
     } catch (error) {
@@ -78,19 +88,33 @@ export default class LlmService implements LlmServiceI {
       }
 
       return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+        // Some OpenAI-compatible gateways/models (notably via OpenRouter) don't reliably support
+        // tool/function-calling. We still keep ToolService around for manual/pre-prompt searches,
+        // but disable model tool-calling to avoid malformed outputs.
+        const disableOpenRouterTools = this.provider === 'openrouter' && !this.openrouterEnableToolCalling;
+        const tools = disableOpenRouterTools ? undefined : this.toolService?.getTools();
         try {
           const { text } = await generateText({
             model: this.model,
             prompt,
             temperature: 0.2,
-            tools: this.toolService?.getTools(),
-            maxSteps: 3,
+            tools,
+            maxSteps: tools ? 3 : 1,
+            abortSignal: controller.signal,
           });
 
-          return parseLlmResponse(text);
-        } catch (error) {
-          console.error('LLM response validation failed:', error);
-          throw new Error('Invalid response format from LLM');
+          // Only wrap parsing/validation errors; transport/provider errors must bubble up so the
+          // RateLimiter can apply provider-specific backoff/retry behavior.
+          try {
+            return parseLlmResponse(text);
+          } catch (error) {
+            console.error('LLM response validation failed:', error);
+            throw new Error('Invalid response format from LLM');
+          }
+        } finally {
+          clearTimeout(timer);
         }
       });
     } catch (error) {
@@ -104,14 +128,21 @@ export default class LlmService implements LlmServiceI {
     return this.rateLimiter.executeWithRateLimiting(
       this.provider,
       async () => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), this.timeoutMs);
         console.log(`Sending text generation request to ${this.provider}`);
-        const { text } = await generateText({
-          model: this.model,
-          prompt,
-          temperature: 0.1,
-        });
+        try {
+          const { text } = await generateText({
+            model: this.model,
+            prompt,
+            temperature: 0.1,
+            abortSignal: controller.signal,
+          });
 
-        return text.replace(/(\r\n|\n|\r|"|')/gm, '');
+          return text.replace(/(\r\n|\n|\r|"|')/gm, '');
+        } finally {
+          clearTimeout(timer);
+        }
       },
     );
   }

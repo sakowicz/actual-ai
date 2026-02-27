@@ -20,12 +20,19 @@ import {
   guessedTag,
   isFeatureEnabled,
   llmProvider,
+  llmTimeoutMs,
   notGuessedTag,
   ollamaBaseURL,
   ollamaModel,
   openaiApiKey,
   openaiBaseURL,
   openaiModel,
+  openrouterApiKey,
+  openrouterBaseURL,
+  openrouterEnableToolCalling,
+  openrouterModel,
+  openrouterReferrer,
+  openrouterTitle,
   password,
   promptTemplate,
   serverURL,
@@ -49,9 +56,12 @@ import TransactionFilterer from './transaction/transaction-filterer';
 import RateLimiter from './utils/rate-limiter';
 
 // Create tool service if API key is available and tools are enabled
-const toolService = valueSerpApiKey && getEnabledTools().length > 0
-  ? new ToolService(valueSerpApiKey)
-  : undefined;
+export function createToolService(): ToolService | undefined {
+  // freeWebSearch does not require ValueSerp; only the paid `webSearch` does.
+  return getEnabledTools().length > 0 ? new ToolService(valueSerpApiKey) : undefined;
+}
+
+const toolService = createToolService();
 
 const isDryRun = isFeatureEnabled('dryRun');
 
@@ -60,6 +70,11 @@ const llmModelFactory = new LlmModelFactory(
   openaiApiKey,
   openaiModel,
   openaiBaseURL,
+  openrouterApiKey,
+  openrouterModel,
+  openrouterBaseURL,
+  openrouterReferrer,
+  openrouterTitle,
   anthropicBaseURL,
   anthropicApiKey,
   anthropicModel,
@@ -93,6 +108,10 @@ const llmService = new LlmService(
   new RateLimiter(true),
   isFeatureEnabled('disableRateLimiter'),
   toolService,
+  {
+    timeoutMs: llmTimeoutMs,
+    openrouterEnableToolCalling,
+  },
 );
 
 const tagService = new TagService(notGuessedTag, guessedTag);

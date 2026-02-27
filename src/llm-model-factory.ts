@@ -15,6 +15,16 @@ class LlmModelFactory implements LlmModelFactoryI {
 
   private readonly openaiBaseURL: string;
 
+  private readonly openrouterApiKey: string;
+
+  private readonly openrouterModel: string;
+
+  private readonly openrouterBaseURL: string;
+
+  private readonly openrouterReferrer: string;
+
+  private readonly openrouterTitle: string;
+
   private readonly anthropicBaseURL: string;
 
   private readonly anthropicApiKey: string;
@@ -42,6 +52,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     openaiApiKey: string,
     openaiModel: string,
     openaiBaseURL: string,
+    openrouterApiKey: string,
+    openrouterModel: string,
+    openrouterBaseURL: string,
+    openrouterReferrer: string,
+    openrouterTitle: string,
     anthropicBaseURL: string,
     anthropicApiKey: string,
     anthropicModel: string,
@@ -58,6 +73,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     this.openaiApiKey = openaiApiKey;
     this.openaiModel = openaiModel;
     this.openaiBaseURL = openaiBaseURL;
+    this.openrouterApiKey = openrouterApiKey;
+    this.openrouterModel = openrouterModel;
+    this.openrouterBaseURL = openrouterBaseURL;
+    this.openrouterReferrer = openrouterReferrer;
+    this.openrouterTitle = openrouterTitle;
     this.anthropicBaseURL = anthropicBaseURL;
     this.anthropicApiKey = anthropicApiKey;
     this.anthropicModel = anthropicModel;
@@ -80,6 +100,19 @@ class LlmModelFactory implements LlmModelFactoryI {
           apiKey: this.openaiApiKey,
         });
         return openai(this.openaiModel);
+      }
+      case 'openrouter': {
+        const headers: Record<string, string> = {};
+        if (this.openrouterReferrer) headers['HTTP-Referer'] = this.openrouterReferrer;
+        if (this.openrouterTitle) headers['X-Title'] = this.openrouterTitle;
+
+        const openrouter = createOpenAI({
+          name: 'openrouter',
+          baseURL: this.openrouterBaseURL,
+          apiKey: this.openrouterApiKey,
+          headers,
+        });
+        return openrouter(this.openrouterModel);
       }
       case 'anthropic': {
         const anthropic = createAnthropic({
