@@ -185,12 +185,6 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
     return Promise.resolve([]);
   }
 
-  async createRule(rule: Omit<RuleEntity, 'id'>): Promise<string> {
-    const id = `rule-${Date.now()}`;
-    this.rules.push({ id, ...rule });
-    return Promise.resolve(id);
-  }
-
   setRules(rules: RuleEntity[]): void {
     this.rules = rules;
   }

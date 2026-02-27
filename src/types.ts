@@ -42,8 +42,6 @@ export interface ActualApiServiceI {
 
   getPayeeRules(payeeId: string): Promise<RuleEntity[]>
 
-  createRule(rule: Omit<RuleEntity, 'id'>): Promise<string>
-
   updateTransactionNotes(id: string, notes: string): Promise<void>
 
   updateTransactionNotesAndCategory(

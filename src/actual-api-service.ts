@@ -202,15 +202,6 @@ class ActualApiService implements ActualApiServiceI {
     return this.actualApiClient.getPayeeRules(payeeId);
   }
 
-  public async createRule(rule: Omit<RuleEntity, 'id'>): Promise<string> {
-    if (this.isDryRun) {
-      console.log(`DRY RUN: Would create rule: ${JSON.stringify(rule)}`);
-      return 'dry run';
-    }
-    const result = await this.actualApiClient.createRule(rule);
-    return result.id;
-  }
-
   public async updateTransactionNotes(id: string, notes: string): Promise<void> {
     if (this.isDryRun) {
       console.log(`DRY RUN: Would update transaction notes of ${id} to: ${notes}`);
