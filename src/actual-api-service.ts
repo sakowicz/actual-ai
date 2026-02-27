@@ -7,7 +7,6 @@ import {
 import path from 'path';
 import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/src/types/models';
 import { ActualApiServiceI } from './types';
-import { formatError } from './utils/error-utils';
 
 function isErrnoException(error: unknown): error is Error & { code?: string } {
   return error instanceof Error;
@@ -202,15 +201,6 @@ class ActualApiService implements ActualApiServiceI {
     return this.actualApiClient.getPayeeRules(payeeId);
   }
 
-  public async createRule(rule: Omit<RuleEntity, 'id'>): Promise<string> {
-    if (this.isDryRun) {
-      console.log(`DRY RUN: Would create rule: ${JSON.stringify(rule)}`);
-      return 'dry run';
-    }
-    const result = await this.actualApiClient.createRule(rule);
-    return result.id;
-  }
-
   public async updateTransactionNotes(id: string, notes: string): Promise<void> {
     if (this.isDryRun) {
       console.log(`DRY RUN: Would update transaction notes of ${id} to: ${notes}`);
@@ -229,22 +219,6 @@ class ActualApiService implements ActualApiServiceI {
       return;
     }
     await this.actualApiClient.updateTransaction(id, { notes, category: categoryId });
-  }
-
-  public async updateTransaction(
-    id: string,
-    updates: Partial<TransactionEntity>,
-  ): Promise<void> {
-    if (this.isDryRun) {
-      console.log(`DRY RUN: Would update transaction ${id} with: ${JSON.stringify(updates)}`);
-      return;
-    }
-
-    try {
-      await this.actualApiClient.updateTransaction(id, updates);
-    } catch (error) {
-      console.error(`Error updating transaction ${id}:`, formatError(error));
-    }
   }
 
   public async runBankSync(): Promise<void> {
