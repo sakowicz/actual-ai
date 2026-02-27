@@ -15,14 +15,23 @@ interface OrganicResults {
   organic_results?: SearchResult[];
 }
 
+interface CachedSearchResult {
+  value: string;
+  expiresAt: number;
+}
+
 export default class ToolService implements ToolServiceI {
+  private static readonly CACHE_TTL_MS = 30 * 60 * 1000;
+
+  private static readonly CACHE_MAX_ENTRIES = 200;
+
   private readonly valueSerpApiKey: string;
 
   private readonly freeWebSearchService: FreeWebSearchService;
 
-  private readonly webSearchCache = new Map<string, string>();
+  private readonly webSearchCache = new Map<string, CachedSearchResult>();
 
-  private readonly freeWebSearchCache = new Map<string, string>();
+  private readonly freeWebSearchCache = new Map<string, CachedSearchResult>();
 
   private freeWebSearchDisabledMessage = '';
 
@@ -36,37 +45,41 @@ export default class ToolService implements ToolServiceI {
    * that do not reliably support function/tool calling.
    */
   public async search(query: string): Promise<string> {
-    const q = query.trim();
+    const q = this.normalizeQuery(query);
     if (!q) return 'Search unavailable';
 
     if (getEnabledTools().includes('webSearch')) {
-      const cacheKey = q.toLowerCase();
-      const cached = this.webSearchCache.get(cacheKey);
-      if (cached) return cached;
-      if (!this.valueSerpApiKey) return 'Search unavailable';
-      console.log(`Performing web search for ${q}`);
-      const results = await this.performSearch(q);
-      const formatted = this.formatSearchResults(results);
-      this.webSearchCache.set(cacheKey, formatted);
-      return formatted;
+      return this.searchWithCache({
+        query: q,
+        cache: this.webSearchCache,
+        unavailableMessage: 'Search unavailable',
+        searchTypeLabel: 'web search',
+        executor: async (normalizedQuery) => {
+          if (!this.valueSerpApiKey) return 'Search unavailable';
+          const results = await this.performSearch(normalizedQuery);
+          return this.formatSearchResults(results);
+        },
+      });
     }
 
     if (getEnabledTools().includes('freeWebSearch')) {
-      const cacheKey = q.toLowerCase();
-      const cached = this.freeWebSearchCache.get(cacheKey);
-      if (cached) return cached;
-      if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
-      console.log(`Performing free web search for ${q}`);
-      try {
-        const results = await this.freeWebSearchService.search(q);
-        const formatted = this.freeWebSearchService.formatSearchResults(results);
-        this.freeWebSearchCache.set(cacheKey, formatted);
-        return formatted;
-      } catch (error) {
-        this.maybeDisableFreeWebSearch(error);
-        console.error('Error during free web search:', error);
-        return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
-      }
+      return this.searchWithCache({
+        query: q,
+        cache: this.freeWebSearchCache,
+        unavailableMessage: this.freeWebSearchDisabledMessage || 'Search unavailable',
+        searchTypeLabel: 'free web search',
+        executor: async (normalizedQuery) => {
+          if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
+          try {
+            const results = await this.freeWebSearchService.search(normalizedQuery);
+            return this.freeWebSearchService.formatSearchResults(results);
+          } catch (error) {
+            this.setFreeWebSearchBackoffOnHttpError(error);
+            console.error('Error during free web search:', error);
+            return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
+          }
+        },
+      });
     }
 
     return 'Search unavailable';
@@ -85,15 +98,17 @@ export default class ToolService implements ToolServiceI {
           ),
         }),
         execute: async ({ query }: { query: string }): Promise<string> => {
-          const cacheKey = query.trim().toLowerCase();
-          const cached = this.webSearchCache.get(cacheKey);
-          if (cached) return cached;
-          if (!this.valueSerpApiKey) return 'Search unavailable';
-          console.log(`Performing web search for ${query}`);
-          const results = await this.performSearch(query);
-          const formatted = this.formatSearchResults(results);
-          this.webSearchCache.set(cacheKey, formatted);
-          return formatted;
+          return this.searchWithCache({
+            query,
+            cache: this.webSearchCache,
+            unavailableMessage: 'Search unavailable',
+            searchTypeLabel: 'web search',
+            executor: async (normalizedQuery) => {
+              if (!this.valueSerpApiKey) return 'Search unavailable';
+              const results = await this.performSearch(normalizedQuery);
+              return this.formatSearchResults(results);
+            },
+          });
         },
       });
     }
@@ -108,21 +123,23 @@ export default class ToolService implements ToolServiceI {
           ),
         }),
         execute: async ({ query }: { query: string }): Promise<string> => {
-          const cacheKey = query.trim().toLowerCase();
-          const cached = this.freeWebSearchCache.get(cacheKey);
-          if (cached) return cached;
-          if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
-          console.log(`Performing free web search for ${query}`);
-          try {
-            const results = await this.freeWebSearchService.search(query);
-            const formatted = this.freeWebSearchService.formatSearchResults(results);
-            this.freeWebSearchCache.set(cacheKey, formatted);
-            return formatted;
-          } catch (error) {
-            this.maybeDisableFreeWebSearch(error);
-            console.error('Error during free web search:', error);
-            return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
-          }
+          return this.searchWithCache({
+            query,
+            cache: this.freeWebSearchCache,
+            unavailableMessage: this.freeWebSearchDisabledMessage || 'Search unavailable',
+            searchTypeLabel: 'free web search',
+            executor: async (normalizedQuery) => {
+              if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
+              try {
+                const results = await this.freeWebSearchService.search(normalizedQuery);
+                return this.freeWebSearchService.formatSearchResults(results);
+              } catch (error) {
+                this.setFreeWebSearchBackoffOnHttpError(error);
+                console.error('Error during free web search:', error);
+                return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
+              }
+            },
+          });
         },
       });
     }
@@ -130,7 +147,75 @@ export default class ToolService implements ToolServiceI {
     return tools;
   }
 
-  private maybeDisableFreeWebSearch(error: unknown): void {
+  private normalizeQuery(query: string): string {
+    return query.trim();
+  }
+
+  private getCachedResult(
+    cache: Map<string, CachedSearchResult>,
+    cacheKey: string,
+  ): string | undefined {
+    const cached = cache.get(cacheKey);
+    if (!cached) return undefined;
+    if (cached.expiresAt <= Date.now()) {
+      cache.delete(cacheKey);
+      return undefined;
+    }
+    return cached.value;
+  }
+
+  private setCachedResult(
+    cache: Map<string, CachedSearchResult>,
+    cacheKey: string,
+    value: string,
+  ): void {
+    this.pruneExpiredEntries(cache);
+    if (cache.size >= ToolService.CACHE_MAX_ENTRIES) {
+      const oldestKey = cache.keys().next().value as string | undefined;
+      if (oldestKey) {
+        cache.delete(oldestKey);
+      }
+    }
+    cache.set(cacheKey, {
+      value,
+      expiresAt: Date.now() + ToolService.CACHE_TTL_MS,
+    });
+  }
+
+  private pruneExpiredEntries(cache: Map<string, CachedSearchResult>): void {
+    const now = Date.now();
+    for (const [key, entry] of cache.entries()) {
+      if (entry.expiresAt <= now) {
+        cache.delete(key);
+      }
+    }
+  }
+
+  private async searchWithCache({
+    query,
+    cache,
+    unavailableMessage,
+    searchTypeLabel,
+    executor,
+  }: {
+    query: string;
+    cache: Map<string, CachedSearchResult>;
+    unavailableMessage: string;
+    searchTypeLabel: string;
+    executor: (normalizedQuery: string) => Promise<string>;
+  }): Promise<string> {
+    const normalizedQuery = this.normalizeQuery(query);
+    if (!normalizedQuery) return unavailableMessage;
+    const cacheKey = normalizedQuery.toLowerCase();
+    const cached = this.getCachedResult(cache, cacheKey);
+    if (cached) return cached;
+    console.log(`Performing ${searchTypeLabel} for ${normalizedQuery}`);
+    const result = await executor(normalizedQuery);
+    this.setCachedResult(cache, cacheKey, result);
+    return result;
+  }
+
+  private setFreeWebSearchBackoffOnHttpError(error: unknown): void {
     if (this.freeWebSearchDisabledMessage) return;
     const message = error instanceof Error ? error.message : String(error ?? '');
     const statusMatch = /status code[: ]+(\d{3})/i.exec(message);

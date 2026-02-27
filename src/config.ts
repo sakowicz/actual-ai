@@ -19,6 +19,11 @@ export const openrouterBaseURL = process.env.OPENROUTER_BASE_URL ?? 'https://ope
 export const openrouterModel = process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v3.2';
 export const openrouterReferrer = process.env.OPENROUTER_REFERRER ?? process.env.OPENROUTER_REFERER ?? '';
 export const openrouterTitle = process.env.OPENROUTER_TITLE ?? 'actual-ai';
+const parsedLlmTimeoutMs = Number.parseInt(process.env.LLM_TIMEOUT_MS ?? '', 10);
+export const llmTimeoutMs = Number.isFinite(parsedLlmTimeoutMs) && parsedLlmTimeoutMs > 0
+  ? parsedLlmTimeoutMs
+  : 120_000;
+export const openrouterEnableToolCalling = process.env.OPENROUTER_ENABLE_TOOL_CALLING === 'true';
 export const anthropicApiKey = process.env.ANTHROPIC_API_KEY ?? '';
 export const anthropicBaseURL = process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com/v1';
 export const anthropicModel = process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-latest';
@@ -73,12 +78,6 @@ try {
 }
 
 function registerStandardFeatures() {
-  features.disableDuplicateFinding = {
-    enabled: enabledFeatures.includes('disableDuplicateFinding'),
-    defaultValue: false,
-    description: 'Disable finding of duplicate transactions',
-  };
-
   features.suggestNewCategories = {
     enabled: enabledFeatures.includes('suggestNewCategories'),
     defaultValue: false,
@@ -113,42 +112,6 @@ function registerStandardFeatures() {
     enabled: enabledFeatures.includes('disableRateLimiter'),
     defaultValue: false,
     description: 'Disable Rate Limiter',
-  };
-
-  features.prePromptWebSearch = {
-    enabled: enabledFeatures.includes('prePromptWebSearch'),
-    defaultValue: false,
-    description: 'Perform a web search before sending the prompt to the LLM and append results to the prompt',
-  };
-
-  features.skipTransferLike = {
-    enabled: enabledFeatures.includes('skipTransferLike'),
-    defaultValue: false,
-    description: 'Skip categorization for transactions that look like transfers/credit-card payments (to avoid false positives)',
-  };
-
-  features.omitRulesFromPrompt = {
-    enabled: enabledFeatures.includes('omitRulesFromPrompt'),
-    defaultValue: false,
-    description: 'Do not include rule descriptions in the LLM prompt (reduces tokens and avoids rate limits)',
-  };
-
-  features.compactCategoryIds = {
-    enabled: enabledFeatures.includes('compactCategoryIds'),
-    defaultValue: false,
-    description: 'Use short category codes in prompts to reduce token usage (codes are mapped back to IDs internally)',
-  };
-
-  features.historyCategoryGuessing = {
-    enabled: enabledFeatures.includes('historyCategoryGuessing'),
-    defaultValue: false,
-    description: 'Try to categorize from past transactions with the same payee/imported payee before calling the LLM',
-  };
-
-  features.historyOnly = {
-    enabled: enabledFeatures.includes('historyOnly'),
-    defaultValue: false,
-    description: 'Only categorize using history-based guessing; skip LLM categorization when no reliable history match exists',
   };
 }
 

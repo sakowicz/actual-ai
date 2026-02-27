@@ -20,6 +20,7 @@ import {
   guessedTag,
   isFeatureEnabled,
   llmProvider,
+  llmTimeoutMs,
   notGuessedTag,
   ollamaBaseURL,
   ollamaModel,
@@ -28,6 +29,7 @@ import {
   openaiModel,
   openrouterApiKey,
   openrouterBaseURL,
+  openrouterEnableToolCalling,
   openrouterModel,
   openrouterReferrer,
   openrouterTitle,
@@ -106,6 +108,10 @@ const llmService = new LlmService(
   new RateLimiter(true),
   isFeatureEnabled('disableRateLimiter'),
   toolService,
+  {
+    timeoutMs: llmTimeoutMs,
+    openrouterEnableToolCalling,
+  },
 );
 
 const tagService = new TagService(notGuessedTag, guessedTag);

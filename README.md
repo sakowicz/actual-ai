@@ -84,6 +84,8 @@ services:
 #      OPENROUTER_BASE_URL:  # optional. default: "https://openrouter.ai/api/v1"
 #      OPENROUTER_REFERRER:  # optional but recommended by OpenRouter (or OPENROUTER_REFERER)
 #      OPENROUTER_TITLE:  # optional. default: "actual-ai"
+#      LLM_TIMEOUT_MS:  # optional. request timeout in ms for LLM calls, default: 120000
+#      OPENROUTER_ENABLE_TOOL_CALLING:  # optional. "true" to allow model tool-calling on openrouter, default: false
 #      ANTHROPIC_API_KEY:  # optional. required if you want to use the Anthropic API
 #      ANTHROPIC_MODEL:  # optional. required if you want to use a specific model, default is "claude-3-5-sonnet-latest"
 #      ANTHROPIC_BASE_URL:  # optional. default: "https://api.anthropic.com/v1
@@ -123,6 +125,14 @@ Available features:
 - `dryRun` - Run in dry run mode (enabled by default)
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
 - `disableRateLimiter` - Disable Rate Limiter
+
+## OpenRouter Tool Calling
+
+By default, model tool-calling is disabled when `LLM_PROVIDER=openrouter` because some gateway/model combinations can return unstable tool-call responses. You can re-enable it with:
+
+```
+OPENROUTER_ENABLE_TOOL_CALLING=true
+```
 
 ## Customizing the Prompt
 

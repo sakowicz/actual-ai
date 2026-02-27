@@ -17,11 +17,19 @@ export default class LlmService implements LlmServiceI {
 
   private readonly isFallbackMode;
 
+  private readonly timeoutMs: number;
+
+  private readonly openrouterEnableToolCalling: boolean;
+
   constructor(
     llmModelFactory: LlmModelFactoryI,
     rateLimiter: RateLimiter,
     isRateLimitDisabled: boolean,
     toolService?: ToolServiceI,
+    options?: {
+      timeoutMs?: number;
+      openrouterEnableToolCalling?: boolean;
+    },
   ) {
     const factory = llmModelFactory;
     this.model = factory.create();
@@ -29,6 +37,8 @@ export default class LlmService implements LlmServiceI {
     this.provider = factory.getProvider();
     this.rateLimiter = rateLimiter;
     this.toolService = toolService;
+    this.timeoutMs = options?.timeoutMs ?? 120_000;
+    this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
 
     // Set rate limits for the provider
     const limits = PROVIDER_LIMITS[this.provider];
@@ -38,13 +48,6 @@ export default class LlmService implements LlmServiceI {
     } else {
       console.warn(`No rate limits configured for provider: ${this.provider} or Rate Limiter is disabled`);
     }
-  }
-
-  private getTimeoutMs(): number {
-    const raw = process.env.LLM_TIMEOUT_MS;
-    const parsed = raw ? Number(raw) : NaN;
-    // Default is generous; "hanging forever" is worse than a retry.
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 120_000;
   }
 
   public async searchWeb(query: string): Promise<string> {
@@ -86,12 +89,12 @@ export default class LlmService implements LlmServiceI {
 
       return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
         const controller = new AbortController();
-        const timeoutMs = this.getTimeoutMs();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const timer = setTimeout(() => controller.abort(), this.timeoutMs);
         // Some OpenAI-compatible gateways/models (notably via OpenRouter) don't reliably support
         // tool/function-calling. We still keep ToolService around for manual/pre-prompt searches,
         // but disable model tool-calling to avoid malformed outputs.
-        const tools = this.provider === 'openrouter' ? undefined : this.toolService?.getTools();
+        const disableOpenRouterTools = this.provider === 'openrouter' && !this.openrouterEnableToolCalling;
+        const tools = disableOpenRouterTools ? undefined : this.toolService?.getTools();
         try {
           const { text } = await generateText({
             model: this.model,
@@ -126,8 +129,7 @@ export default class LlmService implements LlmServiceI {
       this.provider,
       async () => {
         const controller = new AbortController();
-        const timeoutMs = this.getTimeoutMs();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const timer = setTimeout(() => controller.abort(), this.timeoutMs);
         console.log(`Sending text generation request to ${this.provider}`);
         try {
           const { text } = await generateText({
