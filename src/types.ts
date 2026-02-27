@@ -50,6 +50,11 @@ export interface ActualApiServiceI {
     categoryId: string,
   ): Promise<void>
 
+  updateTransaction(
+    id: string,
+    updates: Partial<TransactionEntity>,
+  ): Promise<void>
+
   runBankSync(): Promise<void>
 
   createCategory(name: string, groupId: string): Promise<string>
@@ -93,18 +98,26 @@ export interface CategorySuggestion {
 }
 
 export interface UnifiedResponse {
-  type: 'existing' | 'new' | 'rule';
+  type: 'existing' | 'new' | 'rule' | 'skip';
   categoryId?: string;
   ruleName?: string;
   newCategory?: CategorySuggestion;
+  // Optional explanation when the model chooses not to categorize.
+  reason?: string;
+  // Optional confidence score (0..1). When present, the processor can enforce
+  // a minimum threshold and safely skip uncertain classifications.
+  confidence?: number;
 }
 
 export interface LlmServiceI {
   ask(prompt: string): Promise<UnifiedResponse>;
+  searchWeb?(query: string): Promise<string>;
 }
 
 export interface ToolServiceI {
   getTools(): Record<string, Tool>;
+  // Optional helper to run a single search outside of model tool-calling.
+  search?(query: string): Promise<string>;
 }
 
 export interface PromptGeneratorI {
