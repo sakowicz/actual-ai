@@ -105,6 +105,8 @@ export interface LlmServiceI {
 
 export interface ToolServiceI {
   getTools(): Record<string, Tool>;
+  // Optional helper to run a single search outside model tool-calling.
+  search?(query: string): Promise<string>;
 }
 
 export interface PromptGeneratorI {

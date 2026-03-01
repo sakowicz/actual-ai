@@ -75,7 +75,9 @@ export default class FreeWebSearchService {
             return;
           }
           if (res.statusCode !== 200) {
-            reject(new Error(`Request failed with status code ${res.statusCode}`));
+            const error = new Error(`Request failed with status code ${res.statusCode}`) as Error & { statusCode?: number };
+            error.statusCode = res.statusCode;
+            reject(error);
             return;
           }
 
