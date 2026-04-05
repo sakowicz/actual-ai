@@ -3,8 +3,8 @@ import {
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
-} from '@actual-app/api/@types/loot-core/src/server/api-models';
-import { RuleEntity, TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
+} from '@actual-app/core/src/server/api-models';
+import { RuleEntity, TransactionEntity } from '@actual-app/core/src/types/models';
 import { ActualApiServiceI } from '../../src/types';
 
 export default class InMemoryActualApiService implements ActualApiServiceI {
@@ -21,6 +21,12 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
   private wasBankSyncRan = false;
 
   private rules: RuleEntity[] = [];
+
+  private readonly isDryRun: boolean;
+
+  constructor(isDryRun = false) {
+    this.isDryRun = isDryRun;
+  }
 
   async initializeApi(): Promise<void> {
     // Initialize the API (mock implementation)
@@ -71,6 +77,9 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
   }
 
   async updateTransactionNotes(id: string, notes: string): Promise<void> {
+    if (this.isDryRun) {
+      return Promise.resolve();
+    }
     return new Promise((resolve) => {
       const transaction = this.transactions.find((t) => t.id === id);
 
@@ -87,6 +96,9 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
     notes: string,
     categoryId: string,
   ): Promise<void> {
+    if (this.isDryRun) {
+      return Promise.resolve();
+    }
     return new Promise((resolve) => {
       const transaction = this.transactions.find((t) => t.id === id);
       if (!transaction) {

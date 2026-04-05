@@ -531,4 +531,91 @@ describe('ActualAiService', () => {
     createGroupSpy.mockRestore();
     createCategorySpy.mockRestore();
   });
+
+  describe('dry run mode', () => {
+    let dryRunApiService: InMemoryActualApiService;
+    let dryRunTransactionService: TransactionService;
+
+    beforeEach(() => {
+      dryRunApiService = new InMemoryActualApiService(true);
+      const tagService = new TagService(NOT_GUESSED_TAG, GUESSED_TAG);
+      const ruleMatchStrategy = new RuleMatchStrategy(dryRunApiService, tagService);
+      const existingCategoryStrategy = new ExistingCategoryStrategy(dryRunApiService, tagService);
+      const categorySuggester = new CategorySuggester(
+        dryRunApiService,
+        new CategorySuggestionOptimizer(new SimilarityCalculator()),
+        tagService,
+      );
+      const transactionProcessor = new TransactionProcessor(
+        dryRunApiService,
+        mockedLlmService,
+        mockedPromptGenerator,
+        tagService,
+        [ruleMatchStrategy, existingCategoryStrategy, new NewCategoryStrategy()],
+      );
+      const batchTransactionProcessor = new BatchTransactionProcessor(transactionProcessor, 20);
+      dryRunTransactionService = new TransactionService(
+        dryRunApiService,
+        categorySuggester,
+        batchTransactionProcessor,
+        new TransactionFilterer(tagService),
+        true,
+      );
+      dryRunApiService.setCategoryGroups(GivenActualData.createSampleCategoryGroups());
+      dryRunApiService.setCategories(GivenActualData.createSampleCategories());
+      dryRunApiService.setPayees(GivenActualData.createSamplePayees());
+      dryRunApiService.setAccounts(GivenActualData.createSampleAccounts());
+      dryRunApiService.setRules(GivenActualData.createSampleRules());
+    });
+
+    it('should NOT write #actual-ai-miss tag when LLM API error occurs in dry run mode', async () => {
+      // Arrange
+      const originalNotes = 'Carrefour XXXX1234567 822-307-2000';
+      const transaction = GivenActualData.createTransaction(
+        '1',
+        -123,
+        'Carrefour 1234',
+        originalNotes,
+      );
+      dryRunApiService.setTransactions([transaction]);
+      mockedLlmService.setError(new Error('404 Model not found'));
+
+      // Act
+      sut = new ActualAiService(
+        dryRunTransactionService,
+        dryRunApiService,
+        new NotesMigrator(dryRunApiService, new TagService(NOT_GUESSED_TAG, GUESSED_TAG)),
+      );
+      await sut.classify();
+
+      // Assert: notes must be unchanged — no #actual-ai-miss written in dry run mode
+      const updatedTransactions = await dryRunApiService.getTransactions();
+      expect(updatedTransactions[0].notes).toBe(originalNotes);
+    });
+
+    it('should NOT assign category when LLM succeeds in dry run mode', async () => {
+      // Arrange
+      const transaction = GivenActualData.createTransaction(
+        '1',
+        -123,
+        'Carrefour 1234',
+        'Carrefour XXXX1234567 822-307-2000',
+      );
+      dryRunApiService.setTransactions([transaction]);
+      mockedLlmService.setGuess(GivenActualData.CATEGORY_GROCERIES);
+
+      // Act
+      sut = new ActualAiService(
+        dryRunTransactionService,
+        dryRunApiService,
+        new NotesMigrator(dryRunApiService, new TagService(NOT_GUESSED_TAG, GUESSED_TAG)),
+      );
+      await sut.classify();
+
+      // Assert: no writes in dry run mode
+      const updatedTransactions = await dryRunApiService.getTransactions();
+      expect(updatedTransactions[0].category).toBeUndefined();
+      expect(updatedTransactions[0].notes).toBe('Carrefour XXXX1234567 822-307-2000');
+    });
+  });
 });

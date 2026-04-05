@@ -3,9 +3,9 @@ import {
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
-} from '@actual-app/api/@types/loot-core/src/server/api-models';
+} from '@actual-app/core/src/server/api-models';
 import path from 'path';
-import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/src/types/models';
+import { TransactionEntity, RuleEntity } from '@actual-app/core/src/types/models';
 import { ActualApiServiceI } from './types';
 
 function isErrnoException(error: unknown): error is Error & { code?: string } {
@@ -185,6 +185,7 @@ class ActualApiService implements ActualApiServiceI {
     // eslint-disable-next-line no-restricted-syntax
     for (const account of accounts) {
       transactions = transactions.concat(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         await this.actualApiClient.getTransactions(account.id, '1990-01-01', '2030-01-01'),
       );
     }
@@ -222,6 +223,10 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async runBankSync(): Promise<void> {
+    if (this.isDryRun) {
+      console.log('DRY RUN: Would run bank sync');
+      return;
+    }
     await this.actualApiClient.runBankSync();
   }
 
@@ -230,11 +235,13 @@ class ActualApiService implements ActualApiServiceI {
       console.log(`DRY RUN: Would create category name: ${name} groupId: ${groupId}`);
       return 'dry run';
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const result = await this.actualApiClient.createCategory({
       name,
       group_id: groupId,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return result;
   }
 
@@ -243,6 +250,7 @@ class ActualApiService implements ActualApiServiceI {
       console.log(`DRY RUN: Would create category group: ${name}`);
       return 'dry run';
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.createCategoryGroup({
       name,
     });

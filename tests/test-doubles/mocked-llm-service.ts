@@ -5,7 +5,13 @@ export default class MockedLlmService implements LlmServiceI {
 
   private unifiedResponse: UnifiedResponse | null = null;
 
+  private error: Error | null = null;
+
   async ask(_prompt: string, _categoryIds?: string[]): Promise<UnifiedResponse> {
+    if (this.error) {
+      return Promise.reject(this.error);
+    }
+
     if (this.unifiedResponse) {
       return Promise.resolve(this.unifiedResponse);
     }
@@ -39,5 +45,11 @@ export default class MockedLlmService implements LlmServiceI {
   setUnifiedResponse(response: UnifiedResponse): void {
     this.unifiedResponse = response;
     this.guess = ''; // Clear old guess when setting unified response
+  }
+
+  setError(error: Error): void {
+    this.error = error;
+    this.unifiedResponse = null;
+    this.guess = '';
   }
 }

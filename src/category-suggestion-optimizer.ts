@@ -1,6 +1,6 @@
 import type {
   TransactionEntity,
-} from '@actual-app/api/@types/loot-core/src/types/models';
+} from '@actual-app/core/src/types/models';
 import SimilarityCalculator from './similarity-calculator';
 
 class CategorySuggestionOptimizer {

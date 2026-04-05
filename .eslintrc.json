@@ -24,12 +24,6 @@
         "tsx": "never"
       }
       ],
-    "import/no-unresolved": [
-      "error",
-      {
-        "ignore": ["^@actual-app/api/@types/loot-core/.+"]
-      }
-    ],
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
   },
