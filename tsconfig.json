@@ -7,6 +7,13 @@
     "strict": true,
     "skipLibCheck": true,
     "lib": ["es2020"],
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@actual-app/core/src/server/api-models": ["./src/shims/actual-app-core-src-server-api-models"],
+      "@actual-app/core/src/types/models": ["./src/shims/actual-app-core-src-types-models"],
+      "@actual-app/core": ["./src/shims/empty"],
+      "@actual-app/core/*": ["./src/shims/empty"]
+    }
   }
 }
