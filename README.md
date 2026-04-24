@@ -71,7 +71,8 @@ services:
     environment:
       ACTUAL_SERVER_URL: http://actual_server:5006
       ACTUAL_PASSWORD: your_actual_password
-      ACTUAL_BUDGET_ID: your_actual_budget_id # This is the ID from Settings → Show advanced settings → Sync ID
+      # This is actually NOT the ACTUAL_BUDGET_ID, which is a different identifier. It is the sync ID, a hash for the budget id. Variable not renamed to minimize breaking changes
+      ACTUAL_BUDGET_ID: your_actual_budget_sync_id # This is the sync ID from Settings → Show advanced settings → Sync ID
       CLASSIFICATION_SCHEDULE_CRON: 0 */4 * * * # How often to run classification.
       LLM_PROVIDER: openai # Can be "openai", "openrouter", "anthropic", "google-generative-ai", "ollama" or "groq"
       FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "freeWebSearch", "suggestNewCategories"]'
