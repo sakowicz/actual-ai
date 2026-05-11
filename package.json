@@ -15,7 +15,7 @@
   "author": "Szymon Sakowicz <info@sakowi.cz>",
   "license": "MIT",
   "dependencies": {
-    "@actual-app/api": "^26.5.0",
+    "@actual-app/api": "^26.5.2",
     "@actual-app/core": "^26.5.0",
     "@ai-sdk/anthropic": "^1.2.9",
     "@ai-sdk/google": "^1.2.12",
