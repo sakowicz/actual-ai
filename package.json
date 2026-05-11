@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/natural": "^5.1.5",
+    "@types/natural": "^6.0.1",
     "@types/node": "^22.14.1",
     "@types/node-cron": "^3.0.11",
     "@typescript-eslint/eslint-plugin": "^8.29.1",
