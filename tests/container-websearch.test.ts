@@ -1,3 +1,7 @@
+if (typeof (global as any).navigator === 'undefined') {
+  (global as any).navigator = { userAgent: 'node' };
+}
+
 describe('container tool service wiring', () => {
   const ORIGINAL_ENV = process.env;
 

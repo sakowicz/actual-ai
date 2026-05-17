@@ -66,7 +66,7 @@ class TransactionProcessor {
         if (!response) {
           console.warn(`No mapped JSON response returned from LLM for transaction: ${transaction.id}`);
           await this.actualApiService.updateTransactionNotes(
-            transaction.id,
+            transaction,
             this.tagService.addNotGuessedTag(transaction.notes ?? ''),
           );
           continue;
@@ -78,7 +78,7 @@ class TransactionProcessor {
         } else {
           console.warn(`Unexpected response strategy format: ${JSON.stringify(response)}`);
           await this.actualApiService.updateTransactionNotes(
-            transaction.id,
+            transaction,
             this.tagService.addNotGuessedTag(transaction.notes ?? ''),
           );
         }
@@ -87,7 +87,7 @@ class TransactionProcessor {
       console.error(`Error processing transaction batch:`, error);
       for (const transaction of transactions) {
         await this.actualApiService.updateTransactionNotes(
-          transaction.id,
+          transaction,
           this.tagService.addNotGuessedTag(transaction.notes ?? ''),
         );
       }

@@ -8,6 +8,9 @@ Transaction ID: {{id}}
 * Type: {{type}}
 {{#if description}}
 * Description: {{description}}
+{{#if splitNotes}}
+* Splits notes: {{splitNotes}}
+{{/if}}
 {{/if}}
 * Payee: {{payee}}
 {{#if date}}
@@ -36,7 +39,7 @@ IMPORTANT: You MUST respond with ONLY a valid JSON ARRAY of objects, where each 
   {
     "transactionId": "string", // Must identically match the Transaction ID provided
     "type": "existing"{{#if suggestNewCategoriesEnabled}}|"new"{{/if}}|"rule",
-    "categoryId": "string", // Required for existing category or rule match
+    "categoryId": "string", // Required for existing category or rule match. Omit if the matched rule says "leave uncategorized"
     "ruleName": "string"{{#if suggestNewCategoriesEnabled}}, // Required if matching rule
     "newCategory": { // Required if suggesting new category
       "name": "string", 
@@ -46,13 +49,16 @@ IMPORTANT: You MUST respond with ONLY a valid JSON ARRAY of objects, where each 
   }
 ]
 
+If a rule renders as "→ leave uncategorized", that rule explicitly tells you NOT to assign a category. Match it with type "rule" and the ruleName, and OMIT categoryId — do not invent one and do not fall back to "new".
+
 DO NOT output any text before or after the JSON ARRAY. Your entire response must be a valid, parsable JSON ARRAY mapped exactly to every input transaction!
 
 Examples of valid response array elements:
 [
   {"transactionId": "id-1", "type": "existing", "categoryId": "abc123"},
-  {"transactionId": "id-2", "type": "rule", "categoryId": "def456", "ruleName": "Coffee Shop"}{{#if suggestNewCategoriesEnabled}},
-  {"transactionId": "id-3", "type": "new", "newCategory": {"name": "Pet Supplies", "groupName": "Pets", "groupIsNew": true}}{{/if}}
+  {"transactionId": "id-2", "type": "rule", "categoryId": "def456", "ruleName": "Coffee Shop"},
+  {"transactionId": "id-3", "type": "rule", "ruleName": "Amazon leave uncategorized"}{{#if suggestNewCategoriesEnabled}},
+  {"transactionId": "id-4", "type": "new", "newCategory": {"name": "Pet Supplies", "groupName": "Pets", "groupIsNew": true}}{{/if}}
 ]
 
 {{#if hasWebSearchTool}}

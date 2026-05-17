@@ -35,7 +35,9 @@ import {
   openrouterTitle,
   password,
   promptTemplate,
+  requestsPerMinuteOverride,
   serverURL,
+  tokensPerMinuteOverride,
   valueSerpApiKey,
 } from './config';
 import ActualAiService from './actual-ai';
@@ -111,6 +113,8 @@ const llmService = new LlmService(
   {
     timeoutMs: llmTimeoutMs,
     openrouterEnableToolCalling,
+    requestsPerMinuteOverride,
+    tokensPerMinuteOverride,
   },
 );
 

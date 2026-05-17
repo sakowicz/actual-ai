@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
+import { parseRateLimitEnv } from './utils/parse-rate-limit-env';
 
 const defaultPromptTemplate = fs.readFileSync('./src/templates/prompt.hbs', 'utf8').trim();
 
@@ -40,6 +41,17 @@ export const groqApiKey = process.env.GROQ_API_KEY ?? '';
 export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
 export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
+
+// Optional per-deployment overrides for LLM rate limits.
+// `null` → use provider default; `0` → disable that axis; `>0` → custom limit.
+export const requestsPerMinuteOverride = parseRateLimitEnv(
+  process.env.REQUESTS_PER_MINUTE,
+  'REQUESTS_PER_MINUTE',
+);
+export const tokensPerMinuteOverride = parseRateLimitEnv(
+  process.env.TOKENS_PER_MINUTE,
+  'TOKENS_PER_MINUTE',
+);
 export interface FeatureFlag {
   enabled: boolean;
   defaultValue: boolean;

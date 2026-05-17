@@ -81,12 +81,25 @@ class PromptGenerator implements PromptGeneratorI {
     try {
       const webSearchEnabled = (typeof isToolEnabled('webSearch') === 'boolean' && isToolEnabled('webSearch'))
         || (typeof isToolEnabled('freeWebSearch') === 'boolean' && isToolEnabled('freeWebSearch'));
+      
+      const firstTransaction = mappedTransactions[0];
+
       return template({
         categoryGroups: groupsWithCategories,
         rules: rulesDescription,
         transactions: mappedTransactions,
         hasWebSearchTool: webSearchEnabled,
         suggestNewCategoriesEnabled: isFeatureEnabled('suggestNewCategories'),
+        // Backward compatibility for legacy single-transaction templates
+        ...(firstTransaction ? {
+          amount: firstTransaction.amount,
+          type: firstTransaction.type,
+          description: firstTransaction.description,
+          payee: firstTransaction.payee,
+          date: firstTransaction.date,
+          cleared: firstTransaction.cleared,
+          reconciled: firstTransaction.reconciled,
+        } : {}),
       });
     } catch {
       console.error('Error generating prompt. Check syntax of your template.');

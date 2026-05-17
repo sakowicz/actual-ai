@@ -1,6 +1,6 @@
 {
   "name": "@sakowicz/actual-ai",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Transaction AI classification for Actual Budget app.",
   "main": "app.js",
   "scripts": {
@@ -15,8 +15,8 @@
   "author": "Szymon Sakowicz <info@sakowi.cz>",
   "license": "MIT",
   "dependencies": {
-    "@actual-app/api": "^26.4.0",
-    "@actual-app/core": "^26.4.0",
+    "@actual-app/api": "^26.5.0",
+    "@actual-app/core": "^26.5.0",
     "@ai-sdk/anthropic": "^1.2.9",
     "@ai-sdk/google": "^1.2.12",
     "@ai-sdk/groq": "^1.2.7",
@@ -26,6 +26,7 @@
     "axios": "^1.8.1",
     "dotenv": "^16.5.0",
     "handlebars": "^4.7.8",
+    "natural": "^8.1.1",
     "node-cron": "^3.0.3",
     "ollama-ai-provider": "^1.2.0",
     "ts-node": "^10.9.2",
@@ -34,6 +35,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
+    "@types/natural": "^5.1.5",
     "@types/node": "^22.14.1",
     "@types/node-cron": "^3.0.11",
     "@typescript-eslint/eslint-plugin": "^8.29.1",
@@ -46,6 +48,6 @@
     "ts-jest": "^29.3.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
