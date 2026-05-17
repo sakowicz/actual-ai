@@ -56,6 +56,7 @@ class TransactionService implements TransactionServiceI {
     const uncategorizedTransactions = this.transactionFilterer.filterUncategorized(
       transactions,
       accounts,
+      categories,
     );
 
     if (uncategorizedTransactions.length === 0) {

@@ -5,7 +5,7 @@ import {
   PromptGeneratorI,
 } from './types';
 import PromptTemplateException from './exceptions/prompt-template-exception';
-import { isToolEnabled } from './config';
+import { isToolEnabled, isFeatureEnabled } from './config';
 import { transformRulesToDescriptions } from './utils/rule-utils';
 
 class PromptGenerator implements PromptGeneratorI {
@@ -19,7 +19,7 @@ class PromptGenerator implements PromptGeneratorI {
 
   generate(
     categoryGroups: APICategoryGroupEntity[],
-    transaction: TransactionEntity,
+    transactions: TransactionEntity[],
     payees: APIPayeeEntity[],
     rules: RuleEntity[],
   ): string {
@@ -30,7 +30,6 @@ class PromptGenerator implements PromptGeneratorI {
       console.error('Error generating prompt. Check syntax of your template.');
       throw new PromptTemplateException('Error generating prompt. Check syntax of your template.');
     }
-    const payeeName = payees.find((payee) => payee.id === transaction.payee)?.name;
 
     // Ensure each category group has its categories property
     const groupsWithCategories = categoryGroups.map((group) => ({
@@ -45,21 +44,49 @@ class PromptGenerator implements PromptGeneratorI {
       payees,
     );
 
+    const mappedTransactions = transactions.map(transaction => {
+      const payeeName = payees.find((payee) => payee.id === transaction.payee)?.name;
+      let description = transaction.notes ?? '';
+
+      // Extract Amazon product names to simplify the prompt
+      if (description.includes('#Amazon-Product-Name')) {
+        const productMatch = description.match(/#Amazon-Product-Name\s+(.*?)(?=\s*#[A-Za-z-]+|$)/);
+        if (productMatch) {
+          description = productMatch[1].trim();
+        }
+      } else if (description.includes('#Amazon-Product-Name-Split-')) {
+        const splitProducts = [];
+        const splitRegex = /#Amazon-Product-Name-Split-\d+\s+(.*?)(?=\s*#[A-Za-z-]+|$)/g;
+        let match;
+        while ((match = splitRegex.exec(description)) !== null) {
+          splitProducts.push(match[1].trim());
+        }
+        if (splitProducts.length > 0) {
+          description = splitProducts.join('; ');
+        }
+      }
+
+      return {
+        id: transaction.id,
+        amount: Math.abs(transaction.amount),
+        type: transaction.amount > 0 ? 'Income' : 'Outcome',
+        description: description,
+        payee: payeeName || transaction.imported_payee || '',
+        date: transaction.date ?? '',
+        cleared: transaction.cleared,
+        reconciled: transaction.reconciled,
+      };
+    });
+
     try {
       const webSearchEnabled = (typeof isToolEnabled('webSearch') === 'boolean' && isToolEnabled('webSearch'))
         || (typeof isToolEnabled('freeWebSearch') === 'boolean' && isToolEnabled('freeWebSearch'));
       return template({
         categoryGroups: groupsWithCategories,
         rules: rulesDescription,
-        amount: Math.abs(transaction.amount),
-        type: transaction.amount > 0 ? 'Income' : 'Outcome',
-        description: transaction.notes ?? '',
-        payee: payeeName ?? '',
-        importedPayee: transaction.imported_payee ?? '',
-        date: transaction.date ?? '',
-        cleared: transaction.cleared,
-        reconciled: transaction.reconciled,
+        transactions: mappedTransactions,
         hasWebSearchTool: webSearchEnabled,
+        suggestNewCategoriesEnabled: isFeatureEnabled('suggestNewCategories'),
       });
     } catch {
       console.error('Error generating prompt. Check syntax of your template.');

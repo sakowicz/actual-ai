@@ -1,19 +1,19 @@
-I want to categorize the given bank transaction.
+I want to categorize the given bank transactions.
 
-Transaction details:
+Transactions to categorize:
+{{#each transactions}}
+---
+Transaction ID: {{id}}
 * Amount: {{amount}}
 * Type: {{type}}
 {{#if description}}
 * Description: {{description}}
 {{/if}}
-{{#if payee}}
 * Payee: {{payee}}
-{{^}}
-* Payee: {{importedPayee}}
-{{/if}}
 {{#if date}}
 * Date: {{date}}
 {{/if}}
+{{/each}}
 
 Existing categories by group:
 {{#each categoryGroups}}
@@ -31,24 +31,29 @@ Existing Rules:
 {{/each}}
 {{/if}}
 
-IMPORTANT: You MUST respond with ONLY a valid JSON object using this structure:
-{
-  "type": "existing"|"new"|"rule",
-  "categoryId": "string", // Required for existing category or rule match
-  "ruleName": "string", // Required if matching rule
-  "newCategory": { // Required if suggesting new category
-    "name": "string", 
-    "groupName": "string",
-    "groupIsNew": boolean
+IMPORTANT: You MUST respond with ONLY a valid JSON ARRAY of objects, where each object corresponds to a categorized transaction from the list above. No other text is permitted. Use this structure for each object:
+[
+  {
+    "transactionId": "string", // Must identically match the Transaction ID provided
+    "type": "existing"{{#if suggestNewCategoriesEnabled}}|"new"{{/if}}|"rule",
+    "categoryId": "string", // Required for existing category or rule match
+    "ruleName": "string"{{#if suggestNewCategoriesEnabled}}, // Required if matching rule
+    "newCategory": { // Required if suggesting new category
+      "name": "string", 
+      "groupName": "string",
+      "groupIsNew": boolean
+    }{{else}} // Required if matching rule{{/if}}
   }
-}
+]
 
-DO NOT output any text before or after the JSON. Your entire response must be a valid, parsable JSON object.
+DO NOT output any text before or after the JSON ARRAY. Your entire response must be a valid, parsable JSON ARRAY mapped exactly to every input transaction!
 
-Examples:
-{"type": "existing", "categoryId": "abc123"}
-{"type": "rule", "categoryId": "def456", "ruleName": "Coffee Shop"}
-{"type": "new", "newCategory": {"name": "Pet Supplies", "groupName": "Pets", "groupIsNew": true}}
+Examples of valid response array elements:
+[
+  {"transactionId": "id-1", "type": "existing", "categoryId": "abc123"},
+  {"transactionId": "id-2", "type": "rule", "categoryId": "def456", "ruleName": "Coffee Shop"}{{#if suggestNewCategoriesEnabled}},
+  {"transactionId": "id-3", "type": "new", "newCategory": {"name": "Pet Supplies", "groupName": "Pets", "groupIsNew": true}}{{/if}}
+]
 
 {{#if hasWebSearchTool}}
 You can use the web search tool to find more information about the transaction.

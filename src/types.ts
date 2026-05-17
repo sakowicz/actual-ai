@@ -57,6 +57,7 @@ export interface ActualApiServiceI {
   createCategoryGroup(name: string): Promise<string>
 
   updateCategoryGroup(id: string, name: string): Promise<void>
+
 }
 
 export interface TransactionServiceI {
@@ -93,6 +94,7 @@ export interface CategorySuggestion {
 }
 
 export interface UnifiedResponse {
+  transactionId: string;
   type: 'existing' | 'new' | 'rule';
   categoryId?: string;
   ruleName?: string;
@@ -100,7 +102,7 @@ export interface UnifiedResponse {
 }
 
 export interface LlmServiceI {
-  ask(prompt: string): Promise<UnifiedResponse>;
+  ask(prompt: string): Promise<UnifiedResponse[]>;
 }
 
 export interface ToolServiceI {
@@ -112,7 +114,7 @@ export interface ToolServiceI {
 export interface PromptGeneratorI {
   generate(
     categoryGroups: APICategoryGroupEntity[],
-    transaction: TransactionEntity,
+    transactions: TransactionEntity[],
     payees: APIPayeeEntity[],
     rules: RuleEntity[],
   ): string;

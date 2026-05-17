@@ -5,7 +5,7 @@ import { PromptGeneratorI } from '../../src/types';
 export default class MockedPromptGenerator implements PromptGeneratorI {
   generate(
     _categoryGroups: APICategoryGroupEntity[],
-    _transaction: TransactionEntity,
+    _transactions: TransactionEntity[],
     _payees: APIPayeeEntity[],
     _rules?: RuleEntity[],
   ): string {

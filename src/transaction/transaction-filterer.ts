@@ -1,5 +1,6 @@
 import { TransactionEntity } from '@actual-app/core/src/types/models';
 import { APIAccountEntity } from '@actual-app/core/src/server/api-models';
+import { APICategoryEntity, APICategoryGroupEntity } from '../types';
 import { isFeatureEnabled } from '../config';
 import TagService from './tag-service';
 
@@ -27,6 +28,7 @@ class TransactionFilterer {
   public filterUncategorized(
     transactions: TransactionEntity[],
     accounts: APIAccountEntity[],
+    categories: (APICategoryEntity | APICategoryGroupEntity)[] = [],
   ): TransactionEntity[] {
     console.log(`All transactions count: ${transactions.length}`);
     console.log(`All accounts: ${accounts.length}`);
@@ -35,12 +37,21 @@ class TransactionFilterer {
       .map((account) => account.id) ?? [];
     console.log(`Accounts off budget: ${accountsToSkip.length}`);
 
+    // Find the 'To Recategorise' category ID
+    const recategoriseCategory = categories.find(
+      (cat) => 'name' in cat && cat.name === 'To Recategorise',
+    );
+    const recategoriseCategoryId = recategoriseCategory?.id;
+    if (recategoriseCategoryId) {
+      console.log(`Found 'To Recategorise' category: ${recategoriseCategoryId}`);
+    }
+
     let filteredTransactions = transactions;
 
     // Apply filters one by one
     filteredTransactions = this.applyFilter(
       filteredTransactions,
-      (transaction) => !transaction.category,
+      (transaction) => !transaction.category || transaction.category === recategoriseCategoryId,
       'Already has a category',
     );
 
@@ -59,7 +70,8 @@ class TransactionFilterer {
     filteredTransactions = this.applyFilter(
       filteredTransactions,
       (transaction) => (transaction.imported_payee !== null && transaction.imported_payee !== '')
-          || (transaction.payee !== null && transaction.payee !== ''),
+          || (transaction.payee !== null && transaction.payee !== '')
+          || (!!transaction.parent_id && (transaction.notes ?? '').trim() !== ''),
       'Has no payee / imported_payee',
     );
 
@@ -79,6 +91,12 @@ class TransactionFilterer {
       filteredTransactions,
       (transaction) => !accountsToSkip.includes(transaction.account),
       'Account is not budget',
+    );
+
+    filteredTransactions = this.applyFilter(
+      filteredTransactions,
+      (transaction) => isFeatureEnabled('includeIncome') || transaction.amount <= 0,
+      'Is income transaction',
     );
 
     console.log(`Found ${filteredTransactions.length} uncategorized transactions`);

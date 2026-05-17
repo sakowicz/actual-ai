@@ -23,67 +23,71 @@ function cleanJsonResponse(text: string): string {
   return cleaned.trim();
 }
 
-function parseLlmResponse(text: string): UnifiedResponse {
+function parseLlmResponse(text: string): UnifiedResponse[] {
   const cleanedText = cleanJsonResponse(text);
   console.log('Cleaned LLM response:', cleanedText);
 
   try {
-    let parsed: Partial<UnifiedResponse>;
+    let parsedArray: Partial<UnifiedResponse>[];
     try {
-      parsed = JSON.parse(cleanedText) as Partial<UnifiedResponse>;
+      const parsed = JSON.parse(cleanedText);
+      // Ensure it's an array for batching processing
+      parsedArray = Array.isArray(parsed) ? parsed : [parsed];
     } catch {
-      // If not valid JSON, check if it's a simple ID
-      const trimmedText = cleanedText.trim().replace(/^"|"$/g, '');
+      throw new Error('Response is not valid JSON mapped correctly');
+    }
 
-      if (/^[a-zA-Z0-9_-]+$/.test(trimmedText)) {
-        console.log(`LLM returned simple ID: "${trimmedText}"`);
-        return {
-          type: 'existing',
-          categoryId: trimmedText,
-        };
+    const validResponses: UnifiedResponse[] = [];
+
+    for (const parsed of parsedArray) {
+      if (!parsed.transactionId) {
+        console.warn('Skipping response map without transactionId', parsed);
+        continue; // Fallback missing links
       }
 
-      throw new Error('Response is neither valid JSON nor simple ID');
+      const transactionId = parsed.transactionId;
+
+      if (parsed.type === 'existing' && parsed.categoryId) {
+        validResponses.push({ transactionId, type: 'existing', categoryId: parsed.categoryId });
+        continue;
+      }
+      if (parsed.type === 'rule' && parsed.categoryId && parsed.ruleName) {
+        validResponses.push({
+          transactionId,
+          type: 'rule',
+          categoryId: parsed.categoryId,
+          ruleName: parsed.ruleName,
+        });
+        continue;
+      }
+      if (parsed.type === 'new' && parsed.newCategory) {
+        validResponses.push({
+          transactionId,
+          type: 'new',
+          newCategory: parsed.newCategory,
+        });
+        continue;
+      }
+
+
+      if (parsed.categoryId) {
+        console.log(`LLM response missing type but has categoryId for ${transactionId}, treating as existing category`);
+        validResponses.push({
+          transactionId,
+          type: 'existing',
+          categoryId: parsed.categoryId,
+        });
+        continue;
+      }
+      console.warn(`Invalid valid response structure mapped from LLM for ${transactionId}`);
     }
 
-    if (parsed.type === 'existing' && parsed.categoryId) {
-      return { type: 'existing', categoryId: parsed.categoryId };
-    }
-    if (parsed.type === 'rule' && parsed.categoryId && parsed.ruleName) {
-      return {
-        type: 'rule',
-        categoryId: parsed.categoryId,
-        ruleName: parsed.ruleName,
-      };
-    }
-    if (parsed.type === 'new' && parsed.newCategory) {
-      return {
-        type: 'new',
-        newCategory: parsed.newCategory,
-      };
-    }
-
-    // If the response doesn't match expected format but has a categoryId,
-    // default to treating it as an existing category
-    if (parsed.categoryId) {
-      console.log('LLM response missing type but has categoryId, treating as existing category');
-      return {
-        type: 'existing',
-        categoryId: parsed.categoryId,
-      };
-    }
-    if (parsed && typeof parsed === 'string') {
-      return {
-        type: 'existing',
-        categoryId: parsed,
-      };
-    }
-
-    console.error('Invalid response structure from LLM:', parsed);
-    throw new Error('Invalid response format from LLM');
+    if (validResponses.length === 0) throw new Error('No valid array items generated from LLM');
+    return validResponses;
+    
   } catch (parseError) {
-    console.error('Failed to parse LLM response:', cleanedText, parseError);
-    throw new Error('Invalid response format from LLM');
+    console.error('Failed to parse LLM response array:', cleanedText, parseError);
+    throw new Error('Invalid array response format from LLM');
   }
 }
 

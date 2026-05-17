@@ -140,7 +140,7 @@ const transactionProcessor = new TransactionProcessor(
 
 const batchTransactionProcessor = new BatchTransactionProcessor(
   transactionProcessor,
-  20,
+  Number(process.env.BATCH_SIZE) || 50,
 );
 
 const transactionFilterer = new TransactionFilterer(tagService);

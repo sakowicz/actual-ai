@@ -69,7 +69,7 @@ export default class LlmService implements LlmServiceI {
     }
   }
 
-  public async ask(prompt: string): Promise<UnifiedResponse> {
+  public async ask(prompt: string): Promise<UnifiedResponse[]> {
     try {
       console.log(`Making LLM request to ${this.provider}${this.isFallbackMode ? ' (fallback mode)' : ''}`);
 
@@ -81,10 +81,11 @@ export default class LlmService implements LlmServiceI {
               + 'Maybe you need to use bigger context window');
           throw new Error(`Could not foud category in LLM response: ${response}`);
         }
-        return {
+        return [{
+          transactionId: 'fallback',
           type: 'existing',
           categoryId: response,
-        };
+        }];
       }
 
       return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
@@ -102,6 +103,7 @@ export default class LlmService implements LlmServiceI {
             temperature: 0.2,
             tools,
             maxSteps: tools ? 3 : 1,
+            maxRetries: 0,
             abortSignal: controller.signal,
           });
 

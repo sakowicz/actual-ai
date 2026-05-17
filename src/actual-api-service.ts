@@ -184,10 +184,15 @@ class ActualApiService implements ActualApiServiceI {
     const accounts = await this.getAccounts();
     // eslint-disable-next-line no-restricted-syntax
     for (const account of accounts) {
-      transactions = transactions.concat(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        await this.actualApiClient.getTransactions(account.id, '1990-01-01', '2030-01-01'),
-      );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const accountTransactions: TransactionEntity[] = await this.actualApiClient.getTransactions(account.id, '1990-01-01', '2030-01-01');
+      for (const t of accountTransactions) {
+        transactions.push(t);
+        // Ensure child transactions are processed by flattening them into the array
+        if (t.subtransactions && Array.isArray(t.subtransactions)) {
+          transactions.push(...t.subtransactions);
+        }
+      }
     }
     return transactions;
   }
@@ -263,6 +268,8 @@ class ActualApiService implements ActualApiServiceI {
     }
     await this.actualApiClient.updateCategoryGroup(id, { name });
   }
+
+
 }
 
 export default ActualApiService;

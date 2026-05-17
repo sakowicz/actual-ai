@@ -93,7 +93,7 @@ describe('PromptGenerator', () => {
     // Modern format test
     const modernTemplate = fs.readFileSync('./src/templates/prompt.hbs', 'utf8').trim();
     const modernPromptGenerator = new PromptGenerator(modernTemplate);
-    const generatedModern = modernPromptGenerator.generate(categoryGroups, transaction, payees, []);
+    const generatedModern = modernPromptGenerator.generate(categoryGroups, [transaction], payees, []);
     const expectedModern = loadAndRenderTemplate(modernTemplate, transaction, categoryGroups);
     expect(generatedModern.trim()).toEqual(expectedModern.trim());
 
@@ -119,7 +119,7 @@ Please categorize the following transaction:
 ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY NAME, JUST AN ID. Do not guess, if you don't know the answer, return "uncategorized".`.trim();
 
     const legacyPromptGenerator = new PromptGenerator(legacyTemplate);
-    const generatedLegacy = legacyPromptGenerator.generate(categoryGroups, transaction, payees, []);
+    const generatedLegacy = legacyPromptGenerator.generate(categoryGroups, [transaction], payees, []);
     const expectedLegacy = loadAndRenderTemplate(legacyTemplate, transaction, categoryGroups);
     expect(generatedLegacy.trim()).toEqual(expectedLegacy.trim());
   });
@@ -130,7 +130,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
     const transaction = GivenActualData.createTransaction('1', 1000, 'Carrefour 2137');
     const promptGenerator = new PromptGenerator('{{#each categories}}');
     const t = () => {
-      promptGenerator.generate(categoryGroups, transaction, payees, []);
+      promptGenerator.generate(categoryGroups, [transaction], payees, []);
     };
 
     expect(t).toThrow(PromptTemplateException);
@@ -152,7 +152,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
     const payees = GivenActualData.createSamplePayees();
 
     const promptGenerator = new PromptGenerator(promptTemplate);
-    const prompt = promptGenerator.generate(categoryGroups, transaction, payees, rules);
+    const prompt = promptGenerator.generate(categoryGroups, [transaction], payees, rules);
 
     // Check for rule-specific content
     expect(prompt).toContain('Existing Rules:');
@@ -189,7 +189,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
       const payees = GivenActualData.createSamplePayees();
 
       const promptGenerator = new PromptGenerator(promptTemplate);
-      const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
+      const prompt = promptGenerator.generate(categoryGroups, [transaction], payees, []);
 
       expect(prompt).toContain('You can use the web search tool to find more information about the transaction.');
     });
@@ -211,7 +211,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
       const payees = GivenActualData.createSamplePayees();
 
       const promptGenerator = new PromptGenerator(promptTemplate);
-      const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
+      const prompt = promptGenerator.generate(categoryGroups, [transaction], payees, []);
 
       expect(prompt).toContain('You can use the web search tool to find more information about the transaction.');
     });
@@ -233,7 +233,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
       const payees = GivenActualData.createSamplePayees();
 
       const promptGenerator = new PromptGenerator(promptTemplate);
-      const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
+      const prompt = promptGenerator.generate(categoryGroups, [transaction], payees, []);
 
       expect(prompt).not.toContain('You can use the web search tool to find more information about the transaction.');
     });

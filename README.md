@@ -19,6 +19,26 @@ or any other compatible API (including OpenRouter).
 
 ## 🌟 Features
 
+#### ⚡ High Performance Batch Processing [FORK FEATURE]
+
+Instead of running slow sequential API requests one transaction at a time, this fork bundles uncategorized transactions into highly optimized batches (configured via `BATCH_SIZE`, defaults to `50`) and submits them to the LLM in a single request. This drastically increases throughput and reduces overall runtime.
+
+#### 🚦 Client-Side Rate Limiter & Token Bucket [FORK FEATURE]
+
+Includes a robust client-side rate limiter tailored for Google Generative AI / Gemini API RPM (Requests Per Minute) and TPM (Tokens Per Minute) limit constraints (configured via `REQUESTS_PER_MINUTE` and `TOKENS_PER_MINUTE` environment variables). It gracefully queues requests and limits concurrent traffic, preventing `429 Too Many Requests` API failures under high transaction loads.
+
+#### 🛍️ Amazon Split Transaction Matching [FORK FEATURE]
+
+Built-in smart parsing for complex Amazon transaction splits. It automatically detects, extracts, and groups product split tags (`#Amazon-Product-Name-Split-1`, `#Amazon-Product-Name-Split-2`, etc.) in bank description notes before sending cleaned product names to the LLM.
+
+#### 🎯 Forced Targeted Recategorization via `"To Recategorise"` [FORK FEATURE]
+
+To trigger a manual, targeted AI recategorization on any existing transaction, change its category to `"To Recategorise"` in the Actual Budget UI. The system will automatically treat these transactions as uncategorized and submit them to the LLM for a fresh classification.
+
+#### 💰 Opt-in Income Categorization via `"includeIncome"` [FORK FEATURE]
+
+A new opt-in feature flag `"includeIncome"` to control income categorization. By default, positive transactions (income) are completely skipped and left uncategorized. Add `"includeIncome"` to your `FEATURES` array to enable LLM-based categorization of income.
+
 #### 📊 Classify transactions using LLM
 
 The app sends requests to the LLM to classify transactions based on their description, amount, and notes.
@@ -124,7 +144,16 @@ Available features:
 - `syncAccountsBeforeClassify` - Sync accounts before running classification
 - `dryRun` - Run in dry run mode (enabled by default)
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
-- `disableRateLimiter` - Disable Rate Limiter
+- `includeIncome` - Enable categorization of positive amount transactions (income). Disabled by default.
+- `disableRateLimiter` - Disable client-side rate limiter
+
+## ⚡ Performance and Rate Limiting Options
+
+Configure performance and rate limiting for batch processing using these environment variables:
+
+- `BATCH_SIZE` - The maximum number of transactions to group and process in a single LLM request. Default is `50`.
+- `REQUESTS_PER_MINUTE` - Strict limit on the maximum number of requests to execute per minute. Default is empty (no limit).
+- `TOKENS_PER_MINUTE` - Strict limit on the maximum number of tokens to use per minute. Default is empty (no limit).
 
 ## OpenRouter Tool Calling
 

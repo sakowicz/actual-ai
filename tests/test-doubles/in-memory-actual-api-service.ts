@@ -110,6 +110,8 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
     });
   }
 
+
+
   async runBankSync(): Promise<void> {
     this.wasBankSyncRan = true;
     return Promise.resolve();
