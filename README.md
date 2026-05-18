@@ -27,9 +27,6 @@ Instead of running slow sequential API requests one transaction at a time, this 
 
 Includes a robust client-side rate limiter tailored for Google Generative AI / Gemini API RPM (Requests Per Minute) and TPM (Tokens Per Minute) limit constraints (configured via `REQUESTS_PER_MINUTE` and `TOKENS_PER_MINUTE` environment variables). It gracefully queues requests and limits concurrent traffic, preventing `429 Too Many Requests` API failures under high transaction loads.
 
-#### 🛍️ Amazon Split Transaction Matching [FORK FEATURE]
-
-Built-in smart parsing for complex Amazon transaction splits. It automatically detects, extracts, and groups product split tags (`#Amazon-Product-Name-Split-1`, `#Amazon-Product-Name-Split-2`, etc.) in bank description notes before sending cleaned product names to the LLM.
 
 #### 🎯 Forced Targeted Recategorization via `"To Recategorise"` [FORK FEATURE]
 
