@@ -57,6 +57,7 @@ class TransactionService implements TransactionServiceI {
       transactions,
       accounts,
       categories,
+      payees,
     );
 
     if (uncategorizedTransactions.length === 0) {

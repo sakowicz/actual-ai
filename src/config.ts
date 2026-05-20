@@ -125,6 +125,12 @@ function registerStandardFeatures() {
     defaultValue: false,
     description: 'Disable Rate Limiter',
   };
+
+  features.amazonNoterWorkflow = {
+    enabled: enabledFeatures.includes('amazonNoterWorkflow'),
+    defaultValue: false,
+    description: 'Ignore all Amazon and AMZN transactions',
+  };
 }
 
 function registerToolFeatures() {

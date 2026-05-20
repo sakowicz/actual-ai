@@ -1,5 +1,5 @@
 import { TransactionEntity } from '@actual-app/core/src/types/models';
-import { APIAccountEntity } from '@actual-app/core/src/server/api-models';
+import { APIAccountEntity, APIPayeeEntity } from '@actual-app/core/src/server/api-models';
 import { APICategoryEntity, APICategoryGroupEntity } from '../types';
 import { isFeatureEnabled } from '../config';
 import TagService from './tag-service';
@@ -29,6 +29,7 @@ class TransactionFilterer {
     transactions: TransactionEntity[],
     accounts: APIAccountEntity[],
     categories: (APICategoryEntity | APICategoryGroupEntity)[] = [],
+    payees: APIPayeeEntity[] = [],
   ): TransactionEntity[] {
     console.log(`All transactions count: ${transactions.length}`);
     console.log(`All accounts: ${accounts.length}`);
@@ -97,6 +98,41 @@ class TransactionFilterer {
       filteredTransactions,
       (transaction) => isFeatureEnabled('includeIncome') || transaction.amount <= 0,
       'Is income transaction',
+    );
+
+    filteredTransactions = this.applyFilter(
+      filteredTransactions,
+      (transaction) => {
+        if (!isFeatureEnabled('amazonNoterWorkflow')) {
+          return true;
+        }
+
+        const containsAmazon = (str: string | null | undefined): boolean => {
+          if (!str) return false;
+          const lower = str.toLowerCase();
+          return lower.includes('amazon') || lower.includes('amzn');
+        };
+
+        const payeeName = payees.find((p) => p.id === transaction.payee)?.name;
+
+        const isTxAmazon = containsAmazon(transaction.imported_payee)
+          || containsAmazon(transaction.notes)
+          || containsAmazon(payeeName);
+
+        const parent = transaction.parent_id
+          ? transactions.find((t) => t.id === transaction.parent_id)
+          : undefined;
+
+        const isParentAmazon = parent
+          ? containsAmazon(parent.imported_payee)
+            || containsAmazon(parent.notes)
+            || containsAmazon(payees.find((p) => p.id === parent.payee)?.name)
+          : false;
+
+        const isAmazon = isTxAmazon || isParentAmazon;
+        return !isAmazon;
+      },
+      'Is Amazon transaction (amazonNoterWorkflow enabled)',
     );
 
     console.log(`Found ${filteredTransactions.length} uncategorized transactions`);

@@ -41,6 +41,10 @@ To trigger a manual, targeted AI recategorization on any existing transaction, c
 
 A new opt-in feature flag `"includeIncome"` to control income categorization. By default, positive transactions (income) are completely skipped and left uncategorized. Add `"includeIncome"` to your `FEATURES` array to enable LLM-based categorization of income.
 
+#### 📦 Amazon Noter Workflow Integration (`"amazonNoterWorkflow"`) [FORK FEATURE]
+
+When enabled, `actual-ai` will completely ignore all transactions where the payee, imported payee, or notes (or parent transaction's payee/notes if it's a split child) mention `"amazon"` or `"amzn"` (case-insensitive). This ensures that standard Amazon transactions are skipped entirely by `actual-ai` to avoid conflict, allowing your dedicated [rr4444/actual-amazon-noter](https://github.com/rr4444/actual-amazon-noter) workflow to fetch, split, and categorize them without AI interference. Add `"amazonNoterWorkflow"` to your `FEATURES` array to enable this behavior.
+
 #### 📊 Classify transactions using LLM
 
 The app sends requests to the LLM to classify transactions based on their description, amount, and notes.
