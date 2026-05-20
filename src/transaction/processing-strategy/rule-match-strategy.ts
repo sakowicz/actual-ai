@@ -18,9 +18,6 @@ class RuleMatchStrategy implements ProcessingStrategyI {
   }
 
   isSatisfiedBy(response: UnifiedResponse): boolean {
-    if (response.categoryId === undefined) {
-      return false;
-    }
     if (response.ruleName === undefined) {
       return false;
     }
@@ -32,16 +29,23 @@ class RuleMatchStrategy implements ProcessingStrategyI {
     transaction: TransactionEntity,
     response: UnifiedResponse,
   ) {
-    if (response.categoryId === undefined) {
-      throw new Error('No categoryId in response');
-    }
     let updatedNotes = this.tagService.addGuessedTag(transaction.notes ?? '');
     updatedNotes = `${updatedNotes} (rule: ${response.ruleName})`;
 
-    await this.actualApiService.updateTransactionNotesAndCategory(
-      transaction.id,
+    if (response.categoryId) {
+      await this.actualApiService.updateTransactionNotesAndCategory(
+        transaction,
+        updatedNotes,
+        response.categoryId,
+      );
+      return;
+    }
+
+    // Rule explicitly leaves the transaction uncategorized — tag the
+    // notes so the rule attribution is visible, but don't assign a category.
+    await this.actualApiService.updateTransactionNotes(
+      transaction,
       updatedNotes,
-      response.categoryId,
     );
   }
 }

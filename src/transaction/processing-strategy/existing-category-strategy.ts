@@ -37,7 +37,7 @@ class ExistingCategoryStrategy implements ProcessingStrategyI {
     if (!category) {
       // Add not guessed tag when category not found
       await this.actualApiService.updateTransactionNotes(
-        transaction.id,
+        transaction,
         this.tagService.addNotGuessedTag(transaction.notes ?? ''),
       );
       return;
@@ -45,7 +45,7 @@ class ExistingCategoryStrategy implements ProcessingStrategyI {
 
     console.log(`Using existing category: ${category.name}`);
     await this.actualApiService.updateTransactionNotesAndCategory(
-      transaction.id,
+      transaction,
       this.tagService.addGuessedTag(transaction.notes ?? ''),
       response.categoryId,
     );

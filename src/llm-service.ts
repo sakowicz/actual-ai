@@ -29,6 +29,8 @@ export default class LlmService implements LlmServiceI {
     options?: {
       timeoutMs?: number;
       openrouterEnableToolCalling?: boolean;
+      requestsPerMinuteOverride?: number | null;
+      tokensPerMinuteOverride?: number | null;
     },
   ) {
     const factory = llmModelFactory;
@@ -40,14 +42,37 @@ export default class LlmService implements LlmServiceI {
     this.timeoutMs = options?.timeoutMs ?? 120_000;
     this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
 
-    // Set rate limits for the provider
-    const limits = PROVIDER_LIMITS[this.provider];
-    if (!isRateLimitDisabled && limits) {
-      this.rateLimiter.setProviderLimit(this.provider, limits.requestsPerMinute);
-      console.log(`Set ${this.provider} rate limits: ${limits.requestsPerMinute} requests/minute, ${limits.tokensPerMinute} tokens/minute`);
-    } else {
-      console.warn(`No rate limits configured for provider: ${this.provider} or Rate Limiter is disabled`);
+    // Resolve effective rate limits per axis with trichotomy:
+    //   override === null      → fall back to provider default
+    //   override === 0         → axis explicitly disabled
+    //   override > 0           → custom limit
+    const providerDefault = PROVIDER_LIMITS[this.provider];
+    const requestsLimit = options?.requestsPerMinuteOverride
+      ?? providerDefault?.requestsPerMinute;
+    const tokensLimit = options?.tokensPerMinuteOverride
+      ?? providerDefault?.tokensPerMinute;
+
+    if (isRateLimitDisabled) {
+      console.warn(`Rate limiter is disabled for provider: ${this.provider}`);
+      return;
     }
+
+    if (requestsLimit === undefined && tokensLimit === undefined) {
+      console.warn(`No rate limits configured for provider: ${this.provider}`);
+      return;
+    }
+
+    if (requestsLimit !== undefined) {
+      this.rateLimiter.setProviderLimit(this.provider, requestsLimit);
+    }
+    const fmt = (n: number | undefined): string => {
+      if (n === undefined) return 'unset';
+      if (n === 0) return 'disabled';
+      return `${n}/minute`;
+    };
+    console.log(
+      `Rate limits for ${this.provider}: requests=${fmt(requestsLimit)}, tokens=${fmt(tokensLimit)}`,
+    );
   }
 
   public async searchWeb(query: string): Promise<string> {

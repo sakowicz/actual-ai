@@ -1,3 +1,14 @@
+interface GlobalWithNavigator {
+  navigator?: {
+    userAgent: string;
+  };
+}
+
+const globalObj = global as unknown as GlobalWithNavigator;
+if (typeof globalObj.navigator === 'undefined') {
+  globalObj.navigator = { userAgent: 'node' };
+}
+
 describe('container tool service wiring', () => {
   const ORIGINAL_ENV = process.env;
 

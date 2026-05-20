@@ -76,23 +76,23 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
     this.transactions = transactions;
   }
 
-  async updateTransactionNotes(id: string, notes: string): Promise<void> {
+  async updateTransactionNotes(transaction: TransactionEntity, notes: string): Promise<void> {
     if (this.isDryRun) {
       return Promise.resolve();
     }
     return new Promise((resolve) => {
-      const transaction = this.transactions.find((t) => t.id === id);
+      const storedTransaction = this.transactions.find((t) => t.id === transaction.id);
 
-      if (!transaction) {
-        throw new Error(`Transaction with id ${id} not found`);
+      if (!storedTransaction) {
+        throw new Error(`Transaction with id ${transaction.id} not found`);
       }
-      transaction.notes = notes;
+      storedTransaction.notes = notes;
       resolve();
     });
   }
 
   async updateTransactionNotesAndCategory(
-    id: string,
+    transaction: TransactionEntity,
     notes: string,
     categoryId: string,
   ): Promise<void> {
@@ -100,12 +100,12 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
       return Promise.resolve();
     }
     return new Promise((resolve) => {
-      const transaction = this.transactions.find((t) => t.id === id);
-      if (!transaction) {
-        throw new Error(`Transaction with id ${id} not found`);
+      const storedTransaction = this.transactions.find((t) => t.id === transaction.id);
+      if (!storedTransaction) {
+        throw new Error(`Transaction with id ${transaction.id} not found`);
       }
-      transaction.notes = notes;
-      transaction.category = categoryId;
+      storedTransaction.notes = notes;
+      storedTransaction.category = categoryId;
       resolve();
     });
   }

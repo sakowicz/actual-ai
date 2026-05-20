@@ -5,10 +5,13 @@ import { PromptGeneratorI } from '../../src/types';
 export default class MockedPromptGenerator implements PromptGeneratorI {
   generate(
     _categoryGroups: APICategoryGroupEntity[],
-    _transactions: TransactionEntity[],
+    transactions: TransactionEntity[],
     _payees: APIPayeeEntity[],
     _rules?: RuleEntity[],
   ): string {
+    if (transactions.length > 0) {
+      return `mocked prompt with Transaction ID: ${transactions[0].id}`;
+    }
     return 'mocked prompt';
   }
 }

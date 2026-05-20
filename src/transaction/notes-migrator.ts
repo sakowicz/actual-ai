@@ -43,7 +43,7 @@ class NotesMigrator implements NotesMigratorI {
       }
 
       if (newNotes !== transaction.notes) {
-        await this.actualApiService.updateTransactionNotes(transaction.id, newNotes);
+        await this.actualApiService.updateTransactionNotes(transaction, newNotes);
       }
     }
   }

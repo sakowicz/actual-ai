@@ -7,7 +7,7 @@ export default class MockedLlmService implements LlmServiceI {
 
   private error: Error | null = null;
 
-  async ask(_prompt: string, _categoryIds?: string[]): Promise<UnifiedResponse[]> {
+  async ask(prompt: string, _categoryIds?: string[]): Promise<UnifiedResponse[]> {
     if (this.error) {
       return Promise.reject(this.error);
     }
@@ -16,25 +16,32 @@ export default class MockedLlmService implements LlmServiceI {
       return Promise.resolve(this.unifiedResponse);
     }
 
+    // Try to extract Transaction ID from the prompt
+    let matchedId = 'test-id';
+    const idMatch = /Transaction ID:\s*([^\s\n]+)/i.exec(prompt);
+    if (idMatch) {
+      matchedId = idMatch[1];
+    }
+
     // Fallback to old guess behavior if unifiedResponse is not set
     const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
     // Check if guess is a UUID
     if (uuidRegex.test(this.guess)) {
-      return Promise.resolve([{ transactionId: 'test-id', type: 'existing', categoryId: this.guess }]);
+      return Promise.resolve([{ transactionId: matchedId, type: 'existing', categoryId: this.guess }]);
     }
     if (this.guess === 'Groceries') { // Simulate finding by name for old test
-      return Promise.resolve([{ transactionId: 'test-id', type: 'existing', categoryId: 'ff7be77b-40f4-4e9d-aea4-be6b8c431281' }]);
+      return Promise.resolve([{ transactionId: matchedId, type: 'existing', categoryId: 'ff7be77b-40f4-4e9d-aea4-be6b8c431281' }]);
     }
 
     // Simulate rule match if guess contains 'rule:'
     if (this.guess.includes('rule:')) {
       const ruleName = this.guess.split('rule:')[1]?.trim();
       // Provide a dummy category ID for rule match for now
-      return Promise.resolve([{ transactionId: 'test-id', type: 'rule', ruleName, categoryId: 'rule-cat-id' }]);
+      return Promise.resolve([{ transactionId: matchedId, type: 'rule', ruleName, categoryId: 'rule-cat-id' }]);
     }
 
     // Default: Simulate a 'miss' (no category found)
-    return Promise.resolve([{ transactionId: 'test-id', type: 'existing' }]); // No categoryId means it will be marked as miss
+    return Promise.resolve([{ transactionId: matchedId, type: 'existing' }]); // No categoryId means it will be marked as miss
   }
 
   setGuess(guess: string): void {

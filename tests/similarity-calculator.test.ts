@@ -57,5 +57,40 @@ describe('SimilarityCalculator', () => {
       const result = calculator.calculateNameSimilarity('Something', '');
       expect(result).toBeLessThan(0.2);
     });
+
+    it('should treat singular and plural forms as the same word', () => {
+      const result = calculator.calculateNameSimilarity('Sport & Fitness', 'Sports & Fitness');
+      expect(result).toBeGreaterThan(0.9);
+    });
+
+    it('should merge near-identical names that differ only by plural suffix', () => {
+      const result = calculator.calculateNameSimilarity('Subscription', 'Subscriptions');
+      expect(result).toBeGreaterThan(0.85);
+    });
+
+    it('should handle -ies plural form', () => {
+      const result = calculator.calculateNameSimilarity('Categories', 'Category');
+      expect(result).toBeGreaterThan(0.85);
+    });
+
+    it('should merge derivational variants via Porter stemming', () => {
+      const result = calculator.calculateNameSimilarity('Transport', 'Transportation');
+      expect(result).toBeGreaterThan(0.85);
+    });
+
+    it('should give high similarity when one name is a subset of the other', () => {
+      const result = calculator.calculateNameSimilarity('Travel', 'Travel & Transport');
+      expect(result).toBeGreaterThan(0.75);
+    });
+
+    it('should not over-merge unrelated names that share a stopword', () => {
+      const result = calculator.calculateNameSimilarity('The Coffee', 'The Hardware');
+      expect(result).toBeLessThan(0.55);
+    });
+
+    it('should keep distinct compound categories distinct', () => {
+      const result = calculator.calculateNameSimilarity('Health & Fitness', 'Health & Wellness');
+      expect(result).toBeLessThan(0.7);
+    });
   });
 });

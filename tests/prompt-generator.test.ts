@@ -69,18 +69,33 @@ describe('PromptGenerator', () => {
       return safeGroup;
     });
 
+    const payeeName = payees.find((p) => p.id === transaction.payee)?.name;
+
     return template({
       categoryGroups: safeCategoryGroups,
+      // For legacy singular template format
       amount: Math.abs(transaction.amount),
       type: transaction.amount > 0 ? 'Income' : 'Outcome',
       description: transaction.notes ?? '',
-      payee: payees.find((p) => p.id === transaction.payee)?.name ?? '',
+      payee: payeeName ?? transaction.imported_payee ?? '',
       importedPayee: transaction.imported_payee ?? '',
       date: transaction.date ?? '',
       cleared: transaction.cleared ?? false,
       reconciled: transaction.reconciled ?? false,
+      // For modern batched array template format
+      transactions: [{
+        id: transaction.id,
+        amount: Math.abs(transaction.amount),
+        type: transaction.amount > 0 ? 'Income' : 'Outcome',
+        description: transaction.notes ?? '',
+        payee: payeeName ?? transaction.imported_payee ?? '',
+        date: transaction.date ?? '',
+        cleared: transaction.cleared ?? false,
+        reconciled: transaction.reconciled ?? false,
+      }],
       hasWebSearchTool: false,
       rules: [],
+      suggestNewCategoriesEnabled: false,
     });
   };
 
@@ -93,7 +108,12 @@ describe('PromptGenerator', () => {
     // Modern format test
     const modernTemplate = fs.readFileSync('./src/templates/prompt.hbs', 'utf8').trim();
     const modernPromptGenerator = new PromptGenerator(modernTemplate);
-    const generatedModern = modernPromptGenerator.generate(categoryGroups, [transaction], payees, []);
+    const generatedModern = modernPromptGenerator.generate(
+      categoryGroups,
+      [transaction],
+      payees,
+      [],
+    );
     const expectedModern = loadAndRenderTemplate(modernTemplate, transaction, categoryGroups);
     expect(generatedModern.trim()).toEqual(expectedModern.trim());
 
@@ -119,7 +139,12 @@ Please categorize the following transaction:
 ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY NAME, JUST AN ID. Do not guess, if you don't know the answer, return "uncategorized".`.trim();
 
     const legacyPromptGenerator = new PromptGenerator(legacyTemplate);
-    const generatedLegacy = legacyPromptGenerator.generate(categoryGroups, [transaction], payees, []);
+    const generatedLegacy = legacyPromptGenerator.generate(
+      categoryGroups,
+      [transaction],
+      payees,
+      [],
+    );
     const expectedLegacy = loadAndRenderTemplate(legacyTemplate, transaction, categoryGroups);
     expect(generatedLegacy.trim()).toEqual(expectedLegacy.trim());
   });
@@ -161,7 +186,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
     expect(prompt).toContain('Conditions:');
 
     // Check for transaction details
-    expect(prompt).toContain('Transaction details:');
+    expect(prompt).toContain('Transaction ID: 1');
     expect(prompt).toContain('* Amount: 1000');
     expect(prompt).toContain('* Type: Outcome');
     expect(prompt).toContain('* Date: 2021-01-01');
