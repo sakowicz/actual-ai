@@ -130,6 +130,13 @@ class TransactionFilterer {
           : false;
 
         const isAmazon = isTxAmazon || isParentAmazon;
+        if (isAmazon) {
+          const identifier = payeeName || transaction.imported_payee || 'Unknown Payee';
+          console.log(
+            `Ignoring Amazon transaction: [Payee: ${identifier}, `
+            + `Notes: "${transaction.notes || ''}", Amount: ${transaction.amount}]`,
+          );
+        }
         return !isAmazon;
       },
       'Is Amazon transaction (amazonNoterWorkflow enabled)',
