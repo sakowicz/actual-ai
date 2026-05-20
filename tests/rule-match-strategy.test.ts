@@ -1,3 +1,4 @@
+import { UnifiedResponse } from '../src/types';
 import RuleMatchStrategy from '../src/transaction/processing-strategy/rule-match-strategy';
 import TagService from '../src/transaction/tag-service';
 import InMemoryActualApiService from './test-doubles/in-memory-actual-api-service';
@@ -16,7 +17,9 @@ describe('RuleMatchStrategy', () => {
       const { strategy } = buildStrategy();
       expect(strategy.isSatisfiedBy({
         transactionId: 'tx-1',
-        type: 'rule', categoryId: 'cat-1', ruleName: 'Coffee',
+        type: 'rule',
+        categoryId: 'cat-1',
+        ruleName: 'Coffee',
       })).toBe(true);
     });
 
@@ -27,14 +30,19 @@ describe('RuleMatchStrategy', () => {
 
     it('rejects a rule response missing ruleName', () => {
       const { strategy } = buildStrategy();
-      expect(strategy.isSatisfiedBy({ transactionId: 'tx-1', type: 'rule', categoryId: 'cat-1' } as any)).toBe(false);
+      expect(strategy.isSatisfiedBy({
+        transactionId: 'tx-1',
+        type: 'rule',
+        categoryId: 'cat-1',
+      } as unknown as UnifiedResponse)).toBe(false);
     });
 
     it('rejects non-rule responses', () => {
       const { strategy } = buildStrategy();
       expect(strategy.isSatisfiedBy({
         transactionId: 'tx-1',
-        type: 'existing', categoryId: 'cat-1',
+        type: 'existing',
+        categoryId: 'cat-1',
       })).toBe(false);
     });
   });
@@ -47,7 +55,9 @@ describe('RuleMatchStrategy', () => {
 
       await strategy.process(transaction, {
         transactionId: 'tx-1',
-        type: 'rule', categoryId: 'cat-coffee', ruleName: 'Coffee',
+        type: 'rule',
+        categoryId: 'cat-coffee',
+        ruleName: 'Coffee',
       });
 
       const stored = (await apiService.getTransactions()).find((t) => t.id === 'tx-1');
@@ -68,7 +78,8 @@ describe('RuleMatchStrategy', () => {
 
       await strategy.process(transaction, {
         transactionId: 'tx-2',
-        type: 'rule', ruleName: 'Amazon leave uncategorized',
+        type: 'rule',
+        ruleName: 'Amazon leave uncategorized',
       });
 
       const stored = (await apiService.getTransactions()).find((t) => t.id === 'tx-2');

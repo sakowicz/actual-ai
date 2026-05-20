@@ -1,5 +1,12 @@
-if (typeof (global as any).navigator === 'undefined') {
-  (global as any).navigator = { userAgent: 'node' };
+interface GlobalWithNavigator {
+  navigator?: {
+    userAgent: string;
+  };
+}
+
+const globalObj = global as unknown as GlobalWithNavigator;
+if (typeof globalObj.navigator === 'undefined') {
+  globalObj.navigator = { userAgent: 'node' };
 }
 
 describe('container tool service wiring', () => {

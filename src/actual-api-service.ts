@@ -180,19 +180,23 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async getTransactions(): Promise<TransactionEntity[]> {
-    let transactions: TransactionEntity[] = [];
+    const transactions: TransactionEntity[] = [];
     const accounts = await this.getAccounts();
     // eslint-disable-next-line no-restricted-syntax
     for (const account of accounts) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const accountTransactions: TransactionEntity[] = await this.actualApiClient.getTransactions(account.id, '1990-01-01', '2030-01-01');
-      for (const t of accountTransactions) {
+      const accountTransactions = await this.actualApiClient.getTransactions(
+        account.id,
+        '1990-01-01',
+        '2030-01-01',
+      ) as TransactionEntity[];
+
+      accountTransactions.forEach((t) => {
         transactions.push(t);
         // Ensure child transactions are processed by flattening them into the array
         if (t.subtransactions && Array.isArray(t.subtransactions)) {
           transactions.push(...t.subtransactions);
         }
-      }
+      });
     }
     return transactions;
   }
@@ -211,8 +215,11 @@ class ActualApiService implements ActualApiServiceI {
     const accounts = await this.getAccounts();
     // eslint-disable-next-line no-restricted-syntax
     for (const account of accounts) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const accountTransactions: TransactionEntity[] = await this.actualApiClient.getTransactions(account.id, '1990-01-01', '2030-01-01');
+      const accountTransactions = await this.actualApiClient.getTransactions(
+        account.id,
+        '1990-01-01',
+        '2030-01-01',
+      ) as TransactionEntity[];
       const parent = accountTransactions.find((t) => t.id === parentId);
       if (parent) {
         return parent;
@@ -221,7 +228,10 @@ class ActualApiService implements ActualApiServiceI {
     return null;
   }
 
-  public async updateTransactionNotes(transaction: TransactionEntity, notes: string): Promise<void> {
+  public async updateTransactionNotes(
+    transaction: TransactionEntity,
+    notes: string,
+  ): Promise<void> {
     if (this.isDryRun) {
       console.log(`DRY RUN: Would update transaction notes of ${transaction.id} to: ${notes}`);
       return;
@@ -230,7 +240,7 @@ class ActualApiService implements ActualApiServiceI {
     if (transaction.parent_id) {
       console.log(`Transaction ${transaction.id} is a child of parent ${transaction.parent_id}. Updating parent subtransactions...`);
       const parent = await this.getParentTransaction(transaction.parent_id);
-      if (parent && parent.subtransactions) {
+      if (parent?.subtransactions) {
         const updatedSubtransactions = parent.subtransactions.map((sub) => {
           if (sub.id === transaction.id) {
             return { ...sub, notes };
@@ -260,7 +270,7 @@ class ActualApiService implements ActualApiServiceI {
     if (transaction.parent_id) {
       console.log(`Transaction ${transaction.id} is a child of parent ${transaction.parent_id}. Updating parent subtransactions...`);
       const parent = await this.getParentTransaction(transaction.parent_id);
-      if (parent && parent.subtransactions) {
+      if (parent?.subtransactions) {
         const updatedSubtransactions = parent.subtransactions.map((sub) => {
           if (sub.id === transaction.id) {
             return { ...sub, notes, category: categoryId };
@@ -318,8 +328,6 @@ class ActualApiService implements ActualApiServiceI {
     }
     await this.actualApiClient.updateCategoryGroup(id, { name });
   }
-
-
 }
 
 export default ActualApiService;

@@ -10,7 +10,9 @@ describe('parseLlmResponse', () => {
     const result = parseLlmResponse(
       '{"type": "rule", "categoryId": "def", "ruleName": "Coffee Shop"}',
     );
-    expect(result).toEqual([{ transactionId: 'test-transaction-id', type: 'rule', categoryId: 'def', ruleName: 'Coffee Shop' }]);
+    expect(result).toEqual([{
+      transactionId: 'test-transaction-id', type: 'rule', categoryId: 'def', ruleName: 'Coffee Shop',
+    }]);
   });
 
   it('parses a "leave uncategorized" rule match — ruleName without categoryId', () => {
