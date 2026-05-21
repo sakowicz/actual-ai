@@ -38,13 +38,13 @@ class TransactionFilterer {
       .map((account) => account.id) ?? [];
     console.log(`Accounts off budget: ${accountsToSkip.length}`);
 
-    // Find the 'To Recategorise' category ID
-    const recategoriseCategory = categories.find(
-      (cat) => 'name' in cat && cat.name === 'To Recategorise',
+    // Find the 'AI Reclassify' category ID
+    const aiReclassifyCategory = categories.find(
+      (cat) => 'name' in cat && cat.name === 'AI Reclassify',
     );
-    const recategoriseCategoryId = recategoriseCategory?.id;
-    if (recategoriseCategoryId) {
-      console.log(`Found 'To Recategorise' category: ${recategoriseCategoryId}`);
+    const aiReclassifyCategoryId = aiReclassifyCategory?.id;
+    if (aiReclassifyCategoryId) {
+      console.log(`Found 'AI Reclassify' category: ${aiReclassifyCategoryId}`);
     }
 
     let filteredTransactions = transactions;
@@ -52,7 +52,7 @@ class TransactionFilterer {
     // Apply filters one by one
     filteredTransactions = this.applyFilter(
       filteredTransactions,
-      (transaction) => !transaction.category || transaction.category === recategoriseCategoryId,
+      (transaction) => !transaction.category || transaction.category === aiReclassifyCategoryId,
       'Already has a category',
     );
 
