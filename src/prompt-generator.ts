@@ -67,6 +67,25 @@ class PromptGenerator implements PromptGeneratorI {
         }
       }
 
+      // Extract PayPal product names to simplify the prompt
+      if (description.includes('#PayPal-Item-Title')) {
+        const productMatch = /#PayPal-Item-Title\s+(.*?)(?=\s*#[A-Za-z-]+|$)/.exec(description);
+        if (productMatch) {
+          description = productMatch[1].trim();
+        }
+      } else if (description.includes('#PayPal-Product-Name-Split-')) {
+        const splitProducts = [];
+        const splitRegex = /#PayPal-Product-Name-Split-\d+\s+(.*?)(?=\s*#[A-Za-z-]+|$)/g;
+        let match = splitRegex.exec(description);
+        while (match !== null) {
+          splitProducts.push(match[1].trim());
+          match = splitRegex.exec(description);
+        }
+        if (splitProducts.length > 0) {
+          description = splitProducts.join('; ');
+        }
+      }
+
       return {
         id: transaction.id,
         amount: Math.abs(transaction.amount),
