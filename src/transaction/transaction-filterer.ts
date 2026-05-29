@@ -142,6 +142,48 @@ class TransactionFilterer {
       'Is Amazon transaction (amazonNoterWorkflow enabled)',
     );
 
+    filteredTransactions = this.applyFilter(
+      filteredTransactions,
+      (transaction) => {
+        if (!isFeatureEnabled('paypalNoterWorkflow')) {
+          return true;
+        }
+
+        const containsPaypal = (str: string | null | undefined): boolean => {
+          if (!str) return false;
+          const lower = str.toLowerCase();
+          return lower.includes('paypal') || lower.includes('pypl');
+        };
+
+        const payeeName = payees.find((p) => p.id === transaction.payee)?.name;
+
+        const isTxPaypal = containsPaypal(transaction.imported_payee)
+          || containsPaypal(transaction.notes)
+          || containsPaypal(payeeName);
+
+        const parent = transaction.parent_id
+          ? transactions.find((t) => t.id === transaction.parent_id)
+          : undefined;
+
+        const isParentPaypal = parent
+          ? containsPaypal(parent.imported_payee)
+            || containsPaypal(parent.notes)
+            || containsPaypal(payees.find((p) => p.id === parent.payee)?.name)
+          : false;
+
+        const isPaypal = isTxPaypal || isParentPaypal;
+        if (isPaypal) {
+          const identifier = payeeName || transaction.imported_payee || 'Unknown Payee';
+          console.log(
+            `Ignoring PayPal transaction: [Payee: ${identifier}, `
+            + `Notes: "${transaction.notes || ''}", Amount: ${transaction.amount}]`,
+          );
+        }
+        return !isPaypal;
+      },
+      'Is PayPal transaction (paypalNoterWorkflow enabled)',
+    );
+
     console.log(`Found ${filteredTransactions.length} uncategorized transactions`);
 
     return filteredTransactions;

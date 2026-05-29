@@ -131,6 +131,12 @@ function registerStandardFeatures() {
     defaultValue: false,
     description: 'Ignore all Amazon and AMZN transactions',
   };
+
+  features.paypalNoterWorkflow = {
+    enabled: enabledFeatures.includes('paypalNoterWorkflow'),
+    defaultValue: false,
+    description: 'Ignore all PayPal transactions',
+  };
 }
 
 function registerToolFeatures() {
