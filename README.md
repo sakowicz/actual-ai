@@ -43,11 +43,11 @@ A new opt-in feature flag `"includeIncome"` to control income categorization. By
 
 #### 📦 Amazon Noter Workflow Integration (`"amazonNoterWorkflow"`) [FORK FEATURE]
 
-When enabled, `actual-ai` will completely ignore all transactions where the payee, imported payee, or notes (or parent transaction's payee/notes if it's a split child) mention `"amazon"` or `"amzn"` (case-insensitive). This ensures that standard Amazon transactions are skipped entirely by `actual-ai` to avoid conflict, allowing your dedicated [rr4444/actual-ecommerce-noter](https://github.com/rr4444/actual-ecommerce-noter) workflow to fetch, split, and categorize them without AI interference. Add `"amazonNoterWorkflow"` to your `FEATURES` array to enable this behavior.
+When enabled, `actual-ai` will ignore raw, unprocessed Amazon/AMZN transactions to prevent them from being categorized before your uploader has matched/split them. Once the uploader matches a transaction and stamps it with product notes (e.g. `#Amazon-Product-Name`), `actual-ai` will automatically recognize it as processed and categorize its splits/items based on the clean product descriptions. Add `"amazonNoterWorkflow"` to your `FEATURES` array to enable this behavior.
 
 #### 💳 PayPal Noter Workflow Integration (`"paypalNoterWorkflow"`) [FORK FEATURE]
 
-When enabled, `actual-ai` will completely ignore all transactions where the payee, imported payee, or notes (or parent transaction's payee/notes if it's a split child) mention `"paypal"` or `"pypl"` (case-insensitive). This ensures that standard raw PayPal transactions are skipped entirely by `actual-ai` to avoid conflict, allowing your dedicated [rr4444/actual-ecommerce-noter](https://github.com/rr4444/actual-ecommerce-noter) companion uploader workflow to fetch, correlate, split, and categorize them with clean product names without AI interference. Add `"paypalNoterWorkflow"` to your `FEATURES` array to enable this behavior.
+When enabled, `actual-ai` will ignore raw, unprocessed PayPal/PYPL transactions to prevent them from being categorized before your uploader has matched them. Once the uploader matches a transaction and stamps it with item titles (e.g. `#PayPal-Item-Title`), `actual-ai` will automatically recognize it as processed and categorize its splits/items based on the clean product descriptions. Add `"paypalNoterWorkflow"` to your `FEATURES` array to enable this behavior.
 
 #### 📊 Classify transactions using LLM
 
@@ -159,8 +159,8 @@ Available features:
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
 - `includeIncome` - Enable categorization of positive amount transactions (income). Disabled by default.
 - `disableRateLimiter` - Disable client-side rate limiter
-- `amazonNoterWorkflow` - Ignore all Amazon/AMZN transactions (for use with actual-ecommerce-noter)
-- `paypalNoterWorkflow` - Ignore all PayPal/PYPL transactions (for use with actual-ecommerce-noter)
+- `amazonNoterWorkflow` - Ignore all Amazon/AMZN transactions that have not been processed by actual-ecommerce-noter
+- `paypalNoterWorkflow` - Ignore all PayPal/PYPL transactions that have not been processed by actual-ecommerce-noter
 
 ## ⚡ Performance and Rate Limiting Options
 
