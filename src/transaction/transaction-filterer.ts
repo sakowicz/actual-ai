@@ -131,7 +131,8 @@ class TransactionFilterer {
 
         const isAmazon = isTxAmazon || isParentAmazon;
         const hasUploaderNotes = (transaction.notes ?? '').includes('#Amazon-Product-Name')
-          || (transaction.notes ?? '').includes('#Amazon-Product-Name-Split-');
+          || (transaction.notes ?? '').includes('#Amazon-Product-Name-Split-')
+          || !!parent; // If this is a child sub-transaction, it has already been matched and split by the noter
 
         const shouldIgnore = isAmazon && !hasUploaderNotes;
 
@@ -178,7 +179,8 @@ class TransactionFilterer {
 
         const isPaypal = isTxPaypal || isParentPaypal;
         const hasUploaderNotes = (transaction.notes ?? '').includes('#PayPal-Item-Title')
-          || (transaction.notes ?? '').includes('#PayPal-Product-Name-Split-');
+          || (transaction.notes ?? '').includes('#PayPal-Product-Name-Split-')
+          || !!parent; // If this is a child sub-transaction, it has already been matched and split by the noter
 
         const shouldIgnore = isPaypal && !hasUploaderNotes;
 
