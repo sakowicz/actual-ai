@@ -130,14 +130,19 @@ class TransactionFilterer {
           : false;
 
         const isAmazon = isTxAmazon || isParentAmazon;
-        if (isAmazon) {
+        const hasUploaderNotes = (transaction.notes ?? '').includes('#Amazon-Product-Name')
+          || (transaction.notes ?? '').includes('#Amazon-Product-Name-Split-');
+
+        const shouldIgnore = isAmazon && !hasUploaderNotes;
+
+        if (shouldIgnore) {
           const identifier = payeeName || transaction.imported_payee || 'Unknown Payee';
           console.log(
-            `Ignoring Amazon transaction: [Payee: ${identifier}, `
+            `Ignoring raw Amazon transaction (waiting for noter): [Payee: ${identifier}, `
             + `Notes: "${transaction.notes || ''}", Amount: ${transaction.amount}]`,
           );
         }
-        return !isAmazon;
+        return !shouldIgnore;
       },
       'Is Amazon transaction (amazonNoterWorkflow enabled)',
     );
@@ -172,14 +177,19 @@ class TransactionFilterer {
           : false;
 
         const isPaypal = isTxPaypal || isParentPaypal;
-        if (isPaypal) {
+        const hasUploaderNotes = (transaction.notes ?? '').includes('#PayPal-Item-Title')
+          || (transaction.notes ?? '').includes('#PayPal-Product-Name-Split-');
+
+        const shouldIgnore = isPaypal && !hasUploaderNotes;
+
+        if (shouldIgnore) {
           const identifier = payeeName || transaction.imported_payee || 'Unknown Payee';
           console.log(
-            `Ignoring PayPal transaction: [Payee: ${identifier}, `
+            `Ignoring raw PayPal transaction (waiting for noter): [Payee: ${identifier}, `
             + `Notes: "${transaction.notes || ''}", Amount: ${transaction.amount}]`,
           );
         }
-        return !isPaypal;
+        return !shouldIgnore;
       },
       'Is PayPal transaction (paypalNoterWorkflow enabled)',
     );
