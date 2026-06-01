@@ -17,7 +17,20 @@ export function transformRulesToDescriptions(
       (action) => 'field' in action && action.field === 'category' && action.op === 'set',
     );
     const categoryId = categoryAction?.value as string | undefined;
-    const category = categories.find((c) => 'id' in c && c.id === categoryId);
+    let category: any = undefined;
+    for (const item of categories) {
+      if (item && 'id' in item && item.id === categoryId) {
+        category = item;
+        break;
+      }
+      if (item && 'categories' in item && Array.isArray(item.categories)) {
+        const found = item.categories.find((c: any) => c.id === categoryId);
+        if (found) {
+          category = found;
+          break;
+        }
+      }
+    }
 
     let categoryName: string;
     if (category && 'name' in category) categoryName = category.name;
