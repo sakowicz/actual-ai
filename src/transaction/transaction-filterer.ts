@@ -130,9 +130,15 @@ class TransactionFilterer {
           : false;
 
         const isAmazon = isTxAmazon || isParentAmazon;
+        const parentHasUploaderNotes = parent
+          ? (parent.notes ?? '').includes('#Amazon-Product-Name')
+            || (parent.notes ?? '').includes('#Amazon-Product-Name-Split-')
+            || (parent.notes ?? '').includes('#Amazon-Order-ID')
+          : false;
+
         const hasUploaderNotes = (transaction.notes ?? '').includes('#Amazon-Product-Name')
           || (transaction.notes ?? '').includes('#Amazon-Product-Name-Split-')
-          || !!parent; // If this is a child sub-transaction, it has already been matched and split by the noter
+          || parentHasUploaderNotes;
 
         const shouldIgnore = isAmazon && !hasUploaderNotes;
 
