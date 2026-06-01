@@ -137,6 +137,12 @@ function registerStandardFeatures() {
     defaultValue: false,
     description: 'Ignore all PayPal transactions',
   };
+
+  features.ebayNoterWorkflow = {
+    enabled: enabledFeatures.includes('ebayNoterWorkflow'),
+    defaultValue: false,
+    description: 'Ignore all eBay transactions',
+  };
 }
 
 function registerToolFeatures() {

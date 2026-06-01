@@ -70,9 +70,20 @@ class TransactionFilterer {
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
-      (transaction) => (transaction.imported_payee !== null && transaction.imported_payee !== '')
+      (transaction) => {
+        const notes = transaction.notes ?? '';
+        const hasNoterTags = notes.includes('#PayPal-Payee')
+          || notes.includes('#PayPal-Item-Title')
+          || notes.includes('#eBay-Seller-Name')
+          || notes.includes('#eBay-Product-Name')
+          || notes.includes('#Amazon-Product-Name')
+          || notes.includes('#Amazon-Order-ID');
+
+        return (transaction.imported_payee !== null && transaction.imported_payee !== '')
           || (transaction.payee !== null && transaction.payee !== '')
-          || (!!transaction.parent_id && (transaction.notes ?? '').trim() !== ''),
+          || hasNoterTags
+          || (!!transaction.parent_id && notes.trim() !== '');
+      },
       'Has no payee / imported_payee',
     );
 
@@ -140,7 +151,8 @@ class TransactionFilterer {
           || (transaction.notes ?? '').includes('#Amazon-Product-Name-Split-')
           || parentHasUploaderNotes;
 
-        const shouldIgnore = isAmazon && !hasUploaderNotes;
+        const isExplicitReclassify = aiReclassifyCategoryId && transaction.category === aiReclassifyCategoryId;
+        const shouldIgnore = isAmazon && !hasUploaderNotes && !isExplicitReclassify;
 
         if (shouldIgnore) {
           const identifier = payeeName || transaction.imported_payee || 'Unknown Payee';
@@ -188,7 +200,8 @@ class TransactionFilterer {
           || (transaction.notes ?? '').includes('#PayPal-Product-Name-Split-')
           || !!parent; // If this is a child sub-transaction, it has already been matched and split by the noter
 
-        const shouldIgnore = isPaypal && !hasUploaderNotes;
+        const isExplicitReclassify = aiReclassifyCategoryId && transaction.category === aiReclassifyCategoryId;
+        const shouldIgnore = isPaypal && !hasUploaderNotes && !isExplicitReclassify;
 
         if (shouldIgnore) {
           const identifier = payeeName || transaction.imported_payee || 'Unknown Payee';
@@ -200,6 +213,63 @@ class TransactionFilterer {
         return !shouldIgnore;
       },
       'Is PayPal transaction (paypalNoterWorkflow enabled)',
+    );
+
+    filteredTransactions = this.applyFilter(
+      filteredTransactions,
+      (transaction) => {
+        if (!isFeatureEnabled('ebayNoterWorkflow')) {
+          return true;
+        }
+
+        const containsEbay = (str: string | null | undefined): boolean => {
+          if (!str) return false;
+          const lower = str.toLowerCase();
+          return lower.includes('ebay');
+        };
+
+        const payeeName = payees.find((p) => p.id === transaction.payee)?.name;
+
+        const isTxEbay = containsEbay(transaction.imported_payee)
+          || containsEbay(transaction.notes)
+          || containsEbay(payeeName);
+
+        const parent = transaction.parent_id
+          ? transactions.find((t) => t.id === transaction.parent_id)
+          : undefined;
+
+        const isParentEbay = parent
+          ? containsEbay(parent.imported_payee)
+            || containsEbay(parent.notes)
+            || containsEbay(payees.find((p) => p.id === parent.payee)?.name)
+          : false;
+
+        const isEbay = isTxEbay || isParentEbay;
+
+        const parentHasUploaderNotes = parent
+          ? (parent.notes ?? '').includes('#eBay-Product-Name')
+            || (parent.notes ?? '').includes('#eBay-Product-Name-Split-')
+            || (parent.notes ?? '').includes('#eBay-Order-ID')
+          : false;
+
+        const hasUploaderNotes = (transaction.notes ?? '').includes('#eBay-Product-Name')
+          || (transaction.notes ?? '').includes('#eBay-Product-Name-Split-')
+          || (transaction.notes ?? '').includes('#eBay-Order-ID')
+          || parentHasUploaderNotes;
+
+        const isExplicitReclassify = aiReclassifyCategoryId && transaction.category === aiReclassifyCategoryId;
+        const shouldIgnore = isEbay && !hasUploaderNotes && !isExplicitReclassify;
+
+        if (shouldIgnore) {
+          const identifier = payeeName || transaction.imported_payee || 'Unknown Payee';
+          console.log(
+            `Ignoring raw eBay transaction (waiting for noter): [Payee: ${identifier}, `
+            + `Notes: "${transaction.notes || ''}", Amount: ${transaction.amount}]`,
+          );
+        }
+        return !shouldIgnore;
+      },
+      'Is eBay transaction (ebayNoterWorkflow enabled)',
     );
 
     console.log(`Found ${filteredTransactions.length} uncategorized transactions`);
