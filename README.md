@@ -1,18 +1,10 @@
 # 🤖 Actual AI
 
-<p>
-    <a href="https://github.com/sakowicz/actual-ai">
-        <img alt="GitHub Release" src="https://img.shields.io/github/v/release/sakowicz/actual-ai?label=GitHub">
-    </a>
-    <a href="https://hub.docker.com/r/sakowicz/actual-ai">
-        <img alt="Docker Image Version" src="https://img.shields.io/docker/v/sakowicz/actual-ai?label=Docker%20Hub">
-    </a>
-    <a href="https://codecov.io/github/sakowicz/actual-ai" >
-        <img alt="Test Coverage" src="https://codecov.io/github/sakowicz/actual-ai/graph/badge.svg?token=7ZLJUN61QE"/>
-    </a>
-</p>
+This project is a customized fork of the excellent [@sakowicz/actual-ai](https://github.com/sakowicz/actual-ai) repository, to which we extend our sincere thanks for providing a fantastic foundation.
 
-This is a project that allows you to categorize uncategorized transactions
+This fork is specifically designed to work in tandem with the [actual-ecommerce-noter](https://github.com/rr4444/actual-ecommerce-noter) companion utility. It includes high-performance batch classification, token-bucket rate limiting for Gemini, and split-transaction preservation to correctly categorize e-commerce item splits (such as Amazon, PayPal, and eBay orders) after they have been processed and stamped by the noter.
+
+This project allows you to automatically categorize uncategorized transactions
 for [Actual Budget](https://actualbudget.org/)
 using [OpenAI](https://openai.com/api/pricing/), [Anthropic](https://www.anthropic.com/pricing#anthropic-api), [Google Generative AI](https://ai.google/discover/generativeai/), [Ollama](https://github.com/ollama/ollama)
 or any other compatible API (including OpenRouter).
