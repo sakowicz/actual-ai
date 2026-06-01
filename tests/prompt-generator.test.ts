@@ -181,8 +181,8 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
 
     // Check for rule-specific content
     expect(prompt).toContain('Existing Rules:');
-    expect(prompt).toContain('1. Unnamed rule → unknown');
-    expect(prompt).toContain('2. Unnamed rule → unknown');
+    expect(prompt).toContain('1. Unnamed rule → Groceries');
+    expect(prompt).toContain('2. Unnamed rule → Travel');
     expect(prompt).toContain('Conditions:');
 
     // Check for transaction details
