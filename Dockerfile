@@ -16,5 +16,12 @@ ENV PATH=/opt/node_app/node_modules/.bin:$PATH
 
 WORKDIR /opt/node_app/app
 COPY --chown=node:node . .
+
+ARG VERSION=unknown
+ARG COMMIT_HASH=unknown
+ENV APP_VERSION=$VERSION
+ENV APP_COMMIT_HASH=$COMMIT_HASH
+
 RUN npm run build
-CMD [ "npm", "run", "prod" ]
+CMD [ "node", "dist/app.js" ]
+
