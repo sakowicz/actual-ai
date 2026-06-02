@@ -107,7 +107,7 @@ class TransactionFilterer {
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
-      (transaction) => isFeatureEnabled('includeIncome') || transaction.amount <= 0,
+      (transaction) => isFeatureEnabled('includeIncome') || transaction.amount <= 0 || (!!aiReclassifyCategoryId && transaction.category === aiReclassifyCategoryId),
       'Is income transaction',
     );
 
