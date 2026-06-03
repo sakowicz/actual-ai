@@ -107,7 +107,57 @@ class TransactionFilterer {
 
     filteredTransactions = this.applyFilter(
       filteredTransactions,
-      (transaction) => isFeatureEnabled('includeIncome') || transaction.amount <= 0 || (!!aiReclassifyCategoryId && transaction.category === aiReclassifyCategoryId),
+      (transaction) => {
+        if (isFeatureEnabled('includeIncome') || transaction.amount <= 0) {
+          return true;
+        }
+        if (aiReclassifyCategoryId && transaction.category === aiReclassifyCategoryId) {
+          return true;
+        }
+
+        // Special case: Amazon refunds with noter tags are examined even if includeIncome is disabled
+        if (isFeatureEnabled('amazonNoterWorkflow')) {
+          const containsAmazon = (str: string | null | undefined): boolean => {
+            if (!str) return false;
+            const lower = str.toLowerCase();
+            return lower.includes('amazon') || lower.includes('amzn');
+          };
+
+          const payeeName = payees.find((p) => p.id === transaction.payee)?.name;
+
+          const isTxAmazon = containsAmazon(transaction.imported_payee)
+            || containsAmazon(transaction.notes)
+            || containsAmazon(payeeName);
+
+          const parent = transaction.parent_id
+            ? transactions.find((t) => t.id === transaction.parent_id)
+            : undefined;
+
+          const isParentAmazon = parent
+            ? containsAmazon(parent.imported_payee)
+              || containsAmazon(parent.notes)
+              || containsAmazon(payees.find((p) => p.id === parent.payee)?.name)
+            : false;
+
+          if (isTxAmazon || isParentAmazon) {
+            const parentHasUploaderNotes = parent
+              ? (parent.notes ?? '').includes('#Amazon-Product-Name')
+                || (parent.notes ?? '').includes('#Amazon-Product-Name-Split-')
+                || (parent.notes ?? '').includes('#Amazon-Order-ID')
+              : false;
+
+            const hasUploaderNotes = (transaction.notes ?? '').includes('#Amazon-Product-Name')
+              || (transaction.notes ?? '').includes('#Amazon-Product-Name-Split-')
+              || parentHasUploaderNotes;
+
+            if (hasUploaderNotes) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      },
       'Is income transaction',
     );
 

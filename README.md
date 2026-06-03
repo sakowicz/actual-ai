@@ -31,11 +31,11 @@ To trigger a manual, targeted AI recategorization on any existing transaction, c
 
 #### 💰 Opt-in Income Categorization via `"includeIncome"` [FORK FEATURE]
 
-A new opt-in feature flag `"includeIncome"` to control income categorization. By default, positive transactions (income) are completely skipped and left uncategorized. Add `"includeIncome"` to your `FEATURES` array to enable LLM-based categorization of income.
+A new opt-in feature flag `"includeIncome"` to control income categorization. By default, positive transactions (income) are completely skipped and left uncategorized. Add `"includeIncome"` to your `FEATURES` array to enable LLM-based categorization of income. *(Note: Matched Amazon refund/income transactions processed by the uploader under the `amazonNoterWorkflow` are an exception and will still be examined even if `includeIncome` is disabled).*
 
 #### 📦 Amazon Noter Workflow Integration (`"amazonNoterWorkflow"`) [FORK FEATURE]
 
-When enabled, `actual-ai` will ignore raw, unprocessed Amazon/AMZN transactions to prevent them from being categorized before your uploader has matched/split them. Once the uploader matches a transaction and stamps it with product notes (e.g. `#Amazon-Product-Name`), `actual-ai` will automatically recognize it as processed and categorize its splits/items based on the clean product descriptions. Add `"amazonNoterWorkflow"` to your `FEATURES` array to enable this behavior.
+When enabled, `actual-ai` will ignore raw, unprocessed Amazon/AMZN transactions to prevent them from being categorized before your uploader has matched/split them. Once the uploader matches a transaction and stamps it with product notes (e.g. `#Amazon-Product-Name`), `actual-ai` will automatically recognize it as processed and categorize its splits/items based on the clean product descriptions. Add `"amazonNoterWorkflow"` to your `FEATURES` array to enable this behavior. Note: When `amazonNoterWorkflow` is enabled, matched Amazon refunds will be examined and categorized even if `includeIncome` is disabled.
 
 #### 💳 PayPal Noter Workflow Integration (`"paypalNoterWorkflow"`) [FORK FEATURE]
 

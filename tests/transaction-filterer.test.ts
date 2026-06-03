@@ -132,5 +132,50 @@ describe('TransactionFilterer Amazon Noter Workflow', () => {
       // Parent is skipped because is_parent: true, child is skipped because parent mentions Amazon
       expect(result).toHaveLength(0);
     });
+
+    it('should NOT filter out positive income/refund transactions if they have uploader notes, even if includeIncome is disabled', () => {
+      // Arrange
+      config.toggleFeature('includeIncome', false);
+      const accounts = GivenActualData.createSampleAccounts();
+      const categories = GivenActualData.createSampleCategories();
+      const payees = [
+        GivenActualData.createPayee('1', 'Amazon Marketplace'),
+      ];
+
+      const transactions = [
+        // Refund with uploader notes (positive amount)
+        GivenActualData.createTransaction('tx_refund', 1500, 'AMZN Marketplace', '#Amazon-Product-Name Wireless Mouse #Amazon-Order-ID 123-456', '1'),
+        // Standard non-Amazon refund (positive amount) - should be filtered out
+        GivenActualData.createTransaction('tx_other_refund', 2000, 'Some Other Shop', '', '2'),
+      ];
+
+      // Act
+      const result = sut.filterUncategorized(transactions, accounts, categories, payees);
+
+      // Assert
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('tx_refund');
+    });
+
+    it('should filter out positive income/refund transactions if they do NOT have uploader notes and includeIncome is disabled', () => {
+      // Arrange
+      config.toggleFeature('includeIncome', false);
+      const accounts = GivenActualData.createSampleAccounts();
+      const categories = GivenActualData.createSampleCategories();
+      const payees = [
+        GivenActualData.createPayee('1', 'Amazon Marketplace'),
+      ];
+
+      const transactions = [
+        // Refund WITHOUT uploader notes (positive amount)
+        GivenActualData.createTransaction('tx_raw_refund', 1500, 'AMZN Marketplace', '', '1'),
+      ];
+
+      // Act
+      const result = sut.filterUncategorized(transactions, accounts, categories, payees);
+
+      // Assert
+      expect(result).toHaveLength(0);
+    });
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "rr4444/actual-ai",
-  "version": "2.4.0",
+  "version": "2.4.0-fork.7",
   "description": "Transaction AI classification for Actual Budget app.",
   "main": "app.js",
   "scripts": {
