@@ -9,6 +9,11 @@ for [Actual Budget](https://actualbudget.org/)
 using [OpenAI](https://openai.com/api/pricing/), [Anthropic](https://www.anthropic.com/pricing#anthropic-api), [Google Generative AI](https://ai.google/discover/generativeai/), [Ollama](https://github.com/ollama/ollama)
 or any other compatible API (including OpenRouter).
 
+When used alongside [actual-ecommerce-noter](https://github.com/rr4444/actual-ecommerce-noter), there is a limited frontend for AI classification. This allows for manual spawning of classification jobs and for auto processing after importing ecommerce order histories. 
+
+<img width="900" height="1207" alt="image" src="https://github.com/user-attachments/assets/d6e64f62-da08-486e-a232-b366679eb62b" />
+
+
 ## 🌟 Features
 
 #### ⚡ High Performance Batch Processing [FORK FEATURE]
