@@ -247,6 +247,42 @@ describe('CC payment transfer matching', () => {
 
     expect(candidates).toHaveLength(0);
   });
+
+  test('does not match a same-account payment-plan reversal on a card', () => {
+    const accounts = [
+      { id: 'checking', name: 'Checking' },
+      { id: 'cc', name: 'Amazon Rewards Mastercard' },
+    ] as any;
+    const checkingPayment = tx({
+      id: 'checking-payment',
+      account: 'checking',
+      amount: -19000,
+      date: '2025-01-10',
+      imported_payee: 'MBNA M/C PAYMENT',
+    });
+    const planCharge = tx({
+      id: 'plan-charge',
+      account: 'cc',
+      amount: -19000,
+      date: '2025-01-10',
+      imported_payee: 'Couples Therapy payment plan',
+    });
+    const planReversal = tx({
+      id: 'plan-reversal',
+      account: 'cc',
+      amount: 19000,
+      date: '2025-01-10',
+      imported_payee: 'Couples Therapy payment plan',
+    });
+
+    const candidates = findCcPaymentTransferCandidates(
+      [checkingPayment, planCharge, planReversal] as any,
+      accounts,
+      { windowDays: 3, minScore: 0.1 },
+    );
+
+    expect(candidates).toHaveLength(0);
+  });
 });
 
 describe('transfer link plan', () => {

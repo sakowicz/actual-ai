@@ -17,6 +17,26 @@ export type CcPaymentMatcherOptions = {
   creditCardAccountNameRegex?: RegExp;
 };
 
+function sameAccountReversalIds(transactions: TransactionEntity[]): Set<string> {
+  const byAccountDateAmount = new Map<string, TransactionEntity[]>();
+  transactions.forEach((transaction) => {
+    const key = [transaction.account, transaction.date, Math.abs(transaction.amount)].join('|');
+    const group = byAccountDateAmount.get(key) ?? [];
+    group.push(transaction);
+    byAccountDateAmount.set(key, group);
+  });
+
+  const reversalIds = new Set<string>();
+  byAccountDateAmount.forEach((group) => {
+    const hasInflow = group.some((transaction) => transaction.amount > 0);
+    const hasOutflow = group.some((transaction) => transaction.amount < 0);
+    if (hasInflow && hasOutflow) {
+      group.forEach((transaction) => reversalIds.add(transaction.id));
+    }
+  });
+  return reversalIds;
+}
+
 function normalizeText(input: string | null | undefined): string {
   return (input ?? '')
     .toLowerCase()
@@ -219,8 +239,9 @@ export function findCcPaymentTransferCandidates(
   });
 
   const inflowsByAmount = new Map<number, TransactionEntity[]>();
+  const reversalIds = sameAccountReversalIds(transactions);
   transactions.forEach((tx) => {
-    if (tx.amount > 0 && !tx.is_parent && !tx.transfer_id) {
+    if (tx.amount > 0 && !tx.is_parent && !tx.transfer_id && !reversalIds.has(tx.id)) {
       const list = inflowsByAmount.get(tx.amount) ?? [];
       list.push(tx);
       inflowsByAmount.set(tx.amount, list);
@@ -229,7 +250,7 @@ export function findCcPaymentTransferCandidates(
 
   const candidates: CcPaymentTransferCandidate[] = [];
   transactions.forEach((outflow) => {
-    if (outflow.amount >= 0 || outflow.is_parent || outflow.transfer_id) return;
+    if (outflow.amount >= 0 || outflow.is_parent || outflow.transfer_id || reversalIds.has(outflow.id)) return;
     const inflows = inflowsByAmount.get(Math.abs(outflow.amount)) ?? [];
     inflows.forEach((inflow) => {
       const { score, reasons } = scorePair(outflow, inflow, accountsById, ccAccountTokensById, opts);
