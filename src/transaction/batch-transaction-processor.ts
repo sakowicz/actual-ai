@@ -45,22 +45,30 @@ class BatchTransactionProcessor {
 
       const batch = uncategorizedTransactions.slice(batchStart, batchEnd);
 
-      await batch.reduce(async (previousPromise, transaction, batchIndex) => {
-        await previousPromise;
+      const responses = await Promise.all(batch.map(async (transaction, batchIndex) => {
         const globalIndex = batchStart + batchIndex;
         console.log(
-          `${globalIndex + 1}/${uncategorizedTransactions.length} Processing transaction '${transaction.imported_payee}'`,
+          `${globalIndex + 1}/${uncategorizedTransactions.length} Classifying transaction '${transaction.imported_payee}'`,
         );
-
-        await this.transactionProcessor.process(
+        return this.transactionProcessor.classify(
           transaction,
           categoryGroups,
           payees,
           rules,
+        );
+      }));
+
+      for (const [batchIndex, response] of responses.entries()) {
+        if (!response) continue;
+        const transaction = batch[batchIndex];
+        if (!transaction) continue;
+        await this.transactionProcessor.apply(
+          transaction,
+          response,
           categories,
           suggestedCategories,
         );
-      }, Promise.resolve());
+      }
 
       // Add a small delay between batches to avoid overwhelming the API
       if (batchEnd < uncategorizedTransactions.length) {

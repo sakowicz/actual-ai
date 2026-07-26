@@ -6,7 +6,7 @@ import { APIPayeeEntity } from '@actual-app/api/models';
 import {
   ActualApiServiceI, APICategoryEntity, APICategoryGroupEntity,
   LlmServiceI, ProcessingStrategyI,
-  PromptGeneratorI,
+  PromptGeneratorI, UnifiedResponse,
 } from '../types';
 import TagService from './tag-service';
 
@@ -49,6 +49,17 @@ class TransactionProcessor {
         transactions: TransactionEntity[];
       }>,
   ): Promise<void> {
+    const response = await this.classify(transaction, categoryGroups, payees, rules);
+    if (!response) return;
+    await this.apply(transaction, response, categories, suggestedCategories);
+  }
+
+  public async classify(
+    transaction: TransactionEntity,
+    categoryGroups: APICategoryGroupEntity[],
+    payees: APIPayeeEntity[],
+    rules: RuleEntity[],
+  ): Promise<UnifiedResponse | undefined> {
     try {
       const prompt = this.promptGenerator.generate(
         categoryGroups,
@@ -57,8 +68,26 @@ class TransactionProcessor {
         rules,
       );
 
-      const response = await this.llmService.ask(prompt);
+      return await this.llmService.ask(prompt);
+    } catch (error) {
+      console.error(`Error classifying transaction ${transaction.id}:`, error);
+      return undefined;
+    }
+  }
 
+  public async apply(
+    transaction: TransactionEntity,
+    response: UnifiedResponse,
+    categories: (APICategoryEntity | APICategoryGroupEntity)[],
+    suggestedCategories: Map<string, {
+        name: string;
+        groupName: string;
+        groupIsNew: boolean;
+        groupId?: string;
+        transactions: TransactionEntity[];
+      }>,
+  ): Promise<void> {
+    try {
       const strategy = this.processingStrategies.find((s) => s.isSatisfiedBy(response));
       if (strategy) {
         await strategy.process(transaction, response, categories, suggestedCategories);
@@ -71,7 +100,7 @@ class TransactionProcessor {
         this.tagService.addNotGuessedTag(transaction.notes ?? ''),
       );
     } catch (error) {
-      console.error(`Error processing transaction ${transaction.id}:`, error);
+      console.error(`Error applying category for transaction ${transaction.id}:`, error);
     }
   }
 }
