@@ -5,6 +5,7 @@ import TagService from './tag-service';
 
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
+const LEGACY_UNNAMED_RULE_MARKER = '(rule: Unnamed rule)';
 
 class NotesMigrator implements NotesMigratorI {
   private readonly actualApiService: ActualApiServiceI;
@@ -26,6 +27,7 @@ class NotesMigrator implements NotesMigratorI {
             && (
               transaction.notes?.includes(LEGACY_NOTES_NOT_GUESSED)
                 || transaction.notes?.includes(LEGACY_NOTES_GUESSED)
+                || transaction.notes?.includes(LEGACY_UNNAMED_RULE_MARKER)
             ),
     );
 
@@ -39,6 +41,8 @@ class NotesMigrator implements NotesMigratorI {
       if (transaction.notes?.includes(LEGACY_NOTES_NOT_GUESSED)) {
         newNotes = this.tagService.addNotGuessedTag(baseNotes);
       } else if (transaction.notes?.includes(LEGACY_NOTES_GUESSED)) {
+        newNotes = this.tagService.addGuessedTag(baseNotes);
+      } else if (this.tagService.isGuessed(transaction.notes ?? '')) {
         newNotes = this.tagService.addGuessedTag(baseNotes);
       }
 

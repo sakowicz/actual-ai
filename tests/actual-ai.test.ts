@@ -338,6 +338,21 @@ describe('ActualAiService', () => {
     expect(updatedTransactions[1].notes).toBe('Carrefour XXXX1234567 822-307-3000 #actual-ai');
   });
 
+  it('removes the obsolete unnamed-rule marker while preserving the category tag', async () => {
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour #actual-ai (rule: Unnamed rule)',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+
+    await notesMigrator.migrateToTags();
+
+    const [updated] = await inMemoryApiService.getTransactions();
+    expect(updated.notes).toBe('Carrefour #actual-ai');
+  });
+
   it('Clean up existing multiple notes', async () => {
     // Arrange
     const transaction = GivenActualData.createTransaction(
