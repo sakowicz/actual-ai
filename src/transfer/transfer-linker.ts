@@ -1,5 +1,5 @@
-import { APIPayeeEntity, APIAccountEntity } from '@actual-app/api/@types/loot-core/src/server/api-models';
-import { TransactionEntity } from '@actual-app/api/@types/loot-core/src/types/models';
+import { APIPayeeEntity, APIAccountEntity } from '@actual-app/api/models';
+import { TransactionEntity } from '@actual-app/core/types/models';
 import { ActualApiServiceI } from '../types';
 
 export type TransferLinkPlan = {

@@ -3,9 +3,9 @@ import {
   APICategoryEntity,
   APICategoryGroupEntity,
   APIPayeeEntity,
-} from '@actual-app/api/@types/loot-core/src/server/api-models';
+} from '@actual-app/api/models';
 import path from 'path';
-import { TransactionEntity, RuleEntity } from '@actual-app/api/@types/loot-core/src/types/models';
+import { TransactionEntity, RuleEntity } from '@actual-app/core/types/models';
 import { ActualApiServiceI } from './types';
 import { formatError } from './utils/error-utils';
 
