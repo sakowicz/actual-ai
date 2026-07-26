@@ -88,9 +88,17 @@ class TransactionProcessor {
       }>,
   ): Promise<void> {
     try {
-      const strategy = this.processingStrategies.find((s) => s.isSatisfiedBy(response));
+      if (response.type === 'rule' && response.categoryId === 'unknown') {
+        console.warn(`Ignoring invalid rule response: ${JSON.stringify(response)}`);
+        return;
+      }
+
+      const normalizedResponse = response.type === 'rule' && response.ruleName === 'Unnamed rule'
+        ? { ...response, type: 'existing' as const }
+        : response;
+      const strategy = this.processingStrategies.find((s) => s.isSatisfiedBy(normalizedResponse));
       if (strategy) {
-        await strategy.process(transaction, response, categories, suggestedCategories);
+        await strategy.process(transaction, normalizedResponse, categories, suggestedCategories);
         return;
       }
 
