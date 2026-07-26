@@ -138,9 +138,10 @@ loops.
 5. `payee`: The name of the payee associated with the transaction. This is found by matching the payee ID in the
    transaction with the payee list.
 6. `importedPayee`: The imported payee name from the transaction. This is taken from `transaction.imported_payee`.
-7. `date`: The date of the transaction. This is taken from `transaction.date`.
-8. `cleared`: A boolean indicating if the transaction is cleared. This is taken from `transaction.cleared`.
-9. `reconciled`: A boolean indicating if the transaction is reconciled. This is taken from `transaction.reconciled`.
+7. `importedId`: The original bank-import reference. This is taken from `transaction.imported_id` and can distinguish otherwise generic payees such as e-transfers.
+8. `date`: The date of the transaction. This is taken from `transaction.date`.
+9. `cleared`: A boolean indicating if the transaction is cleared. This is taken from `transaction.cleared`.
+10. `reconciled`: A boolean indicating if the transaction is reconciled. This is taken from `transaction.reconciled`.
 
 ## New Category Suggestions
 

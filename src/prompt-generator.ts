@@ -56,6 +56,7 @@ class PromptGenerator implements PromptGeneratorI {
         description: transaction.notes ?? '',
         payee: payeeName ?? '',
         importedPayee: transaction.imported_payee ?? '',
+        importedId: transaction.imported_id ?? '',
         date: transaction.date ?? '',
         cleared: transaction.cleared,
         reconciled: transaction.reconciled,

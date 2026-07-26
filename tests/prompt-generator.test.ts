@@ -76,6 +76,7 @@ describe('PromptGenerator', () => {
       description: transaction.notes ?? '',
       payee: payees.find((p) => p.id === transaction.payee)?.name ?? '',
       importedPayee: transaction.imported_payee ?? '',
+      importedId: transaction.imported_id ?? '',
       date: transaction.date ?? '',
       cleared: transaction.cleared ?? false,
       reconciled: transaction.reconciled ?? false,
@@ -134,6 +135,18 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
     };
 
     expect(t).toThrow(PromptTemplateException);
+  });
+
+  it('includes the bank import reference when available', () => {
+    const transaction = GivenActualData.createTransaction('1', 63003, 'E-Transfer');
+    transaction.imported_id = '2026-07-07-E-TRANSFER ***AVM';
+    const categoryGroups = GivenActualData.createSampleCategoryGroups();
+    const payees = GivenActualData.createSamplePayees();
+    const promptGenerator = new PromptGenerator(promptTemplate);
+
+    const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
+
+    expect(prompt).toContain('* Bank reference: 2026-07-07-E-TRANSFER ***AVM');
   });
 
   it('should include rules in modern format when provided', () => {
