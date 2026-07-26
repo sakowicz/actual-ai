@@ -1,6 +1,5 @@
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
-const LEGACY_UNNAMED_RULE_MARKER = '(rule: Unnamed rule)';
 
 class TagService {
   private readonly notGuessedTag: string;
@@ -36,17 +35,12 @@ class TagService {
       .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
       .replace(new RegExp(`\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
       .replace(new RegExp(`\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
-      .replace(new RegExp(`\\s*${LEGACY_UNNAMED_RULE_MARKER.replace(/[()]/g, '\\$&')}`, 'g'), '')
       .replace(/-miss(?= #actual-ai)/g, '')
       .trim();
   }
 
   public isNotGuessed(notes: string): boolean {
     return notes.includes(this.notGuessedTag);
-  }
-
-  public isGuessed(notes: string): boolean {
-    return notes.includes(this.guessedTag);
   }
 }
 
