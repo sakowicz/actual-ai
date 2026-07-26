@@ -131,9 +131,13 @@ export async function linkTransferPair(
 ): Promise<TransferLinkPlan> {
   const plan = buildTransferLinkPlan(outflow, inflow, payees, accounts, opts);
 
-  // Update both sides. This is required; Actual's transfer logic assumes a symmetric link.
-  await actualApiService.updateTransaction(outflow.id, plan.outflowUpdate);
-  await actualApiService.updateTransaction(inflow.id, plan.inflowUpdate);
+  await actualApiService.linkExistingTransactionsAsTransfer(
+    [outflow.id, inflow.id],
+    [
+      { ...outflow, ...plan.outflowUpdate, category: null as never },
+      { ...inflow, ...plan.inflowUpdate, category: null as never },
+    ],
+  );
 
   return plan;
 }

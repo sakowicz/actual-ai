@@ -238,6 +238,32 @@ class ActualApiService implements ActualApiServiceI {
     }
   }
 
+  public async linkExistingTransactionsAsTransfer(
+    transactionIds: [string, string],
+    updates: [TransactionEntity, TransactionEntity],
+  ): Promise<void> {
+    if (this.isDryRun) {
+      console.log(`DRY RUN: Would link transactions as a transfer: ${transactionIds.join(', ')}`);
+      return;
+    }
+
+    const client = this.actualApiClient as typeof this.actualApiClient & {
+      linkTransactionsAsTransfer?: (ids: [string, string]) => Promise<unknown>;
+    };
+    if (client.linkTransactionsAsTransfer) {
+      await client.linkTransactionsAsTransfer(transactionIds);
+      return;
+    }
+
+    if (!this.actualApiClient.internal) {
+      throw new Error('Actual native transfer handler is unavailable');
+    }
+    await this.actualApiClient.internal.send('transactions-batch-update', {
+      updated: updates,
+      runTransfers: false,
+    });
+  }
+
   public async runBankSync(): Promise<void> {
     await this.actualApiClient.runBankSync();
   }

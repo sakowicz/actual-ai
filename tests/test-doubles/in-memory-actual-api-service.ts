@@ -115,6 +115,17 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
     });
   }
 
+  async linkExistingTransactionsAsTransfer(
+    _transactionIds: [string, string],
+    updates: [TransactionEntity, TransactionEntity],
+  ): Promise<void> {
+    updates.forEach((update) => {
+      const transaction = this.transactions.find((t) => t.id === update.id);
+      if (!transaction) throw new Error(`Transaction with id ${update.id} not found`);
+      Object.assign(transaction, update);
+    });
+  }
+
   async runBankSync(): Promise<void> {
     this.wasBankSyncRan = true;
     return Promise.resolve();

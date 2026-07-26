@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import { findCcPaymentTransferCandidates } from '../src/transfer/cc-payment-transfer-matcher';
-import { buildTransferLinkPlan } from '../src/transfer/transfer-linker';
+import { buildTransferLinkPlan, linkTransferPair } from '../src/transfer/transfer-linker';
 
 function tx(overrides: Partial<any>) {
   return {
@@ -349,5 +349,34 @@ describe('transfer link plan', () => {
       payees,
       accounts,
     )).toThrow('amounts must exactly offset');
+  });
+
+  test('links both sides through one native batch operation', async () => {
+    const outflow = tx({ id: 'o1', account: 'checking', amount: -5000 });
+    const inflow = tx({ id: 'i1', account: 'card', amount: 5000 });
+    const linkExistingTransactionsAsTransfer = jest.fn().mockResolvedValue(undefined);
+
+    await linkTransferPair(
+      { linkExistingTransactionsAsTransfer } as any,
+      outflow as any,
+      inflow as any,
+      [
+        { id: 'payee-card', transfer_acct: 'card' },
+        { id: 'payee-checking', transfer_acct: 'checking' },
+      ] as any,
+      [
+        { id: 'checking', name: 'Checking' },
+        { id: 'card', name: 'Visa Card' },
+      ] as any,
+    );
+
+    expect(linkExistingTransactionsAsTransfer).toHaveBeenCalledTimes(1);
+    expect(linkExistingTransactionsAsTransfer).toHaveBeenCalledWith(
+      ['o1', 'i1'],
+      [
+        expect.objectContaining({ transfer_id: 'i1', payee: 'payee-card', category: null }),
+        expect.objectContaining({ transfer_id: 'o1', payee: 'payee-checking', category: null }),
+      ],
+    );
   });
 });

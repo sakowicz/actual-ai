@@ -55,6 +55,11 @@ export interface ActualApiServiceI {
     updates: Partial<TransactionEntity>,
   ): Promise<void>
 
+  linkExistingTransactionsAsTransfer(
+    transactionIds: [string, string],
+    updates: [TransactionEntity, TransactionEntity],
+  ): Promise<void>
+
   runBankSync(): Promise<void>
 
   createCategory(name: string, groupId: string): Promise<string>
