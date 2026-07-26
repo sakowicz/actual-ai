@@ -296,4 +296,22 @@ describe('transfer link plan', () => {
     expect(plan.outflowUpdate.notes).toContain('posted next day');
     expect(plan.outflowUpdate.notes).toContain('#cc-payment-transfer');
   });
+
+  test('rejects a pair that cannot be represented as an Actual transfer', () => {
+    const accounts = [
+      { id: 'checking', name: 'Checking' },
+      { id: 'cc', name: 'Visa' },
+    ] as any;
+    const payees = [
+      { id: 'p-checking', name: 'Transfer: Checking', transfer_acct: 'checking' },
+      { id: 'p-cc', name: 'Transfer: Visa', transfer_acct: 'cc' },
+    ] as any;
+
+    expect(() => buildTransferLinkPlan(
+      tx({ id: 'o1', account: 'checking', amount: -100 }) as any,
+      tx({ id: 'i1', account: 'cc', amount: 99 }) as any,
+      payees,
+      accounts,
+    )).toThrow('amounts must exactly offset');
+  });
 });

@@ -47,6 +47,24 @@ function accountName(accountsById: Map<string, APIAccountEntity>, id: string): s
   return accountsById.get(id)?.name ?? id;
 }
 
+function assertValidTransferPair(outflow: TransactionEntity, inflow: TransactionEntity): void {
+  if (outflow.transfer_id || inflow.transfer_id) {
+    throw new Error('Cannot link transactions that are already transfers');
+  }
+  if (outflow.is_parent || inflow.is_parent) {
+    throw new Error('Cannot link split parent transactions');
+  }
+  if (outflow.account === inflow.account) {
+    throw new Error('Transfer transactions must belong to different accounts');
+  }
+  if (outflow.amount >= 0 || inflow.amount <= 0) {
+    throw new Error('Transfer pair must be an outflow followed by an inflow');
+  }
+  if (Math.abs(outflow.amount) !== inflow.amount) {
+    throw new Error('Transfer pair amounts must exactly offset');
+  }
+}
+
 export function buildTransferLinkPlan(
   outflow: TransactionEntity,
   inflow: TransactionEntity,
@@ -54,6 +72,7 @@ export function buildTransferLinkPlan(
   accounts: APIAccountEntity[],
   opts: { tag?: string; datePreference?: 'outflow' | 'inflow' | 'min' | 'max' } = {},
 ): TransferLinkPlan {
+  assertValidTransferPair(outflow, inflow);
   const accountsById = new Map(accounts.map((a) => [a.id, a]));
 
   const outflowTransferPayeeId = payeeIdForTransferToAccount(payees, inflow.account);
