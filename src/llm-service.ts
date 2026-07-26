@@ -78,15 +78,15 @@ export default class LlmService implements LlmServiceI {
       }
 
       return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
-        try {
-          const { text } = await generateText({
-            model: this.model,
-            prompt,
-            temperature: 0.2,
-            tools: this.toolService?.getTools(),
-            maxSteps: 3,
-          });
+        const { text } = await generateText({
+          model: this.model,
+          prompt,
+          temperature: 0.2,
+          tools: this.toolService?.getTools(),
+          maxSteps: 3,
+        });
 
+        try {
           return parseLlmResponse(text);
         } catch (error) {
           console.error('LLM response validation failed:', error);

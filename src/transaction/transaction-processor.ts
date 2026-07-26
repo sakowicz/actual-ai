@@ -1,8 +1,8 @@
 import {
   RuleEntity,
   TransactionEntity,
-} from '@actual-app/api/@types/loot-core/src/types/models';
-import { APIPayeeEntity } from '@actual-app/api/@types/loot-core/src/server/api-models';
+} from '@actual-app/core/types/models';
+import { APIPayeeEntity } from '@actual-app/api/models';
 import {
   ActualApiServiceI, APICategoryEntity, APICategoryGroupEntity,
   LlmServiceI, ProcessingStrategyI,
@@ -72,10 +72,6 @@ class TransactionProcessor {
       );
     } catch (error) {
       console.error(`Error processing transaction ${transaction.id}:`, error);
-      await this.actualApiService.updateTransactionNotes(
-        transaction.id,
-        this.tagService.addNotGuessedTag(transaction.notes ?? ''),
-      );
     }
   }
 }
