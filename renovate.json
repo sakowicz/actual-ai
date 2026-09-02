@@ -16,8 +16,7 @@
       "groupName": "actual-app",
       "groupSlug": "actual-app",
       "rangeStrategy": "bump",
-      "separateMajorMinor": false,
-      "schedule": ["before 6am on monday"]
+      "separateMajorMinor": false
     }
   ],
   "vulnerabilityAlerts": {
