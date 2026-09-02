@@ -1,14 +1,20 @@
 name: Tests
 on:
   push:
-  pull_request_target:
+    branches: [master]
+  # `pull_request` (not `pull_request_target`): PR code runs without repo secrets.
+  # Fork PRs are held for maintainer approval by the repo's Actions settings.
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
 jobs:
   eslint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -22,8 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -33,6 +37,8 @@ jobs:
       - name: Run Unit Tests (jest)
         run: npx jest --coverage
       - name: Upload coverage reports to Codecov
+        # Fork PRs get no secrets, so the token would be empty and the upload fails.
+        if: ${{ github.event.pull_request.head.repo.fork != true }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
