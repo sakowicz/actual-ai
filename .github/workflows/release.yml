@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options: [patch, minor, major]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install modules
+        run: npm ci
+      - name: Run ESLint
+        run: ./node_modules/.bin/eslint **/*.ts
+      - name: Run Unit Tests (jest)
+        run: npx jest
+
+  release:
+    needs: test
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # Captured before the bump commit lands, so the changelog range is
+      # last release..HEAD rather than last release..itself.
+      - name: Resolve previous tag
+        id: prev
+        run: echo "tag=$(git tag -l | sort -V | tail -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version
+        id: bump
+        run: |
+          npm version "${{ inputs.version_bump }}" --no-git-tag-version
+          echo "version=$(npm pkg get version | tr -d '"')" >> "$GITHUB_OUTPUT"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG="${{ steps.prev.outputs.tag }}"
+          if [ -z "$PREV_TAG" ]; then RANGE=""; else RANGE="${PREV_TAG}..HEAD"; fi
+          {
+            echo 'body<<CHANGELOG_EOF'
+            git log --pretty=format:'- %s (%h)' $RANGE
+            echo ''
+            echo 'CHANGELOG_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${VERSION}"
+          git tag "${VERSION}"
+          git push origin HEAD:master
+          git push origin "${VERSION}"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.version }}
+          name: ${{ steps.bump.outputs.version }}
+          body: ${{ steps.changelog.outputs.body }}
+
+  docker:
+    needs: release
+    uses: ./.github/workflows/release-build-docker.yml
+    with:
+      tag: ${{ needs.release.outputs.version }}
+    secrets: inherit

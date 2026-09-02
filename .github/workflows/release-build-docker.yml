@@ -2,12 +2,24 @@ name: Build and Push Docker Images
 on:
   release:
     types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_PASSWORD:
+        required: true
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -27,4 +39,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64/v8
           push: true
-          tags: sakowicz/actual-ai:latest,sakowicz/actual-ai:${{ github.ref_name }}
+          tags: sakowicz/actual-ai:latest,sakowicz/actual-ai:${{ inputs.tag || github.ref_name }}
