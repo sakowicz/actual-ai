@@ -103,17 +103,7 @@ export default class LlmService implements LlmServiceI {
       console.log(`Making LLM request to ${this.provider}${this.isFallbackMode ? ' (fallback mode)' : ''}`);
 
       if (this.isFallbackMode) {
-        const response = await this.askUsingFallbackModel(prompt);
-        const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-        if (!uuidRegex.test(response)) {
-          console.warn('If you are using ollama and you see it all the time, check the ollama api logs.'
-              + 'Maybe you need to use bigger context window');
-          throw new Error(`Could not foud category in LLM response: ${response}`);
-        }
-        return {
-          type: 'existing',
-          categoryId: response,
-        };
+        return LlmService.parseFallbackResponse(await this.askUsingFallbackModel(prompt));
       }
 
       return this.rateLimiter.executeWithRateLimiting(this.provider, async () => {
@@ -153,6 +143,27 @@ export default class LlmService implements LlmServiceI {
     }
   }
 
+  /**
+   * Fallback models answer with whatever they feel like: a bare category id, the documented JSON
+   * object, or that JSON wrapped in prose or code fences. Parse the structured answer first and
+   * only fall back to fishing an id out of the text.
+   */
+  private static parseFallbackResponse(response: string): UnifiedResponse {
+    try {
+      return parseLlmResponse(response);
+    } catch {
+      const categoryId = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+        .exec(response);
+      if (categoryId) {
+        return { type: 'existing', categoryId: categoryId[0] };
+      }
+
+      console.warn('If you are using ollama and you see it all the time, check the ollama api logs.'
+        + 'Maybe you need to use bigger context window');
+      throw new Error(`Could not find category in LLM response: ${response}`);
+    }
+  }
+
   public async askUsingFallbackModel(prompt: string): Promise<string> {
     return this.rateLimiter.executeWithRateLimiting(
       this.provider,
@@ -168,7 +179,7 @@ export default class LlmService implements LlmServiceI {
             abortSignal: controller.signal,
           });
 
-          return text.replace(/(\r\n|\n|\r|"|')/gm, '');
+          return text.trim();
         } finally {
           clearTimeout(timer);
         }
