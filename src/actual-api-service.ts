@@ -4,18 +4,12 @@ import {
   APICategoryGroupEntity,
   APIPayeeEntity,
 } from '@actual-app/core/src/server/api-models';
-import path from 'path';
 import { TransactionEntity, RuleEntity } from '@actual-app/core/src/types/models';
 import { ActualApiServiceI } from './types';
-
-function isErrnoException(error: unknown): error is Error & { code?: string } {
-  return error instanceof Error;
-}
+import DataDirLock from './utils/data-dir-lock';
 
 class ActualApiService implements ActualApiServiceI {
   private actualApiClient: typeof import('@actual-app/api');
-
-  private fs: typeof import('fs');
 
   private readonly dataDir: string;
 
@@ -29,9 +23,7 @@ class ActualApiService implements ActualApiServiceI {
 
   private readonly isDryRun: boolean;
 
-  private lockFd: number | null = null;
-
-  private readonly lockPath: string;
+  private readonly dataDirLock: DataDirLock;
 
   constructor(
     actualApiClient: typeof import('@actual-app/api'),
@@ -44,84 +36,30 @@ class ActualApiService implements ActualApiServiceI {
     isDryRun: boolean,
   ) {
     this.actualApiClient = actualApiClient;
-    this.fs = fs;
     this.dataDir = dataDir;
     this.serverURL = serverURL;
     this.password = password;
     this.budgetId = budgetId;
     this.e2ePassword = e2ePassword;
     this.isDryRun = isDryRun;
-    this.lockPath = path.join(this.dataDir, '.actual-ai.lock');
-  }
-
-  private acquireDataDirLock() {
-    // Prevent multiple concurrent runs from sharing the same dataDir. The underlying
-    // Actual sqlite DB is not safe for concurrent writers and can end up "out-of-sync".
-    if (!this.fs.existsSync(this.dataDir)) {
-      this.fs.mkdirSync(this.dataDir, { recursive: true });
-    }
-
-    if (this.fs.existsSync(this.lockPath)) {
-      try {
-        const raw = this.fs.readFileSync(this.lockPath, 'utf8');
-        const parsed = JSON.parse(raw) as { pid?: number; startedAt?: string };
-        const pid = parsed?.pid;
-        if (typeof pid === 'number') {
-          try {
-            process.kill(pid, 0);
-            throw new Error(
-              `Another actual-ai run appears active (pid=${pid}). `
-              + `Refusing to use shared dataDir: ${this.dataDir}`,
-            );
-          } catch (error: unknown) {
-            if (isErrnoException(error) && error.code === 'ESRCH') {
-              // Stale lock from a crashed process; remove it.
-              this.fs.unlinkSync(this.lockPath);
-            } else if (error instanceof Error) {
-              // process.kill threw, but it's not ESRCH; rethrow.
-              throw error;
-            }
-          }
-        } else {
-          // Unparseable/stale lock; remove it.
-          this.fs.unlinkSync(this.lockPath);
-        }
-      } catch (e) {
-        // If anything goes wrong reading the lock, fail safe.
-        throw e instanceof Error ? e : new Error('Failed to read dataDir lock');
-      }
-    }
-
-    // 'wx' creates exclusively; throws if exists.
-    this.lockFd = this.fs.openSync(this.lockPath, 'wx');
-    this.fs.writeFileSync(
-      this.lockFd,
-      JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }),
-    );
-  }
-
-  private releaseDataDirLock() {
-    try {
-      if (this.lockFd !== null) {
-        this.fs.closeSync(this.lockFd);
-        this.lockFd = null;
-      }
-      if (this.fs.existsSync(this.lockPath)) {
-        this.fs.unlinkSync(this.lockPath);
-      }
-    } catch {
-      // Best-effort cleanup.
-    }
+    this.dataDirLock = new DataDirLock(fs, dataDir);
   }
 
   public async initializeApi() {
-    this.acquireDataDirLock();
+    this.dataDirLock.acquire();
 
-    await this.actualApiClient.init({
-      dataDir: this.dataDir,
-      serverURL: this.serverURL,
-      password: this.password,
-    });
+    try {
+      await this.actualApiClient.init({
+        dataDir: this.dataDir,
+        serverURL: this.serverURL,
+        password: this.password,
+      });
+    } catch (error: unknown) {
+      // Never leave the lock behind: the next scheduled run would otherwise find a lock
+      // owned by this still-running process and refuse to start forever.
+      this.dataDirLock.release();
+      throw error;
+    }
 
     try {
       if (this.e2ePassword) {
@@ -144,7 +82,7 @@ class ActualApiService implements ActualApiServiceI {
       console.error('Full error details:', error);
 
       await this.actualApiClient.shutdown();
-      this.releaseDataDirLock();
+      this.dataDirLock.release();
 
       throw new Error(`Budget download failed. Verify that:
 1. Budget ID "${this.budgetId}" is correct
@@ -155,8 +93,11 @@ class ActualApiService implements ActualApiServiceI {
   }
 
   public async shutdownApi() {
-    await this.actualApiClient.shutdown();
-    this.releaseDataDirLock();
+    try {
+      await this.actualApiClient.shutdown();
+    } finally {
+      this.dataDirLock.release();
+    }
   }
 
   public async getCategoryGroups(): Promise<APICategoryGroupEntity[]> {
