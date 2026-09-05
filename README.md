@@ -121,6 +121,18 @@ Available features:
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
 - `disableRateLimiter` - Disable Rate Limiter
 
+## Scheduling
+
+With `CLASSIFICATION_SCHEDULE_CRON` set, the container stays up and runs every scheduled
+classification in a fresh child process. `@actual-app/api` keeps state in module-level singletons
+that survive `shutdown()`, and in a container running for weeks that state drifts until incremental
+sync reports no new messages and imports quietly stop. A new process per run keeps that state fresh
+without needing a restart. Logs from the run appear as usual, and a schedule that fires while the
+previous run is still going is skipped.
+
+Without a cron schedule, `classifyOnStartup` classifies once and the process exits — the right shape
+when an external scheduler owns the timing.
+
 ## Rate Limit Overrides
 
 By default each provider gets a conservative request/token-per-minute limit. You can override these per deployment with two environment variables — useful when your plan's actual limits differ from the built-in defaults (e.g. Google AI Free Tier sits well below the default 300 RPM):
