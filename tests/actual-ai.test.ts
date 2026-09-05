@@ -7,8 +7,7 @@ import GivenActualData from './test-doubles/given/given-actual-data';
 import * as config from '../src/config';
 import SimilarityCalculator from '../src/similarity-calculator';
 import CategorySuggestionOptimizer from '../src/category-suggestion-optimizer';
-import { CategorySuggestion, NotesMigratorI } from '../src/types';
-import NotesMigrator from '../src/transaction/notes-migrator';
+import { CategorySuggestion } from '../src/types';
 import TagService from '../src/transaction/tag-service';
 import RuleMatchStrategy from '../src/transaction/processing-strategy/rule-match-strategy';
 import ExistingCategoryStrategy from '../src/transaction/processing-strategy/existing-category-strategy';
@@ -34,7 +33,6 @@ describe('ActualAiService', () => {
   let inMemoryApiService: InMemoryActualApiService;
   let mockedLlmService: MockedLlmService;
   let mockedPromptGenerator: MockedPromptGenerator;
-  let notesMigrator: NotesMigratorI;
   const GUESSED_TAG = '#actual-ai';
   const NOT_GUESSED_TAG = '#actual-ai-miss';
 
@@ -91,7 +89,6 @@ describe('ActualAiService', () => {
     inMemoryApiService.setPayees(payees);
     inMemoryApiService.setAccounts(accounts);
     inMemoryApiService.setRules(rules);
-    notesMigrator = new NotesMigrator(inMemoryApiService, tagService);
   });
 
   afterEach(() => {
@@ -113,7 +110,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -140,7 +136,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -166,7 +161,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -190,7 +184,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -214,7 +207,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -237,7 +229,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -267,7 +258,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -294,7 +284,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -303,71 +292,7 @@ describe('ActualAiService', () => {
     expect(updatedTransactions[0].category).toBe(undefined);
   });
 
-  it('It migrate legacy transactions to tag', async () => {
-    // Arrange
-    const transactionNotGuessed = GivenActualData.createTransaction(
-      '1',
-      -123,
-      'Carrefour 1235',
-      'Carrefour XXXX1234567 822-307-2000 #actual-ai-miss',
-    );
-    const transactionGuessed = GivenActualData.createTransaction(
-      '2',
-      -123,
-      'Carrefour 1234',
-      'Carrefour XXXX1234567 822-307-3000 actual-ai guessed this category',
-      undefined,
-      GivenActualData.ACCOUNT_MAIN,
-      '2021-01-01',
-      false,
-      GivenActualData.CATEGORY_GROCERIES,
-    );
-    inMemoryApiService.setTransactions([transactionNotGuessed, transactionGuessed]);
-
-    // Act
-    sut = new ActualAiService(
-      transactionService,
-      inMemoryApiService,
-      notesMigrator,
-    );
-    await sut.classify();
-
-    // Assert
-    const updatedTransactions = await inMemoryApiService.getTransactions();
-    expect(updatedTransactions[0].notes).toBe('Carrefour XXXX1234567 822-307-2000 #actual-ai-miss');
-    expect(updatedTransactions[1].notes).toBe('Carrefour XXXX1234567 822-307-3000 #actual-ai');
-  });
-
-  it('Clean up existing multiple notes', async () => {
-    // Arrange
-    const transaction = GivenActualData.createTransaction(
-      '1',
-      -123,
-      'Carrefour 1235',
-      'Carrefour XXXX1234567 822-307-3000  | actual-ai guessed this category | actual-ai guessed this category | actual-ai guessed this category #actual-ai',
-      undefined,
-      '1',
-      '2021-01-01',
-      false,
-      GivenActualData.CATEGORY_GROCERIES,
-    );
-
-    inMemoryApiService.setTransactions([transaction]);
-
-    // Act
-    sut = new ActualAiService(
-      transactionService,
-      inMemoryApiService,
-      notesMigrator,
-    );
-    await sut.classify();
-
-    // Assert
-    const updatedTransactions = await inMemoryApiService.getTransactions();
-    expect(updatedTransactions[0].notes).toBe('Carrefour XXXX1234567 822-307-3000 #actual-ai');
-  });
-
-  it('Do not migrate transaction that not mean to be migrated', async () => {
+  it('It should leave already tagged transactions untouched', async () => {
     // Arrange
     const transaction1 = GivenActualData.createTransaction(
       '1',
@@ -410,7 +335,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -434,7 +358,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -464,7 +387,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
     await sut.classify();
 
@@ -508,7 +430,6 @@ describe('ActualAiService', () => {
     sut = new ActualAiService(
       transactionService,
       inMemoryApiService,
-      notesMigrator,
     );
 
     // Act
@@ -584,7 +505,6 @@ describe('ActualAiService', () => {
       sut = new ActualAiService(
         dryRunTransactionService,
         dryRunApiService,
-        new NotesMigrator(dryRunApiService, new TagService(NOT_GUESSED_TAG, GUESSED_TAG)),
       );
       await sut.classify();
 
@@ -608,7 +528,6 @@ describe('ActualAiService', () => {
       sut = new ActualAiService(
         dryRunTransactionService,
         dryRunApiService,
-        new NotesMigrator(dryRunApiService, new TagService(NOT_GUESSED_TAG, GUESSED_TAG)),
       );
       await sut.classify();
 

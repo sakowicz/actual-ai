@@ -1,5 +1,5 @@
 import {
-  ActualAiServiceI, ActualApiServiceI, NotesMigratorI, TransactionServiceI,
+  ActualAiServiceI, ActualApiServiceI, TransactionServiceI,
 } from './types';
 import suppressConsoleLogsAsync from './utils';
 import { formatError } from './utils/error-utils';
@@ -10,16 +10,12 @@ class ActualAiService implements ActualAiServiceI {
 
   private readonly actualApiService: ActualApiServiceI;
 
-  private readonly notesMigrator: NotesMigratorI;
-
   constructor(
     transactionService: TransactionServiceI,
     actualApiService: ActualApiServiceI,
-    notesMigrator: NotesMigratorI,
   ) {
     this.transactionService = transactionService;
     this.actualApiService = actualApiService;
-    this.notesMigrator = notesMigrator;
   }
 
   public async classify() {
@@ -39,8 +35,6 @@ class ActualAiService implements ActualAiServiceI {
           formatError(error),
         );
       }
-
-      await this.notesMigrator.migrateToTags();
 
       try {
         await this.transactionService.processTransactions();

@@ -47,7 +47,6 @@ import LlmService from './llm-service';
 import ToolService from './utils/tool-service';
 import SimilarityCalculator from './similarity-calculator';
 import CategorySuggestionOptimizer from './category-suggestion-optimizer';
-import NotesMigrator from './transaction/notes-migrator';
 import TagService from './transaction/tag-service';
 import RuleMatchStrategy from './transaction/processing-strategy/rule-match-strategy';
 import ExistingCategoryStrategy from './transaction/processing-strategy/existing-category-strategy';
@@ -158,15 +157,9 @@ const transactionService = new TransactionService(
   isDryRun,
 );
 
-const notesMigrator = new NotesMigrator(
-  actualApiService,
-  tagService,
-);
-
 const actualAi = new ActualAiService(
   transactionService,
   actualApiService,
-  notesMigrator,
 );
 
 export default actualAi;

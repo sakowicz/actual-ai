@@ -63,10 +63,6 @@ export interface TransactionServiceI {
   processTransactions(): Promise<void>;
 }
 
-export interface NotesMigratorI {
-  migrateToTags(): Promise<void>;
-}
-
 export interface ActualAiServiceI {
   classify(): Promise<void>;
 
