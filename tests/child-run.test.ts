@@ -80,6 +80,24 @@ describe('ChildRunner', () => {
   });
 });
 
+describe('ChildRunner shutdown', () => {
+  test('kills the running child so it cannot outlive the scheduler', () => {
+    const child = fakeChild();
+    const kill = jest.fn();
+    child.kill = kill as unknown as ChildProcess['kill'];
+    const runner = new ChildRunner(spawnQueue([child]));
+
+    runner.start();
+    runner.stop('SIGTERM');
+
+    expect(kill).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  test('does nothing when no run is in progress', () => {
+    expect(() => new ChildRunner(spawnQueue([])).stop()).not.toThrow();
+  });
+});
+
 describe('isRunOnceChild', () => {
   test('detects the environment the scheduler sets on its children', () => {
     expect(isRunOnceChild({ [RUN_ONCE_ENV]: 'true' })).toBe(true);

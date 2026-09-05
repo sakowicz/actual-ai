@@ -24,6 +24,13 @@ if (isRunOnceChild()) {
       runner.start();
     });
 
+    (['SIGTERM', 'SIGINT'] as const).forEach((signal) => {
+      process.on(signal, () => {
+        runner.stop(signal);
+        process.exit(0);
+      });
+    });
+
     console.log('Application started');
     if (isFeatureEnabled('classifyOnStartup')) {
       runner.start();

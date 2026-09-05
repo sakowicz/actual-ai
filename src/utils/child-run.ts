@@ -30,6 +30,14 @@ export default class ChildRunner {
     this.spawn = spawn;
   }
 
+  /**
+   * Ends the current run. Without this a container stop leaves the child orphaned, still holding
+   * the dataDir lock, which blocks every run started after the container comes back.
+   */
+  public stop(signal: NodeJS.Signals = 'SIGTERM'): void {
+    this.active?.kill(signal);
+  }
+
   public start(): void {
     if (this.active !== null) {
       console.log('Previous classification run is still in progress, skipping this schedule');
