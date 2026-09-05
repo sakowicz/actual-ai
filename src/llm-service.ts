@@ -21,6 +21,8 @@ export default class LlmService implements LlmServiceI {
 
   private readonly openrouterEnableToolCalling: boolean;
 
+  private readonly temperature: number | undefined;
+
   constructor(
     llmModelFactory: LlmModelFactoryI,
     rateLimiter: RateLimiter,
@@ -29,6 +31,7 @@ export default class LlmService implements LlmServiceI {
     options?: {
       timeoutMs?: number;
       openrouterEnableToolCalling?: boolean;
+      temperature?: number;
       requestsPerMinuteOverride?: number | null;
       tokensPerMinuteOverride?: number | null;
     },
@@ -41,6 +44,7 @@ export default class LlmService implements LlmServiceI {
     this.toolService = toolService;
     this.timeoutMs = options?.timeoutMs ?? 120_000;
     this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
+    this.temperature = options?.temperature;
 
     // Resolve effective rate limits per axis with trichotomy:
     //   override === null      → fall back to provider default
@@ -124,7 +128,7 @@ export default class LlmService implements LlmServiceI {
           const { text } = await generateText({
             model: this.model,
             prompt,
-            temperature: 0.2,
+            temperature: this.temperature ?? 0.2,
             tools,
             maxSteps: tools ? 3 : 1,
             abortSignal: controller.signal,
@@ -160,7 +164,7 @@ export default class LlmService implements LlmServiceI {
           const { text } = await generateText({
             model: this.model,
             prompt,
-            temperature: 0.1,
+            temperature: this.temperature ?? 0.1,
             abortSignal: controller.signal,
           });
 

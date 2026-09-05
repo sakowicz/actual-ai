@@ -21,6 +21,7 @@ import {
   isFeatureEnabled,
   llmProvider,
   llmTimeoutMs,
+  llmTemperature,
   notGuessedTag,
   ollamaBaseURL,
   ollamaModel,
@@ -113,6 +114,7 @@ const llmService = new LlmService(
   {
     timeoutMs: llmTimeoutMs,
     openrouterEnableToolCalling,
+    temperature: llmTemperature,
     requestsPerMinuteOverride,
     tokensPerMinuteOverride,
   },

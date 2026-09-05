@@ -92,6 +92,7 @@ services:
 #      OPENROUTER_TITLE:  # optional. default: "actual-ai"
 #      LLM_TIMEOUT_MS:  # optional. request timeout in ms for LLM calls, default: 120000
 #      OPENROUTER_ENABLE_TOOL_CALLING:  # optional. "true" to allow model tool-calling on openrouter, default: false
+#      LLM_TEMPERATURE:  # optional. temperature for LLM calls, e.g. 1 for models that reject other values
 #      ANTHROPIC_API_KEY:  # optional. required if you want to use the Anthropic API
 #      ANTHROPIC_MODEL:  # optional. required if you want to use a specific model, default is "claude-3-5-sonnet-latest"
 #      ANTHROPIC_BASE_URL:  # optional. default: "https://api.anthropic.com/v1

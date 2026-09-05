@@ -25,6 +25,12 @@ export const llmTimeoutMs = Number.isFinite(parsedLlmTimeoutMs) && parsedLlmTime
   ? parsedLlmTimeoutMs
   : 120_000;
 export const openrouterEnableToolCalling = process.env.OPENROUTER_ENABLE_TOOL_CALLING === 'true';
+// Some models reject an explicit temperature (GPT-5 accepts the default of 1 only), so allow
+// overriding it. Unset keeps the previous hardcoded values.
+const parsedLlmTemperature = Number.parseFloat(process.env.LLM_TEMPERATURE ?? '');
+export const llmTemperature = Number.isFinite(parsedLlmTemperature)
+  ? parsedLlmTemperature
+  : undefined;
 export const anthropicApiKey = process.env.ANTHROPIC_API_KEY ?? '';
 export const anthropicBaseURL = process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com/v1';
 export const anthropicModel = process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-latest';
