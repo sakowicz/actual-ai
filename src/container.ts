@@ -60,7 +60,6 @@ import RateLimiter from './utils/rate-limiter';
 
 // Create tool service if API key is available and tools are enabled
 export function createToolService(): ToolService | undefined {
-  // freeWebSearch does not require ValueSerp; only the paid `webSearch` does.
   return getEnabledTools().length > 0 ? new ToolService(valueSerpApiKey) : undefined;
 }
 

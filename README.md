@@ -39,17 +39,6 @@ When enabled, the LLM can suggest entirely new categories for transactions it ca
 
 Using the ValueSerp API, the system can search the web for information about unfamiliar merchants to help the LLM make better categorization decisions.
 
-#### 🔎 Free web search alternative
-
-A self-hosted alternative to ValueSerp that uses free public search API (DuckDuckGo) to search for merchant information without requiring an API key or deploying any additional app/service. Just add `freeWebSearch` to your FEATURES array:
-
-```
-FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "freeWebSearch"]'
-```
-
-DuckDuckGo blocks requests coming from outdated browser User-Agents with a `403`. If searches start
-failing that way, override the User-Agent with `WEB_SEARCH_USER_AGENT` instead of waiting for a release.
-
 #### 🔄 Re-run missed transactions
 
 Re-process transactions previously marked as unclassified.
@@ -80,7 +69,7 @@ services:
       ACTUAL_BUDGET_ID: your_actual_budget_sync_id # This is the ID from Settings → Show advanced settings → Sync ID
       CLASSIFICATION_SCHEDULE_CRON: 0 */4 * * * # How often to run classification.
       LLM_PROVIDER: openai # Can be "openai", "openrouter", "anthropic", "google-generative-ai", "ollama" or "groq"
-      FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "freeWebSearch", "suggestNewCategories"]'
+      FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "suggestNewCategories"]'
 #      VALUESERP_API_KEY: your_valueserp_api_key # API key for ValueSerp, required if webSearch tool is enabled
 #      OPENAI_API_KEY:  # optional. required if you want to use the OpenAI API
 #      OPENAI_MODEL:  # optional. required if you want to use a specific model, default is "gpt-5-mini"
@@ -117,15 +106,14 @@ You can configure features using `FEATURES` (JSON array) or `ENABLED_FEATURES` (
 The `FEATURES` environment variable accepts a JSON array of feature names to enable:
 
 ```
-FEATURES='["freeWebSearch", "suggestNewCategories", "classifyOnStartup", "syncAccountsBeforeClassify"]'
+FEATURES='["suggestNewCategories", "classifyOnStartup", "syncAccountsBeforeClassify"]'
 
 # Equivalent:
-ENABLED_FEATURES='freeWebSearch,suggestNewCategories,classifyOnStartup,syncAccountsBeforeClassify'
+ENABLED_FEATURES='suggestNewCategories,classifyOnStartup,syncAccountsBeforeClassify'
 ```
 
 Available features:
 - `webSearch` - Enable web search for merchant information
-- `freeWebSearch` - Enable free web search for merchant information (self-hosted alternative to ValueSerp)
 - `suggestNewCategories` - Allow suggesting new categories for transactions
 - `classifyOnStartup` - Run classification when the application starts
 - `syncAccountsBeforeClassify` - Sync accounts before running classification

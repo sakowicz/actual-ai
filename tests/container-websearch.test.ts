@@ -10,14 +10,22 @@ describe('container tool service wiring', () => {
     process.env = ORIGINAL_ENV;
   });
 
-  test('creates ToolService when freeWebSearch is enabled even without ValueSerp key', async () => {
-    process.env.FEATURES = '["freeWebSearch"]';
-    process.env.VALUESERP_API_KEY = '';
+  test('creates ToolService when webSearch is enabled', async () => {
+    process.env.FEATURES = '["webSearch"]';
+    process.env.VALUESERP_API_KEY = 'value-serp-key';
 
     const mod = await import('../src/container');
     const toolService = mod.createToolService();
 
     expect(toolService).toBeDefined();
-    expect(toolService!.getTools()).toHaveProperty('freeWebSearch');
+    expect(toolService!.getTools()).toHaveProperty('webSearch');
+  });
+
+  test('creates no ToolService when no tool is enabled', async () => {
+    process.env.FEATURES = '["classifyOnStartup"]';
+
+    const mod = await import('../src/container');
+
+    expect(mod.createToolService()).toBeUndefined();
   });
 });

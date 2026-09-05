@@ -10,11 +10,11 @@ describe('config feature env parsing', () => {
     process.env = {
       ...ORIGINAL_ENV,
       FEATURES: '',
-      ENABLED_FEATURES: 'freeWebSearch,suggestNewCategories',
+      ENABLED_FEATURES: 'webSearch,suggestNewCategories',
     };
 
     const config = await import('../src/config');
-    expect(config.getEnabledTools()).toContain('freeWebSearch');
+    expect(config.getEnabledTools()).toContain('webSearch');
     expect(config.isFeatureEnabled('suggestNewCategories')).toBe(true);
   });
 

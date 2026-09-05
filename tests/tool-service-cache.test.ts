@@ -1,3 +1,31 @@
+type ToolExecute = (
+  args: { query: string },
+  options: never,
+) => PromiseLike<string>;
+
+/**
+ * Builds a ToolService whose ValueSerp call is stubbed, so the tests exercise the cache only.
+ */
+async function setUpWebSearch(): Promise<{ execute: ToolExecute; searchSpy: jest.SpyInstance }> {
+  process.env.FEATURES = '["webSearch"]';
+
+  const ToolService = (await import('../src/utils/tool-service')).default;
+  const searchSpy = jest.spyOn(
+    ToolService.prototype as unknown as { performSearch: (query: string) => Promise<unknown> },
+    'performSearch',
+  ).mockResolvedValue({ organic_results: [{ title: 'T', snippet: 'S', link: 'L' }] });
+
+  const webSearchTool = new ToolService('value-serp-key').getTools().webSearch;
+  if (!webSearchTool?.execute) {
+    throw new Error('webSearch tool is unavailable');
+  }
+
+  return {
+    execute: webSearchTool.execute.bind(webSearchTool) as unknown as ToolExecute,
+    searchSpy,
+  };
+}
+
 describe('ToolService caching', () => {
   const ORIGINAL_ENV = process.env;
 
@@ -11,53 +39,24 @@ describe('ToolService caching', () => {
     jest.restoreAllMocks();
   });
 
-  test('freeWebSearch results are cached per query', async () => {
-    process.env.FEATURES = '["freeWebSearch"]';
-
-    const FreeWebSearchService = (await import('../src/utils/free-web-search-service')).default;
-    const searchSpy = jest.spyOn(FreeWebSearchService.prototype, 'search')
-      .mockResolvedValue([{ title: 'T', snippet: 'S', link: 'L' }]);
-    jest.spyOn(FreeWebSearchService.prototype, 'formatSearchResults')
-      .mockReturnValue('SEARCH RESULTS:\n[Source 1] T');
-
-    const ToolService = (await import('../src/utils/tool-service')).default;
-    const toolService = new ToolService('');
-    const tools = toolService.getTools();
-    const freeWebSearchTool = tools.freeWebSearch;
-    if (!freeWebSearchTool?.execute) {
-      throw new Error('freeWebSearch tool is unavailable');
-    }
-    const execute = freeWebSearchTool.execute.bind(freeWebSearchTool);
+  test('webSearch results are cached per query', async () => {
+    const { execute, searchSpy } = await setUpWebSearch();
 
     // Call tool twice with identical query; underlying search should execute once.
     await expect(
       execute({ query: 'Example' }, { toolCallId: 't1', messages: [] } as never),
-    ).resolves.toBe('SEARCH RESULTS:\n[Source 1] T');
+    ).resolves.toContain('[Source 1] T');
     await expect(
       execute({ query: 'Example' }, { toolCallId: 't2', messages: [] } as never),
-    ).resolves.toBe('SEARCH RESULTS:\n[Source 1] T');
+    ).resolves.toContain('[Source 1] T');
     expect(searchSpy).toHaveBeenCalledTimes(1);
   });
 
   test('cache entry expires after TTL', async () => {
-    process.env.FEATURES = '["freeWebSearch"]';
-
-    const FreeWebSearchService = (await import('../src/utils/free-web-search-service')).default;
-    const searchSpy = jest.spyOn(FreeWebSearchService.prototype, 'search')
-      .mockResolvedValue([{ title: 'T', snippet: 'S', link: 'L' }]);
-    jest.spyOn(FreeWebSearchService.prototype, 'formatSearchResults')
-      .mockReturnValue('SEARCH RESULTS:\n[Source 1] T');
-
     const nowSpy = jest.spyOn(Date, 'now');
     nowSpy.mockReturnValue(1_000);
 
-    const ToolService = (await import('../src/utils/tool-service')).default;
-    const toolService = new ToolService('');
-    const freeWebSearchTool = toolService.getTools().freeWebSearch;
-    if (!freeWebSearchTool?.execute) {
-      throw new Error('freeWebSearch tool is unavailable');
-    }
-    const execute = freeWebSearchTool.execute.bind(freeWebSearchTool);
+    const { execute, searchSpy } = await setUpWebSearch();
 
     await execute({ query: 'Example' }, { toolCallId: 't1', messages: [] } as never);
     nowSpy.mockReturnValue(1_000 + (30 * 60 * 1000) + 1);
@@ -67,21 +66,7 @@ describe('ToolService caching', () => {
   });
 
   test('cache evicts oldest entries when size cap is reached', async () => {
-    process.env.FEATURES = '["freeWebSearch"]';
-
-    const FreeWebSearchService = (await import('../src/utils/free-web-search-service')).default;
-    const searchSpy = jest.spyOn(FreeWebSearchService.prototype, 'search')
-      .mockResolvedValue([{ title: 'T', snippet: 'S', link: 'L' }]);
-    jest.spyOn(FreeWebSearchService.prototype, 'formatSearchResults')
-      .mockReturnValue('SEARCH RESULTS:\n[Source 1] T');
-
-    const ToolService = (await import('../src/utils/tool-service')).default;
-    const toolService = new ToolService('');
-    const freeWebSearchTool = toolService.getTools().freeWebSearch;
-    if (!freeWebSearchTool?.execute) {
-      throw new Error('freeWebSearch tool is unavailable');
-    }
-    const execute = freeWebSearchTool.execute.bind(freeWebSearchTool);
+    const { execute, searchSpy } = await setUpWebSearch();
 
     // Fill up 201 unique entries (max is 200), forcing oldest eviction.
     await Array.from({ length: 201 }, (_, i) => i).reduce(async (prev, i) => {

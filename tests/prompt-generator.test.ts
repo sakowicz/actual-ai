@@ -194,29 +194,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
       expect(prompt).toContain('You can use the web search tool to find more information about the transaction.');
     });
 
-    it('should include web search tool message when freeWebSearch is enabled', () => {
-      jest.spyOn(config, 'isToolEnabled').mockImplementation((tool) => tool === 'freeWebSearch');
-
-      const transaction = GivenActualData.createTransaction(
-        '1',
-        -1000,
-        'Carrefour 2137',
-        '',
-        GivenActualData.PAYEE_CARREFOUR,
-        undefined,
-        '2021-01-01',
-      );
-
-      const categoryGroups = GivenActualData.createSampleCategoryGroups();
-      const payees = GivenActualData.createSamplePayees();
-
-      const promptGenerator = new PromptGenerator(promptTemplate);
-      const prompt = promptGenerator.generate(categoryGroups, transaction, payees, []);
-
-      expect(prompt).toContain('You can use the web search tool to find more information about the transaction.');
-    });
-
-    it('should not include web search tool message when both are disabled', () => {
+    it('should not include web search tool message when the tool is disabled', () => {
       jest.spyOn(config, 'isToolEnabled').mockImplementation((_tool) => false);
 
       const transaction = GivenActualData.createTransaction(

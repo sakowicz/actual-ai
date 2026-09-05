@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { tool, Tool } from 'ai';
 import { ToolServiceI } from '../types';
 import { getEnabledTools } from '../config';
-import FreeWebSearchService from './free-web-search-service';
 
 interface SearchResult {
   title: string;
@@ -27,17 +26,10 @@ export default class ToolService implements ToolServiceI {
 
   private readonly valueSerpApiKey: string;
 
-  private readonly freeWebSearchService: FreeWebSearchService;
-
   private readonly webSearchCache = new Map<string, CachedSearchResult>();
-
-  private readonly freeWebSearchCache = new Map<string, CachedSearchResult>();
-
-  private freeWebSearchDisabledMessage = '';
 
   constructor(valueSerpApiKey: string) {
     this.valueSerpApiKey = valueSerpApiKey;
-    this.freeWebSearchService = new FreeWebSearchService();
   }
 
   /**
@@ -58,26 +50,6 @@ export default class ToolService implements ToolServiceI {
           if (!this.valueSerpApiKey) return 'Search unavailable';
           const results = await this.performSearch(normalizedQuery);
           return this.formatSearchResults(results);
-        },
-      });
-    }
-
-    if (getEnabledTools().includes('freeWebSearch')) {
-      return this.searchWithCache({
-        query: q,
-        cache: this.freeWebSearchCache,
-        unavailableMessage: this.freeWebSearchDisabledMessage || 'Search unavailable',
-        searchTypeLabel: 'free web search',
-        executor: async (normalizedQuery) => {
-          if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
-          try {
-            const results = await this.freeWebSearchService.search(normalizedQuery);
-            return this.freeWebSearchService.formatSearchResults(results);
-          } catch (error) {
-            this.setFreeWebSearchBackoffOnHttpError(error);
-            console.error('Error during free web search:', error);
-            return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
-          }
         },
       });
     }
@@ -107,37 +79,6 @@ export default class ToolService implements ToolServiceI {
               if (!this.valueSerpApiKey) return 'Search unavailable';
               const results = await this.performSearch(normalizedQuery);
               return this.formatSearchResults(results);
-            },
-          });
-        },
-      });
-    }
-
-    if (getEnabledTools().includes('freeWebSearch')) {
-      tools.freeWebSearch = tool({
-        description: 'Search the web for business information when existing categories are insufficient. Uses free public search APIs. Use when payee is unfamiliar or category context is unclear',
-        parameters: z.object({
-          query: z.string().describe(
-            'Combination of payee name and business type. '
-            + 'Example: "StudntLN" or "Student Loan"',
-          ),
-        }),
-        execute: async ({ query }: { query: string }): Promise<string> => {
-          return this.searchWithCache({
-            query,
-            cache: this.freeWebSearchCache,
-            unavailableMessage: this.freeWebSearchDisabledMessage || 'Search unavailable',
-            searchTypeLabel: 'free web search',
-            executor: async (normalizedQuery) => {
-              if (this.freeWebSearchDisabledMessage) return this.freeWebSearchDisabledMessage;
-              try {
-                const results = await this.freeWebSearchService.search(normalizedQuery);
-                return this.freeWebSearchService.formatSearchResults(results);
-              } catch (error) {
-                this.setFreeWebSearchBackoffOnHttpError(error);
-                console.error('Error during free web search:', error);
-                return this.freeWebSearchDisabledMessage || 'Web search failed. Please try again later.';
-              }
             },
           });
         },
@@ -213,16 +154,6 @@ export default class ToolService implements ToolServiceI {
     const result = await executor(normalizedQuery);
     this.setCachedResult(cache, cacheKey, result);
     return result;
-  }
-
-  private setFreeWebSearchBackoffOnHttpError(error: unknown): void {
-    if (this.freeWebSearchDisabledMessage) return;
-    const message = error instanceof Error ? error.message : String(error ?? '');
-    const statusMatch = /status code[: ]+(\d{3})/i.exec(message);
-    const status = statusMatch ? Number.parseInt(statusMatch[1], 10) : NaN;
-    if (status === 403 || status === 429) {
-      this.freeWebSearchDisabledMessage = `Free web search is temporarily unavailable (HTTP ${status}).`;
-    }
   }
 
   private async performSearch(query: string): Promise<OrganicResults> {

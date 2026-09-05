@@ -47,10 +47,6 @@ export const groqApiKey = process.env.GROQ_API_KEY ?? '';
 export const groqModel = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const groqBaseURL = process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1';
 export const valueSerpApiKey = process.env.VALUESERP_API_KEY ?? '';
-// DuckDuckGo rejects outdated browser User-Agents with a 403, so this needs to stay current.
-// Overridable per deployment to avoid waiting for a release when it gets blocked again.
-export const webSearchUserAgent = process.env.WEB_SEARCH_USER_AGENT
-  ?? 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 // Optional per-deployment overrides for LLM rate limits.
 // `null` → use provider default; `0` → disable that axis; `>0` → custom limit.
@@ -147,13 +143,6 @@ function registerToolFeatures() {
     defaultValue: false,
     description: 'Enable web search capability for merchant lookup',
     options: ['webSearch'],
-  };
-
-  features.freeWebSearch = {
-    enabled: enabledFeatures.includes('freeWebSearch') || legacyTools.includes('freeWebSearch'),
-    defaultValue: false,
-    description: 'Enable free web search capability for merchant lookup (self-hosted alternative to ValueSerp)',
-    options: ['freeWebSearch'],
   };
 
   // Additional tools can be added here following the same pattern
