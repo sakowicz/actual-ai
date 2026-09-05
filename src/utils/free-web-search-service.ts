@@ -1,5 +1,6 @@
 import * as https from 'https';
 import { SearchResult } from '../types';
+import { webSearchUserAgent } from '../config';
 
 /**
  * A free web search service that can be used as an alternative to ValueSerp.
@@ -61,16 +62,20 @@ export default class FreeWebSearchService {
   private async fetchUrl(url: string, retries = 3): Promise<string> {
     // console.debug('[SearchService] Fetching URL:', url);
     return new Promise((resolve, reject) => {
+      let attemptsLeft = retries;
       const attempt = () => {
         https.get(url, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'User-Agent': webSearchUserAgent,
             Accept: 'text/html,application/xhtml+xml,application/xml',
             'Accept-Language': 'en-US,en;q=0.9',
           },
         }, (res) => {
           // console.debug(`[SearchService] HTTP ${res.statusCode} for ${url}`);
-          if (res.statusCode === 202 && retries > 0) {
+          if (res.statusCode === 202 && attemptsLeft > 0) {
+            // DuckDuckGo answers 202 when it throttles; back off, but give up eventually
+            // instead of retrying forever.
+            attemptsLeft -= 1;
             setTimeout(attempt, 1000);
             return;
           }

@@ -47,6 +47,9 @@ A self-hosted alternative to ValueSerp that uses free public search API (DuckDuc
 FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "freeWebSearch"]'
 ```
 
+DuckDuckGo blocks requests coming from outdated browser User-Agents with a `403`. If searches start
+failing that way, override the User-Agent with `WEB_SEARCH_USER_AGENT` instead of waiting for a release.
+
 #### 🔄 Re-run missed transactions
 
 Re-process transactions previously marked as unclassified.
