@@ -9,7 +9,6 @@ const buildFactory = (provider: string): LlmModelFactoryI => ({
   create: () => ({}) as LanguageModel,
   getProvider: () => provider,
   getModelProvider: () => provider,
-  isFallbackMode: () => false,
 });
 
 describe('LlmService rate-limit configuration', () => {

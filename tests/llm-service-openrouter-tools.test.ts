@@ -25,7 +25,6 @@ describe('LlmService OpenRouter tool-calling toggle', () => {
       create: () => ({}) as LanguageModel,
       getProvider: () => 'openrouter',
       getModelProvider: () => 'openrouter',
-      isFallbackMode: () => false,
     };
     const rateLimiter = new RateLimiter();
     rateLimiter.executeWithRateLimiting = async <T>(
@@ -63,7 +62,6 @@ describe('LlmService OpenRouter tool-calling toggle', () => {
       create: () => ({}) as LanguageModel,
       getProvider: () => 'openrouter',
       getModelProvider: () => 'openrouter',
-      isFallbackMode: () => false,
     };
     const rateLimiter = new RateLimiter();
     rateLimiter.executeWithRateLimiting = async <T>(

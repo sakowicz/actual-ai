@@ -27,7 +27,6 @@ describe('LlmService error handling', () => {
       create: () => ({}) as LanguageModel,
       getProvider: () => 'groq',
       getModelProvider: () => 'groq',
-      isFallbackMode: () => false,
     };
 
     const rateLimiter = new RateLimiter();
@@ -39,10 +38,10 @@ describe('LlmService error handling', () => {
     const svc = new LlmService(llmModelFactory, rateLimiter, true, undefined);
 
     await expect(svc.ask('prompt')).rejects.toThrow('Rate limit reached');
-    await expect(svc.ask('prompt')).rejects.not.toThrow('Invalid response format from LLM');
+    await expect(svc.ask('prompt')).rejects.not.toThrow('Could not find category in LLM response');
   });
 
-  test('wraps invalid JSON responses as invalid response format', async () => {
+  test('reports a response that carries no category, quoting what came back', async () => {
     jest.doMock('ai', () => ({
       generateText: jest.fn().mockResolvedValue({ text: 'not json' }),
     }));
@@ -53,7 +52,6 @@ describe('LlmService error handling', () => {
       create: () => ({}) as LanguageModel,
       getProvider: () => 'groq',
       getModelProvider: () => 'groq',
-      isFallbackMode: () => false,
     };
 
     const rateLimiter = new RateLimiter();
@@ -64,6 +62,6 @@ describe('LlmService error handling', () => {
 
     const svc = new LlmService(llmModelFactory, rateLimiter, true, undefined);
 
-    await expect(svc.ask('prompt')).rejects.toThrow('Invalid response format from LLM');
+    await expect(svc.ask('prompt')).rejects.toThrow('Could not find category in LLM response: not json');
   });
 });

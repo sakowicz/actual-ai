@@ -10,7 +10,6 @@ async function askFallback(text: string): Promise<UnifiedResponse> {
     create: () => ({}) as LanguageModel,
     getProvider: () => 'ollama',
     getModelProvider: () => 'ollama',
-    isFallbackMode: () => true,
   };
   const rateLimiter = new RateLimiter();
   rateLimiter.executeWithRateLimiting = async <T>(

@@ -19,7 +19,6 @@ export interface LlmModelI {
 export interface LlmModelFactoryI {
   create(): LanguageModel;
   getProvider(): string;
-  isFallbackMode(): boolean;
   getModelProvider(): string;
 }
 

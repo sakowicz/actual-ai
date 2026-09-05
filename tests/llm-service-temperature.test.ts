@@ -2,14 +2,9 @@ import { LanguageModel } from 'ai';
 import { LlmModelFactoryI } from '../src/types';
 import RateLimiter from '../src/utils/rate-limiter';
 
-async function callWith(
-  temperature: number | undefined,
-  isFallbackMode = false,
-): Promise<{ temperature?: number }> {
+async function callWith(temperature: number | undefined): Promise<{ temperature?: number }> {
   const generateTextMock = jest.fn().mockResolvedValue({
-    text: isFallbackMode
-      ? '11111111-1111-1111-1111-111111111111'
-      : '{"type":"existing","categoryId":"abc"}',
+    text: '{"type":"existing","categoryId":"abc"}',
   });
   jest.doMock('ai', () => ({ generateText: generateTextMock }));
 
@@ -19,7 +14,6 @@ async function callWith(
     create: () => ({}) as LanguageModel,
     getProvider: () => 'openai',
     getModelProvider: () => 'openai',
-    isFallbackMode: () => isFallbackMode,
   };
   const rateLimiter = new RateLimiter();
   rateLimiter.executeWithRateLimiting = async <T>(
@@ -46,16 +40,12 @@ describe('LlmService temperature', () => {
     jest.restoreAllMocks();
   });
 
-  test('keeps the built-in defaults when no temperature is configured', async () => {
+  test('keeps the built-in default when no temperature is configured', async () => {
     expect((await callWith(undefined)).temperature).toBe(0.2);
-    jest.resetModules();
-    expect((await callWith(undefined, true)).temperature).toBe(0.1);
   });
 
-  test('uses the configured temperature for both modes', async () => {
+  test('uses the configured temperature', async () => {
     expect((await callWith(1)).temperature).toBe(1);
-    jest.resetModules();
-    expect((await callWith(1, true)).temperature).toBe(1);
   });
 
   test('allows zero as an explicit temperature', async () => {

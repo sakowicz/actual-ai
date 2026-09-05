@@ -146,10 +146,6 @@ class LlmModelFactory implements LlmModelFactoryI {
     }
   }
 
-  public isFallbackMode(): boolean {
-    return this.llmProvider === 'ollama';
-  }
-
   public getProvider(): string {
     return this.llmProvider;
   }
