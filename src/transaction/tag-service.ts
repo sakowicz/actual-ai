@@ -28,14 +28,19 @@ class TagService {
   }
 
   public clearPreviousTags(notes: string): string {
+    // The "-miss" repair must run while the " #actual-ai" anchor still exists,
+    // and the longer tag must be cleared before the shorter one: the default
+    // guessedTag "#actual-ai" is a prefix of notGuessedTag "#actual-ai-miss",
+    // so clearing it first ate the tag's head and glued one stray "-miss" onto
+    // the note body per rerun ("…-miss-miss #actual-ai-miss").
     return notes
-      .replace(new RegExp(`\\s*${this.guessedTag}`, 'g'), '')
+      .replace(/(-miss)+(?= #actual-ai)/g, '')
       .replace(new RegExp(`\\s*${this.notGuessedTag}`, 'g'), '')
+      .replace(new RegExp(`\\s*${this.guessedTag}`, 'g'), '')
       .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
       .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
       .replace(new RegExp(`\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
       .replace(new RegExp(`\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
-      .replace(/-miss(?= #actual-ai)/g, '')
       .trim();
   }
 
