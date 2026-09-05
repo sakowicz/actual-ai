@@ -198,7 +198,7 @@ This feature is particularly useful when you have transactions that don't fit yo
 
 The system supports various tools that can be enabled to enhance the LLM's capabilities:
 
-1. Enable tools by including them in the `FEATURES` array or by setting `ENABLED_TOOLS`
+1. Enable tools by including them in the `FEATURES` array
 2. Provide any required API keys for the tools you want to use
 
 Currently supported tools:
@@ -208,7 +208,7 @@ Currently supported tools:
 The webSearch tool uses the ValueSerp API to search for information about merchants that the LLM might not be familiar with, providing additional context for categorization decisions.
 
 To use this tool:
-1. Include `webSearch` in your `FEATURES` array or `ENABLED_TOOLS` list
+1. Include `webSearch` in your `FEATURES` array
 2. Provide your ValueSerp API key as `VALUESERP_API_KEY` (required)
 
 This is especially helpful for:

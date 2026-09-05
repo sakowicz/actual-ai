@@ -134,12 +134,8 @@ function registerStandardFeatures() {
 }
 
 function registerToolFeatures() {
-  const legacyTools = (process.env.ENABLED_TOOLS ?? '').split(',')
-    .map((tool) => tool.trim())
-    .filter(Boolean);
-
   features.webSearch = {
-    enabled: enabledFeatures.includes('webSearch') || legacyTools.includes('webSearch'),
+    enabled: enabledFeatures.includes('webSearch'),
     defaultValue: false,
     description: 'Enable web search capability for merchant lookup',
     options: ['webSearch'],
