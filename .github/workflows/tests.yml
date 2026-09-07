@@ -39,6 +39,6 @@ jobs:
       - name: Upload coverage reports to Codecov
         # Fork PRs get no secrets, so the token would be empty and the upload fails.
         if: ${{ github.event.pull_request.head.repo.fork != true }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
