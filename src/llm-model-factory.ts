@@ -25,6 +25,16 @@ class LlmModelFactory implements LlmModelFactoryI {
 
   private readonly openrouterTitle: string;
 
+  private readonly requestyApiKey: string;
+
+  private readonly requestyModel: string;
+
+  private readonly requestyBaseURL: string;
+
+  private readonly requestyReferrer: string;
+
+  private readonly requestyTitle: string;
+
   private readonly anthropicBaseURL: string;
 
   private readonly anthropicApiKey: string;
@@ -57,6 +67,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     openrouterBaseURL: string,
     openrouterReferrer: string,
     openrouterTitle: string,
+    requestyApiKey: string,
+    requestyModel: string,
+    requestyBaseURL: string,
+    requestyReferrer: string,
+    requestyTitle: string,
     anthropicBaseURL: string,
     anthropicApiKey: string,
     anthropicModel: string,
@@ -78,6 +93,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     this.openrouterBaseURL = openrouterBaseURL;
     this.openrouterReferrer = openrouterReferrer;
     this.openrouterTitle = openrouterTitle;
+    this.requestyApiKey = requestyApiKey;
+    this.requestyModel = requestyModel;
+    this.requestyBaseURL = requestyBaseURL;
+    this.requestyReferrer = requestyReferrer;
+    this.requestyTitle = requestyTitle;
     this.anthropicBaseURL = anthropicBaseURL;
     this.anthropicApiKey = anthropicApiKey;
     this.anthropicModel = anthropicModel;
@@ -113,6 +133,19 @@ class LlmModelFactory implements LlmModelFactoryI {
           headers,
         });
         return openrouter(this.openrouterModel);
+      }
+      case 'requesty': {
+        const headers: Record<string, string> = {};
+        if (this.requestyReferrer) headers['HTTP-Referer'] = this.requestyReferrer;
+        if (this.requestyTitle) headers['X-Title'] = this.requestyTitle;
+
+        const requesty = createOpenAI({
+          name: 'requesty',
+          baseURL: this.requestyBaseURL,
+          apiKey: this.requestyApiKey,
+          headers,
+        });
+        return requesty(this.requestyModel);
       }
       case 'anthropic': {
         const anthropic = createAnthropic({

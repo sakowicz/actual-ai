@@ -26,6 +26,11 @@ export const PROVIDER_LIMITS: Record<string, ProviderLimits> = {
     tokensPerMinute: 60000,
     requestsPerMinute: 120,
   },
+  requesty: {
+    // Requesty rate limits vary by model/provider; keep conservative defaults.
+    tokensPerMinute: 60000,
+    requestsPerMinute: 120,
+  },
   ollama: {
     tokensPerMinute: 10000, // This is a local model, so limits depend on your hardware
     requestsPerMinute: 50,
