@@ -19,6 +19,8 @@ export default class LlmService implements LlmServiceI {
 
   private readonly openrouterEnableToolCalling: boolean;
 
+  private readonly requestyEnableToolCalling: boolean;
+
   private readonly temperature: number | undefined;
 
   constructor(
@@ -29,6 +31,7 @@ export default class LlmService implements LlmServiceI {
     options?: {
       timeoutMs?: number;
       openrouterEnableToolCalling?: boolean;
+      requestyEnableToolCalling?: boolean;
       temperature?: number;
       requestsPerMinuteOverride?: number | null;
       tokensPerMinuteOverride?: number | null;
@@ -41,6 +44,7 @@ export default class LlmService implements LlmServiceI {
     this.toolService = toolService;
     this.timeoutMs = options?.timeoutMs ?? 120_000;
     this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
+    this.requestyEnableToolCalling = options?.requestyEnableToolCalling ?? false;
     this.temperature = options?.temperature;
 
     // Resolve effective rate limits per axis with trichotomy:
@@ -128,15 +132,21 @@ export default class LlmService implements LlmServiceI {
   }
 
   /**
-   * Ollama models cannot call tools at all, and OpenAI-compatible gateways (notably OpenRouter)
-   * do it unreliably enough to produce malformed output. ToolService stays available either way
-   * for searches run before the prompt is built.
+   * Ollama models cannot call tools at all, and OpenAI-compatible gateways (notably OpenRouter
+   * and Requesty) do it unreliably enough to produce malformed output. ToolService stays
+   * available either way for searches run before the prompt is built.
    */
   private supportsToolCalling(): boolean {
     if (this.provider === 'ollama') {
       return false;
     }
-    return this.provider !== 'openrouter' || this.openrouterEnableToolCalling;
+    if (this.provider === 'openrouter') {
+      return this.openrouterEnableToolCalling;
+    }
+    if (this.provider === 'requesty') {
+      return this.requestyEnableToolCalling;
+    }
+    return true;
   }
 
   /**
