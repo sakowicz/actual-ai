@@ -20,11 +20,17 @@ export const openrouterBaseURL = process.env.OPENROUTER_BASE_URL ?? 'https://ope
 export const openrouterModel = process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v3.2';
 export const openrouterReferrer = process.env.OPENROUTER_REFERRER ?? process.env.OPENROUTER_REFERER ?? '';
 export const openrouterTitle = process.env.OPENROUTER_TITLE ?? 'actual-ai';
+export const requestyApiKey = process.env.REQUESTY_API_KEY ?? '';
+export const requestyBaseURL = process.env.REQUESTY_BASE_URL ?? 'https://router.requesty.ai/v1';
+export const requestyModel = process.env.REQUESTY_MODEL ?? 'openai/gpt-4o-mini';
+export const requestyReferrer = process.env.REQUESTY_REFERRER ?? '';
+export const requestyTitle = process.env.REQUESTY_TITLE ?? 'actual-ai';
 const parsedLlmTimeoutMs = Number.parseInt(process.env.LLM_TIMEOUT_MS ?? '', 10);
 export const llmTimeoutMs = Number.isFinite(parsedLlmTimeoutMs) && parsedLlmTimeoutMs > 0
   ? parsedLlmTimeoutMs
   : 120_000;
 export const openrouterEnableToolCalling = process.env.OPENROUTER_ENABLE_TOOL_CALLING === 'true';
+export const requestyEnableToolCalling = process.env.REQUESTY_ENABLE_TOOL_CALLING === 'true';
 // Some models reject an explicit temperature (GPT-5 accepts the default of 1 only), so allow
 // overriding it. Unset keeps the previous hardcoded values.
 const parsedLlmTemperature = Number.parseFloat(process.env.LLM_TEMPERATURE ?? '');

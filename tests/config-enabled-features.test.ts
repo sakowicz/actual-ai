@@ -40,4 +40,14 @@ describe('config feature env parsing', () => {
     expect(config.llmTimeoutMs).toBe(45000);
     expect(config.openrouterEnableToolCalling).toBe(true);
   });
+
+  test('parses Requesty tool-calling env value', async () => {
+    process.env = {
+      ...ORIGINAL_ENV,
+      REQUESTY_ENABLE_TOOL_CALLING: 'true',
+    };
+
+    const config = await import('../src/config');
+    expect(config.requestyEnableToolCalling).toBe(true);
+  });
 });
