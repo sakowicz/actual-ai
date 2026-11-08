@@ -65,7 +65,7 @@ services:
         condition: service_healthy
     environment:
       ACTUAL_SERVER_URL: http://actual_server:5006
-      ACTUAL_PASSWORD: your_actual_password
+      ACTUAL_PASSWORD: your_actual_password # or ACTUAL_SESSION_TOKEN, see below
       ACTUAL_BUDGET_ID: your_actual_budget_sync_id # This is the ID from Settings → Show advanced settings → Sync ID
       CLASSIFICATION_SCHEDULE_CRON: 0 */4 * * * # How often to run classification.
       LLM_PROVIDER: openai # Can be "openai", "openrouter", "anthropic", "google-generative-ai", "ollama" or "groq"
@@ -93,11 +93,26 @@ services:
 #      GROQ_API_KEY:  # optional. required if you want to use the Groq API
 #      GROQ_MODEL:  # optional. required if you want to use a specific model, default is "mixtral-8x7b-32768"
 #      GROQ_BASE_URL:  # optional. default: "https://api.groq.com/openai/v1"
+#      ACTUAL_SESSION_TOKEN:  # optional. use instead of ACTUAL_PASSWORD on OpenID servers, see "OpenID servers"
 #      ACTUAL_E2E_PASSWORD:  # optional. required if you have E2E encryption
 #      NODE_TLS_REJECT_UNAUTHORIZED: 0 # optional. required if you have trouble connecting to Actual server 
 #      NOT_GUESSED_TAG=#actual-ai-miss
 #      GUESSED_TAG=#actual-ai
 ```
+
+## OpenID servers
+
+If your Actual server only allows OpenID login, there is no password for `ACTUAL_PASSWORD`. Set
+`ACTUAL_SESSION_TOKEN` instead. It takes precedence over `ACTUAL_PASSWORD` when both are set.
+
+To get one, sign in to Actual in a browser, open DevTools, and go to **Application → IndexedDB →
+actual → asyncStorage**. The value of the `user-token` key is your session token (a UUID). Close the
+window without logging out: logging out deletes the session. Check it with
+`curl -H "X-ACTUAL-TOKEN: <token>" <server>/account/validate`.
+
+The token acts as your user, so treat it like a password. How long it stays valid depends on the
+server's `ACTUAL_TOKEN_EXPIRATION` (default `never`). To revoke it, `POST` `{"token": "<token>"}` to
+`<server>/account/logout`.
 
 ## Feature Configuration
 
