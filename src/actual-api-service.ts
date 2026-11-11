@@ -17,6 +17,8 @@ class ActualApiService implements ActualApiServiceI {
 
   private readonly password: string;
 
+  private readonly sessionToken: string;
+
   private readonly budgetId: string;
 
   private readonly e2ePassword: string;
@@ -31,6 +33,7 @@ class ActualApiService implements ActualApiServiceI {
     dataDir: string,
     serverURL: string,
     password: string,
+    sessionToken: string,
     budgetId: string,
     e2ePassword: string,
     isDryRun: boolean,
@@ -39,6 +42,7 @@ class ActualApiService implements ActualApiServiceI {
     this.dataDir = dataDir;
     this.serverURL = serverURL;
     this.password = password;
+    this.sessionToken = sessionToken;
     this.budgetId = budgetId;
     this.e2ePassword = e2ePassword;
     this.isDryRun = isDryRun;
@@ -49,11 +53,21 @@ class ActualApiService implements ActualApiServiceI {
     this.dataDirLock.acquire();
 
     try {
-      await this.actualApiClient.init({
-        dataDir: this.dataDir,
-        serverURL: this.serverURL,
-        password: this.password,
-      });
+      // A session token lets OpenID-only servers work: they have no password to log in with.
+      // It takes precedence over the password when both are set.
+      if (this.sessionToken) {
+        await this.actualApiClient.init({
+          dataDir: this.dataDir,
+          serverURL: this.serverURL,
+          sessionToken: this.sessionToken,
+        });
+      } else {
+        await this.actualApiClient.init({
+          dataDir: this.dataDir,
+          serverURL: this.serverURL,
+          password: this.password,
+        });
+      }
     } catch (error: unknown) {
       // Never leave the lock behind: the next scheduled run would otherwise find a lock
       // owned by this still-running process and refuse to start forever.
@@ -87,7 +101,7 @@ class ActualApiService implements ActualApiServiceI {
       throw new Error(`Budget download failed. Verify that:
 1. Budget ID "${this.budgetId}" is correct
 2. Server URL "${this.serverURL}" is reachable
-3. Password is correct
+3. Password or session token is valid
 4. E2E password (if used) is valid`);
     }
   }
