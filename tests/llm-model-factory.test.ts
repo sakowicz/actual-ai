@@ -12,6 +12,11 @@ describe('LlmModelFactory', () => {
       'https://openrouter.ai/api/v1',
       'https://example.com',
       'actual-ai-tests',
+      'requesty-api-key',
+      'requesty-model',
+      'https://router.requesty.ai/v1',
+      'https://example.com',
+      'actual-ai-tests',
       'https://api.anthropic.com',
       'anthropic-api-key',
       'anthropic-model',
@@ -43,6 +48,13 @@ describe('LlmModelFactory', () => {
     const model = sut.create();
     expect(model).toBeDefined();
     expect(model.provider).toEqual('openrouter.chat');
+  });
+
+  it('should create a Requesty model (OpenAI-compatible)', () => {
+    const sut = createSut('requesty');
+    const model = sut.create();
+    expect(model).toBeDefined();
+    expect(model.provider).toEqual('requesty.chat');
   });
 
   it('should create a Google Generative AI model', () => {
