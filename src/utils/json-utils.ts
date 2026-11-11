@@ -23,6 +23,32 @@ function cleanJsonResponse(text: string): string {
   return cleaned.trim();
 }
 
+// Models sometimes prepend prose reasoning to the JSON object — and when the
+// prompt contains bracketed note tags like "[enricher]", the prose echoes them,
+// so cleanJsonResponse's "first structure character" cut lands inside the prose
+// instead of the JSON. Recover by scanning for the last balanced {...} block
+// that parses. Braces inside JSON strings can break the depth count; then the
+// parse fails and the scan moves on to an earlier candidate.
+function extractLastJsonObject(text: string): Partial<UnifiedResponse> | null {
+  for (let start = text.lastIndexOf('{'); start !== -1; start = text.lastIndexOf('{', start - 1)) {
+    let depth = 0;
+    for (let i = start; i < text.length; i += 1) {
+      if (text[i] === '{') depth += 1;
+      if (text[i] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          try {
+            return JSON.parse(text.slice(start, i + 1)) as Partial<UnifiedResponse>;
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function parseLlmResponse(text: string): UnifiedResponse {
   const cleanedText = cleanJsonResponse(text);
   console.log('Cleaned LLM response:', cleanedText);
@@ -43,7 +69,12 @@ function parseLlmResponse(text: string): UnifiedResponse {
         };
       }
 
-      throw new Error('Response is neither valid JSON nor simple ID');
+      const extracted = extractLastJsonObject(text);
+      if (extracted === null) {
+        throw new Error('Response is neither valid JSON nor simple ID');
+      }
+      console.log('Recovered trailing JSON object from prose LLM response');
+      parsed = extracted;
     }
 
     if (parsed.type === 'existing' && parsed.categoryId) {
