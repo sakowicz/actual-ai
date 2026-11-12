@@ -17,6 +17,11 @@ describe('LlmModelFactory', () => {
       'https://router.requesty.ai/v1',
       'https://example.com',
       'actual-ai-tests',
+      'uberllm-api-key',
+      'uberllm-model',
+      'https://api.uberllm.dev/v1',
+      'https://example.com',
+      'actual-ai-tests',
       'https://api.anthropic.com',
       'anthropic-api-key',
       'anthropic-model',
@@ -55,6 +60,13 @@ describe('LlmModelFactory', () => {
     const model = sut.create();
     expect(model).toBeDefined();
     expect(model.provider).toEqual('requesty.chat');
+  });
+
+  it('should create an UberLLM model (OpenAI-compatible)', () => {
+    const sut = createSut('uberllm');
+    const model = sut.create();
+    expect(model).toBeDefined();
+    expect(model.provider).toEqual('uberllm.chat');
   });
 
   it('should create a Google Generative AI model', () => {
