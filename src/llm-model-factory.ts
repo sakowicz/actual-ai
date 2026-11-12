@@ -35,6 +35,16 @@ class LlmModelFactory implements LlmModelFactoryI {
 
   private readonly requestyTitle: string;
 
+  private readonly uberllmApiKey: string;
+
+  private readonly uberllmModel: string;
+
+  private readonly uberllmBaseURL: string;
+
+  private readonly uberllmReferrer: string;
+
+  private readonly uberllmTitle: string;
+
   private readonly anthropicBaseURL: string;
 
   private readonly anthropicApiKey: string;
@@ -72,6 +82,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     requestyBaseURL: string,
     requestyReferrer: string,
     requestyTitle: string,
+    uberllmApiKey: string,
+    uberllmModel: string,
+    uberllmBaseURL: string,
+    uberllmReferrer: string,
+    uberllmTitle: string,
     anthropicBaseURL: string,
     anthropicApiKey: string,
     anthropicModel: string,
@@ -98,6 +113,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     this.requestyBaseURL = requestyBaseURL;
     this.requestyReferrer = requestyReferrer;
     this.requestyTitle = requestyTitle;
+    this.uberllmApiKey = uberllmApiKey;
+    this.uberllmModel = uberllmModel;
+    this.uberllmBaseURL = uberllmBaseURL;
+    this.uberllmReferrer = uberllmReferrer;
+    this.uberllmTitle = uberllmTitle;
     this.anthropicBaseURL = anthropicBaseURL;
     this.anthropicApiKey = anthropicApiKey;
     this.anthropicModel = anthropicModel;
@@ -146,6 +166,19 @@ class LlmModelFactory implements LlmModelFactoryI {
           headers,
         });
         return requesty(this.requestyModel);
+      }
+      case 'uberllm': {
+        const headers: Record<string, string> = {};
+        if (this.uberllmReferrer) headers['HTTP-Referer'] = this.uberllmReferrer;
+        if (this.uberllmTitle) headers['X-Title'] = this.uberllmTitle;
+
+        const uberllm = createOpenAI({
+          name: 'uberllm',
+          baseURL: this.uberllmBaseURL,
+          apiKey: this.uberllmApiKey,
+          headers,
+        });
+        return uberllm(this.uberllmModel);
       }
       case 'anthropic': {
         const anthropic = createAnthropic({

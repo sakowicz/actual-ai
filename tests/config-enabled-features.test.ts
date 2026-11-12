@@ -50,4 +50,14 @@ describe('config feature env parsing', () => {
     const config = await import('../src/config');
     expect(config.requestyEnableToolCalling).toBe(true);
   });
+
+  test('parses UberLLM tool-calling env value', async () => {
+    process.env = {
+      ...ORIGINAL_ENV,
+      UBERLLM_ENABLE_TOOL_CALLING: 'true',
+    };
+
+    const config = await import('../src/config');
+    expect(config.uberllmEnableToolCalling).toBe(true);
+  });
 });

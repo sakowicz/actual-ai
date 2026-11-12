@@ -21,6 +21,8 @@ export default class LlmService implements LlmServiceI {
 
   private readonly requestyEnableToolCalling: boolean;
 
+  private readonly uberllmEnableToolCalling: boolean;
+
   private readonly temperature: number | undefined;
 
   constructor(
@@ -32,6 +34,7 @@ export default class LlmService implements LlmServiceI {
       timeoutMs?: number;
       openrouterEnableToolCalling?: boolean;
       requestyEnableToolCalling?: boolean;
+      uberllmEnableToolCalling?: boolean;
       temperature?: number;
       requestsPerMinuteOverride?: number | null;
       tokensPerMinuteOverride?: number | null;
@@ -45,6 +48,7 @@ export default class LlmService implements LlmServiceI {
     this.timeoutMs = options?.timeoutMs ?? 120_000;
     this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
     this.requestyEnableToolCalling = options?.requestyEnableToolCalling ?? false;
+    this.uberllmEnableToolCalling = options?.uberllmEnableToolCalling ?? false;
     this.temperature = options?.temperature;
 
     // Resolve effective rate limits per axis with trichotomy:
@@ -132,8 +136,8 @@ export default class LlmService implements LlmServiceI {
   }
 
   /**
-   * Ollama models cannot call tools at all, and OpenAI-compatible gateways (notably OpenRouter
-   * and Requesty) do it unreliably enough to produce malformed output. ToolService stays
+   * Ollama models cannot call tools at all, and OpenAI-compatible gateways (notably OpenRouter,
+   * Requesty and UberLLM) do it unreliably enough to produce malformed output. ToolService stays
    * available either way for searches run before the prompt is built.
    */
   private supportsToolCalling(): boolean {
@@ -145,6 +149,9 @@ export default class LlmService implements LlmServiceI {
     }
     if (this.provider === 'requesty') {
       return this.requestyEnableToolCalling;
+    }
+    if (this.provider === 'uberllm') {
+      return this.uberllmEnableToolCalling;
     }
     return true;
   }
