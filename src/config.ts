@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import { parseRateLimitEnv } from './utils/parse-rate-limit-env';
+import { parseTemperatureEnv } from './utils/parse-temperature-env';
 
 const defaultPromptTemplate = fs.readFileSync('./src/templates/prompt.hbs', 'utf8').trim();
 
@@ -39,11 +40,9 @@ export const openrouterEnableToolCalling = process.env.OPENROUTER_ENABLE_TOOL_CA
 export const requestyEnableToolCalling = process.env.REQUESTY_ENABLE_TOOL_CALLING === 'true';
 export const uberllmEnableToolCalling = process.env.UBERLLM_ENABLE_TOOL_CALLING === 'true';
 // Some models reject an explicit temperature (GPT-5 accepts the default of 1 only), so allow
-// overriding it. Unset keeps the previous hardcoded values.
-const parsedLlmTemperature = Number.parseFloat(process.env.LLM_TEMPERATURE ?? '');
-export const llmTemperature = Number.isFinite(parsedLlmTemperature)
-  ? parsedLlmTemperature
-  : undefined;
+// overriding it. Unset keeps the previous hardcoded values; "none" leaves it out of the request
+// for models that reject any value (e.g. Claude Opus 5.5).
+export const llmTemperature = parseTemperatureEnv(process.env.LLM_TEMPERATURE);
 export const anthropicApiKey = process.env.ANTHROPIC_API_KEY ?? '';
 export const anthropicBaseURL = process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com/v1';
 export const anthropicModel = process.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-latest';
