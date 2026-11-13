@@ -1,10 +1,21 @@
-import { generateText, LanguageModel } from 'ai';
+import {
+  generateText, LanguageModel, LanguageModelV1Middleware, wrapLanguageModel,
+} from 'ai';
 import {
   LlmModelFactoryI, LlmServiceI, ToolServiceI, UnifiedResponse,
 } from './types';
 import RateLimiter from './utils/rate-limiter';
 import { PROVIDER_LIMITS } from './utils/provider-limits';
 import { parseLlmResponse } from './utils/json-utils';
+
+/**
+ * AI SDK 4 sends `temperature: 0` when none is given, and some models (e.g. Claude Opus 5.5)
+ * reject any explicit temperature. Removing it after the SDK has filled in its default is the
+ * only way to leave it out of the request.
+ */
+const omitTemperature: LanguageModelV1Middleware = {
+  transformParams: ({ params }) => Promise.resolve({ ...params, temperature: undefined }),
+};
 
 export default class LlmService implements LlmServiceI {
   private readonly model: LanguageModel;
@@ -23,6 +34,7 @@ export default class LlmService implements LlmServiceI {
 
   private readonly uberllmEnableToolCalling: boolean;
 
+  /** `undefined` only with LLM_TEMPERATURE=none, where the model is wrapped to omit it. */
   private readonly temperature: number | undefined;
 
   constructor(
@@ -35,13 +47,17 @@ export default class LlmService implements LlmServiceI {
       openrouterEnableToolCalling?: boolean;
       requestyEnableToolCalling?: boolean;
       uberllmEnableToolCalling?: boolean;
-      temperature?: number;
+      temperature?: number | null;
       requestsPerMinuteOverride?: number | null;
       tokensPerMinuteOverride?: number | null;
     },
   ) {
     const factory = llmModelFactory;
-    this.model = factory.create();
+    const model = factory.create();
+    // `null` comes from LLM_TEMPERATURE=none: leave temperature out of the request entirely.
+    this.model = options?.temperature === null
+      ? wrapLanguageModel({ model, middleware: omitTemperature })
+      : model;
     this.provider = factory.getProvider();
     this.rateLimiter = rateLimiter;
     this.toolService = toolService;
@@ -49,7 +65,7 @@ export default class LlmService implements LlmServiceI {
     this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
     this.requestyEnableToolCalling = options?.requestyEnableToolCalling ?? false;
     this.uberllmEnableToolCalling = options?.uberllmEnableToolCalling ?? false;
-    this.temperature = options?.temperature;
+    this.temperature = options?.temperature === null ? undefined : (options?.temperature ?? 0.2);
 
     // Resolve effective rate limits per axis with trichotomy:
     //   override === null      → fall back to provider default
@@ -115,7 +131,7 @@ export default class LlmService implements LlmServiceI {
           const { text } = await generateText({
             model: this.model,
             prompt,
-            temperature: this.temperature ?? 0.2,
+            temperature: this.temperature,
             tools,
             maxSteps: tools ? 3 : 1,
             abortSignal: controller.signal,

@@ -93,7 +93,7 @@ services:
 #      OPENROUTER_ENABLE_TOOL_CALLING:  # optional. "true" to allow model tool-calling on openrouter, default: false
 #      REQUESTY_ENABLE_TOOL_CALLING:  # optional. "true" to allow model tool-calling on requesty, default: false
 #      UBERLLM_ENABLE_TOOL_CALLING:  # optional. "true" to allow model tool-calling on uberllm, default: false
-#      LLM_TEMPERATURE:  # optional. temperature for LLM calls, e.g. 1 for models that reject other values
+#      LLM_TEMPERATURE:  # optional. temperature for LLM calls, e.g. 1 for models that reject other values, or "none" to leave it out for models that reject any value (e.g. Claude Opus 5.5)
 #      ANTHROPIC_API_KEY:  # optional. required if you want to use the Anthropic API
 #      ANTHROPIC_MODEL:  # optional. required if you want to use a specific model, default is "claude-3-5-sonnet-latest"
 #      ANTHROPIC_BASE_URL:  # optional. default: "https://api.anthropic.com/v1
