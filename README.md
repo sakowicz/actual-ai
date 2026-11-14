@@ -70,6 +70,7 @@ services:
       CLASSIFICATION_SCHEDULE_CRON: 0 */4 * * * # How often to run classification.
       LLM_PROVIDER: openai # Can be "openai", "openrouter", "requesty", "uberllm", "anthropic", "google-generative-ai", "ollama" or "groq"
       FEATURES: '["classifyOnStartup", "syncAccountsBeforeClassify", "suggestNewCategories"]'
+#      TZ: America/New_York # optional. time zone for CLASSIFICATION_SCHEDULE_CRON, UTC if not set
 #      VALUESERP_API_KEY: your_valueserp_api_key # API key for ValueSerp, required if webSearch tool is enabled
 #      OPENAI_API_KEY:  # optional. required if you want to use the OpenAI API
 #      OPENAI_MODEL:  # optional. required if you want to use a specific model, default is "gpt-5-mini"
@@ -156,6 +157,9 @@ that survive `shutdown()`, and in a container running for weeks that state drift
 sync reports no new messages and imports quietly stop. A new process per run keeps that state fresh
 without needing a restart. Logs from the run appear as usual, and a schedule that fires while the
 previous run is still going is skipped.
+
+The schedule follows the container's clock, which is UTC unless you set `TZ` (for example
+`TZ: America/New_York`). Without it, `0 6 * * *` runs at 6 AM UTC, not 6 AM where you are.
 
 Without a cron schedule, `classifyOnStartup` classifies once and the process exits — the right shape
 when an external scheduler owns the timing.
