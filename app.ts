@@ -1,8 +1,9 @@
 import cron from 'node-cron';
-import { cronSchedule, isFeatureEnabled } from './src/config';
+import { cronSchedule, isFeatureEnabled, serverURL } from './src/config';
 import actualAi from './src/container';
 import installProcessGuards from './src/utils/process-guards';
 import ChildRunner, { isRunOnceChild } from './src/utils/child-run';
+import waitForServer from './src/utils/wait-for-server';
 
 if (isRunOnceChild()) {
   // Spawned by the scheduler below for a single classification; the process exits afterwards.
@@ -33,13 +34,14 @@ if (isRunOnceChild()) {
 
     console.log('Application started');
     if (isFeatureEnabled('classifyOnStartup')) {
-      runner.start();
+      // After a reboot the Actual server may still be starting; scheduled runs need no wait.
+      void waitForServer(serverURL).then(() => runner.start());
     } else {
       console.log('Application started, waiting for cron schedule:', cronSchedule);
     }
   } else {
     // Without a schedule the process classifies once and exits, so it always has fresh state.
     console.log('Application started');
-    void actualAi.classify();
+    void waitForServer(serverURL).then(() => actualAi.classify());
   }
 }
