@@ -365,6 +365,31 @@ describe('ActualAiService', () => {
     expect(inMemoryApiService.getWasBankSyncRan()).toBe(true);
   });
 
+  it('It should not mute what runBankSync logs, such as the dry run notice', async () => {
+    // Arrange
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'syncAccountsBeforeClassify') return true;
+      if (feature === 'rerunMissedTransactions') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+    jest.spyOn(inMemoryApiService, 'runBankSync').mockImplementation(() => {
+      console.log('DRY RUN: Would run bank sync');
+      return Promise.resolve();
+    });
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+    );
+    await sut.classify();
+
+    // Assert
+    expect(logSpy).toHaveBeenCalledWith('DRY RUN: Would run bank sync');
+    logSpy.mockRestore();
+  });
+
   // Add a new test for when rerunMissedTransactions is true
   it('It should process transaction with missed tag when rerunMissedTransactions is true', async () => {
     // Arrange
