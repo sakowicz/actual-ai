@@ -1,7 +1,6 @@
 import {
   ActualAiServiceI, ActualApiServiceI, TransactionServiceI,
 } from './types';
-import suppressConsoleLogsAsync from './utils';
 import { formatError } from './utils/error-utils';
 import { isFeatureEnabled } from './config';
 
@@ -70,7 +69,7 @@ class ActualAiService implements ActualAiServiceI {
   async syncAccounts(): Promise<void> {
     console.log('Syncing bank accounts');
     try {
-      await suppressConsoleLogsAsync(async () => this.actualApiService.runBankSync());
+      await this.actualApiService.runBankSync();
       console.log('Bank accounts synced');
     } catch (error) {
       console.error(

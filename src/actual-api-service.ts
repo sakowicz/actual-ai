@@ -7,6 +7,7 @@ import {
 import { TransactionEntity, RuleEntity } from '@actual-app/core/src/types/models';
 import { ActualApiServiceI } from './types';
 import DataDirLock from './utils/data-dir-lock';
+import suppressConsoleLogsAsync from './utils';
 
 class ActualApiService implements ActualApiServiceI {
   private actualApiClient: typeof import('@actual-app/api');
@@ -182,7 +183,9 @@ class ActualApiService implements ActualApiServiceI {
       console.log('DRY RUN: Would run bank sync');
       return;
     }
-    await this.actualApiClient.runBankSync();
+    await suppressConsoleLogsAsync(async () => {
+      await this.actualApiClient.runBankSync();
+    });
   }
 
   public async createCategory(name: string, groupId: string): Promise<string> {
