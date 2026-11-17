@@ -41,7 +41,7 @@ class PromptGenerator implements PromptGeneratorI {
 
     const rulesDescription = transformRulesToDescriptions(
       rules,
-      groupsWithCategories,
+      groupsWithCategories.flatMap((group) => group.categories),
       payees,
     );
 
