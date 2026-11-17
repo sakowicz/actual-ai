@@ -215,7 +215,7 @@ loops.
             - `category` is an object with the following properties:
                 - `id`: The ID of the category.
                 - `name`: The name of the category.
-2. `amount`: The absolute value of the transaction amount.
+2. `amount`: The absolute value of the transaction amount, in Actual's integer format (cents, so 12.34 is `1234`).
 3. `type`: The type of transaction, either 'Income' or 'Outcome'.
 4. `description`: The notes or description of the transaction. This is taken from `transaction.notes`.
 5. `payee`: The name of the payee associated with the transaction. This is found by matching the payee ID in the
@@ -224,6 +224,17 @@ loops.
 7. `date`: The date of the transaction. This is taken from `transaction.date`.
 8. `cleared`: A boolean indicating if the transaction is cleared. This is taken from `transaction.cleared`.
 9. `reconciled`: A boolean indicating if the transaction is reconciled. This is taken from `transaction.reconciled`.
+10. `rules`: An array of your Actual rules that set a category.
+    - `rule` is an object with the following properties:
+        - `ruleName`: The name of the rule, or `Unnamed rule`.
+        - `categoryName`: The name of the category the rule sets.
+        - `categoryId`: The ID of that category.
+        - `conditions`: An array of the rule's conditions, each with `field`, `op`, `type` and `value`. Payee IDs in
+          `value` are replaced by payee names.
+11. `hasWebSearchTool`: A boolean that is true when the `webSearch` feature is enabled.
+
+Besides the built-in Handlebars helpers, templates can use `eq` (`{{#if (eq type "Income")}}`) and `incIndex`
+(`{{incIndex @index}}` numbers a list from 1).
 
 ## New Category Suggestions
 
