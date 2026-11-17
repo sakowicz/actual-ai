@@ -145,7 +145,7 @@ Available features:
 - `suggestNewCategories` - Allow suggesting new categories for transactions
 - `classifyOnStartup` - Run classification when the application starts
 - `syncAccountsBeforeClassify` - Sync accounts before running classification
-- `dryRun` - Run in dry run mode (enabled by default)
+- `dryRun` - Run in dry run mode (off unless listed)
 - `rerunMissedTransactions` - Re-process transactions previously marked as unclassified
 - `disableRateLimiter` - Disable Rate Limiter
 
@@ -263,7 +263,7 @@ The search results are included in the prompts sent to the LLM, helping it make 
 
 ## Dry Run Mode
 
-The `dryRun` feature is enabled by default. In this mode:
+The `dryRun` feature is off unless you add it to your `FEATURES` array. In this mode:
 - No transactions will be modified
 - No categories will be created
 - All proposed changes will be logged to console
