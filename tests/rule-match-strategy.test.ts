@@ -45,12 +45,27 @@ describe('RuleMatchStrategy', () => {
 
       await strategy.process(transaction, {
         type: 'rule', categoryId: 'cat-coffee', ruleName: 'Coffee',
-      });
+      }, [GivenActualData.createCategory('cat-coffee', 'Coffee', '1')]);
 
       const stored = (await apiService.getTransactions()).find((t) => t.id === 'tx-1');
       expect(stored?.category).toBe('cat-coffee');
       expect(stored?.notes).toContain('#actual-ai');
       expect(stored?.notes).toContain('(rule: Coffee)');
+    });
+
+    it('tags the transaction as missed when the category id is not in the budget', async () => {
+      const { strategy, apiService } = buildStrategy();
+      const transaction = GivenActualData.createTransaction('tx-3', -100, 'Apple', 'original notes');
+      apiService.setTransactions([transaction]);
+
+      await strategy.process(transaction, {
+        type: 'rule', categoryId: 'cat-made-up', ruleName: 'Coffee',
+      }, [GivenActualData.createCategory('cat-coffee', 'Coffee', '1')]);
+
+      const stored = (await apiService.getTransactions()).find((t) => t.id === 'tx-3');
+      expect(stored?.category).toBeUndefined();
+      expect(stored?.notes).toContain('#actual-ai-miss');
+      expect(stored?.notes).not.toContain('(rule:');
     });
 
     it('only tags notes when the rule says leave uncategorized', async () => {
@@ -65,7 +80,7 @@ describe('RuleMatchStrategy', () => {
 
       await strategy.process(transaction, {
         type: 'rule', ruleName: 'Amazon leave uncategorized',
-      });
+      }, []);
 
       const stored = (await apiService.getTransactions()).find((t) => t.id === 'tx-2');
       expect(stored?.category).toBeUndefined();

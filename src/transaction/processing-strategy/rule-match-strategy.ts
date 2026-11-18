@@ -1,3 +1,4 @@
+import type { APICategoryEntity, APICategoryGroupEntity } from '@actual-app/core/src/server/api-models';
 import type { TransactionEntity } from '@actual-app/core/src/types/models';
 import type {
   ActualApiServiceI, ProcessingStrategyI, UnifiedResponse,
@@ -28,7 +29,18 @@ class RuleMatchStrategy implements ProcessingStrategyI {
   async process(
     transaction: TransactionEntity,
     response: UnifiedResponse,
+    categories: (APICategoryEntity | APICategoryGroupEntity)[],
   ) {
+    if (response.categoryId && !categories.some((c) => c.id === response.categoryId)) {
+      // Same check as the existing-category path: never apply a category id
+      // that is not in the budget.
+      await this.actualApiService.updateTransactionNotes(
+        transaction.id,
+        this.tagService.addNotGuessedTag(transaction.notes ?? ''),
+      );
+      return;
+    }
+
     let updatedNotes = this.tagService.addGuessedTag(transaction.notes ?? '');
     updatedNotes = `${updatedNotes} (rule: ${response.ruleName})`;
 
