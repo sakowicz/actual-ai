@@ -226,7 +226,8 @@ loops.
 9. `reconciled`: A boolean indicating if the transaction is reconciled. This is taken from `transaction.reconciled`.
 10. `rules`: An array of your Actual rules that set a category.
     - `rule` is an object with the following properties:
-        - `ruleName`: The name of the rule, or `Unnamed rule`.
+        - `ruleName`: The rule's label: `Rule 1`, `Rule 2` and so on, its number in the list. A rule reply only
+          counts when its `ruleName` is one of these labels; it then gets that rule's own category.
         - `categoryName`: The name of the category the rule sets.
         - `categoryId`: The ID of that category.
         - `conditions`: An array of the rule's conditions, each with `field`, `op`, `type` and `value`. Payee IDs in

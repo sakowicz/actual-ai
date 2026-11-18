@@ -67,6 +67,24 @@ describe('transformRulesToDescriptions', () => {
     expect(result).toHaveLength(0);
   });
 
+  it('labels each rule by its number in the list, skipping rules it leaves out', () => {
+    const rules = [
+      baseRule([{
+        op: 'set', field: 'category', value: groceries.id, type: 'id',
+      }], { id: 'first' }),
+      baseRule([{
+        op: 'set', field: 'payee', value: 'payee-1', type: 'id',
+      }], { id: 'rename' }),
+      baseRule([{
+        op: 'set', field: 'category', value: '', type: 'id',
+      }], { id: 'leave-uncat' }),
+    ];
+
+    const result = transformRulesToDescriptions(rules, [groceries]);
+
+    expect(result.map((r) => r.ruleName)).toEqual(['Rule 1', 'Rule 2']);
+  });
+
   it('keeps a "set to nothing" rule alongside a payee-rename rule', () => {
     const rules = [
       baseRule([{

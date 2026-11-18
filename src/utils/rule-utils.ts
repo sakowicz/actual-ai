@@ -12,7 +12,7 @@ export function transformRulesToDescriptions(
 ): RuleDescription[] {
   return rules.filter((rule) => rule.actions.some(
     (action) => 'field' in action && action.field === 'category' && action.op === 'set',
-  )).map((rule) => {
+  )).map((rule, index) => {
     const categoryAction = rule.actions.find(
       (action) => 'field' in action && action.field === 'category' && action.op === 'set',
     );
@@ -58,7 +58,9 @@ export function transformRulesToDescriptions(
       }),
       categoryName,
       categoryId: categoryId ?? '',
-      ruleName: 'name' in rule ? rule.name as string : 'Unnamed rule',
+      // Actual rules have no name, so each one is labeled by its number in the
+      // prompt's list. A rule reply has to name one of these labels.
+      ruleName: 'name' in rule ? rule.name as string : `Rule ${index + 1}`,
     };
   });
 }
