@@ -144,6 +144,63 @@ describe('ActualAiService', () => {
     expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
   });
 
+  it('It should apply the category of the rule a rule reply names', async () => {
+    // Arrange: the sample rules are listed as Rule 1 (Groceries) and Rule 2 (Travel)
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Airbnb 1234',
+      'AIRBNB * HMXYZ',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    mockedLlmService.setUnifiedResponse({
+      type: 'rule',
+      ruleName: 'Rule 2',
+      categoryId: GivenActualData.CATEGORY_GROCERIES,
+    });
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+    );
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_TRAVEL);
+    expect(updatedTransactions[0].notes).toContain('(rule: Rule 2)');
+  });
+
+  it('It should treat a reply naming a rule that was not listed as an ordinary guess', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    mockedLlmService.setUnifiedResponse({
+      type: 'rule',
+      ruleName: 'Carrefour groceries',
+      categoryId: GivenActualData.CATEGORY_GROCERIES,
+    });
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+    );
+    await sut.classify();
+
+    // Assert
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
+    expect(updatedTransactions[0].notes).toContain(GUESSED_TAG);
+    expect(updatedTransactions[0].notes).not.toContain('(rule:');
+  });
+
   it('It should process off-budget transaction when flag is set to false', async () => {
     // Arrange
     const transactionOffBudget = GivenActualData.createTransaction(

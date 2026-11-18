@@ -6,9 +6,31 @@ import { APIPayeeEntity } from '@actual-app/core/src/server/api-models';
 import {
   ActualApiServiceI, APICategoryEntity, APICategoryGroupEntity,
   LlmServiceI, ProcessingStrategyI,
-  PromptGeneratorI,
+  PromptGeneratorI, UnifiedResponse,
 } from '../types';
+import { transformRulesToDescriptions } from '../utils/rule-utils';
 import TagService from './tag-service';
+
+/**
+ * A rule reply counts only when it names a rule from the prompt, and then that
+ * rule's own category is used. A reply naming any other rule is handled as an
+ * ordinary category guess.
+ */
+function resolveRuleReply(response: UnifiedResponse, rules: RuleEntity[]): UnifiedResponse {
+  if (response.type !== 'rule') {
+    return response;
+  }
+
+  // Same list and labels as the prompt; category names are not needed here.
+  const rule = transformRulesToDescriptions(rules, [])
+    .find((r) => r.ruleName === response.ruleName);
+  if (!rule) {
+    console.warn(`The reply names a rule that was not in the prompt: ${response.ruleName}`);
+    return { type: 'existing', categoryId: response.categoryId };
+  }
+
+  return { ...response, categoryId: rule.categoryId || undefined };
+}
 
 class TransactionProcessor {
   private readonly actualApiService: ActualApiServiceI;
@@ -57,7 +79,7 @@ class TransactionProcessor {
         rules,
       );
 
-      const response = await this.llmService.ask(prompt);
+      const response = resolveRuleReply(await this.llmService.ask(prompt), rules);
 
       const strategy = this.processingStrategies.find((s) => s.isSatisfiedBy(response));
       if (strategy) {
