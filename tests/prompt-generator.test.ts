@@ -167,6 +167,23 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
     expect(prompt).toContain('* Date: 2021-01-01');
   });
 
+  it('lists category ids but not group ids, so only category ids can be answered', () => {
+    const transaction = GivenActualData.createTransaction('1', -1000, 'Carrefour 2137');
+    const categoryGroups = GivenActualData.createSampleCategoryGroups();
+    const payees = GivenActualData.createSamplePayees();
+
+    const prompt = new PromptGenerator(promptTemplate)
+      .generate(categoryGroups, transaction, payees, []);
+
+    categoryGroups.forEach((group) => {
+      expect(prompt).toContain(`GROUP: ${group.name}`);
+      expect(prompt).not.toContain(`"${group.id}"`);
+      (group.categories ?? []).forEach((category) => {
+        expect(prompt).toContain(`* ${category.name} (ID: "${category.id}")`);
+      });
+    });
+  });
+
   describe('web search tool', () => {
     afterEach(() => {
       jest.clearAllMocks();
