@@ -162,9 +162,62 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
 
     // Check for transaction details
     expect(prompt).toContain('Transaction details:');
-    expect(prompt).toContain('* Amount: 1000');
+    expect(prompt).toContain('* Amount: 10.00');
     expect(prompt).toContain('* Type: Outcome');
     expect(prompt).toContain('* Date: 2021-01-01');
+  });
+
+  it('should show amounts as money, also in amount rule conditions', () => {
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -1234,
+      'Carrefour 2137',
+      '',
+      GivenActualData.PAYEE_CARREFOUR,
+      undefined,
+      '2021-01-01',
+    );
+
+    // Actual stores amounts in cents, and an "is between" range as { num1, num2 },
+    // which the shim's string type does not cover.
+    const rules: RuleEntity[] = [
+      {
+        id: '879da987-9879-8798-7987-987987987989',
+        stage: null,
+        conditionsOp: 'and',
+        conditions: [
+          {
+            field: 'amount',
+            op: 'is',
+            value: '-1234',
+            type: 'number',
+          },
+          {
+            field: 'amount',
+            op: 'isbetween',
+            value: { num1: -2000, num2: -1000 } as unknown as string,
+            type: 'number',
+          },
+        ],
+        actions: [{
+          op: 'set',
+          field: 'category',
+          value: GivenActualData.CATEGORY_GROCERIES,
+          type: 'id',
+        }],
+      },
+    ];
+
+    const promptGenerator = new PromptGenerator(promptTemplate);
+    const prompt = promptGenerator.generate(
+      GivenActualData.createSampleCategoryGroups(),
+      transaction,
+      GivenActualData.createSamplePayees(),
+      rules,
+    );
+
+    expect(prompt).toContain('* Amount: 12.34');
+    expect(prompt).toContain('Conditions: amount is -12.34, amount isbetween -20.00 and -10.00');
   });
 
   describe('web search tool', () => {

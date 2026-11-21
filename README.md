@@ -216,6 +216,7 @@ loops.
                 - `id`: The ID of the category.
                 - `name`: The name of the category.
 2. `amount`: The absolute value of the transaction amount, in Actual's integer format (cents, so 12.34 is `1234`).
+   The default template shows it as money with `{{currency amount}}`.
 3. `type`: The type of transaction, either 'Income' or 'Outcome'.
 4. `description`: The notes or description of the transaction. This is taken from `transaction.notes`.
 5. `payee`: The name of the payee associated with the transaction. This is found by matching the payee ID in the
@@ -234,8 +235,9 @@ loops.
           `value` are replaced by payee names.
 11. `hasWebSearchTool`: A boolean that is true when the `webSearch` feature is enabled.
 
-Besides the built-in Handlebars helpers, templates can use `eq` (`{{#if (eq type "Income")}}`) and `incIndex`
-(`{{incIndex @index}}` numbers a list from 1).
+Besides the built-in Handlebars helpers, templates can use `eq` (`{{#if (eq type "Income")}}`), `incIndex`
+(`{{incIndex @index}}` numbers a list from 1) and `currency` (`{{currency amount}}` shows cents as money, so `1234`
+becomes `12.34`; an amount condition's "is between" range shows as `-20.00 and -10.00`).
 
 ## New Category Suggestions
 
