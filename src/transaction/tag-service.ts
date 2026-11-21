@@ -1,6 +1,12 @@
 const LEGACY_NOTES_NOT_GUESSED = 'actual-ai could not guess this category';
 const LEGACY_NOTES_GUESSED = 'actual-ai guessed this category';
 
+// A tag in a note runs up to the next whitespace or "#", as in Actual's own tags. Matching
+// only whole tags keeps a note's tags that start with ours (such as "#airport" next to the
+// tag "#ai") intact, and escaping lets a tag contain regex characters.
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const wholeTag = (tag: string, flags = ''): RegExp => new RegExp(`\\s*${escapeRegExp(tag)}(?=[\\s#]|$)`, flags);
+
 class TagService {
   private readonly notGuessedTag: string;
 
@@ -35,8 +41,8 @@ class TagService {
     // the note body per rerun ("…-miss-miss #actual-ai-miss").
     return notes
       .replace(/(-miss)+(?= #actual-ai)/g, '')
-      .replace(new RegExp(`\\s*${this.notGuessedTag}`, 'g'), '')
-      .replace(new RegExp(`\\s*${this.guessedTag}`, 'g'), '')
+      .replace(wholeTag(this.notGuessedTag, 'g'), '')
+      .replace(wholeTag(this.guessedTag, 'g'), '')
       .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_NOT_GUESSED}`, 'g'), '')
       .replace(new RegExp(`\\s*\\|\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
       .replace(new RegExp(`\\s*${LEGACY_NOTES_GUESSED}`, 'g'), '')
@@ -45,7 +51,7 @@ class TagService {
   }
 
   public isNotGuessed(notes: string): boolean {
-    return notes.includes(this.notGuessedTag);
+    return wholeTag(this.notGuessedTag).test(notes);
   }
 }
 
