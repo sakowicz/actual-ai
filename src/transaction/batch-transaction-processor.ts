@@ -34,6 +34,7 @@ class BatchTransactionProcessor {
         groupId?: string;
         transactions: TransactionEntity[];
       }>,
+    currencyCode: string,
   ): Promise<void> {
     for (
       let batchStart = 0;
@@ -59,6 +60,7 @@ class BatchTransactionProcessor {
           rules,
           categories,
           suggestedCategories,
+          currencyCode,
         );
       }, Promise.resolve());
 

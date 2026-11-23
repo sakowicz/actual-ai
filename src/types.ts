@@ -41,6 +41,8 @@ export interface ActualApiServiceI {
 
   getPayeeRules(payeeId: string): Promise<RuleEntity[]>
 
+  getCurrencyCode(): Promise<string>
+
   updateTransactionNotes(id: string, notes: string): Promise<void>
 
   updateTransactionNotesAndCategory(
@@ -110,6 +112,7 @@ export interface PromptGeneratorI {
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
     rules: RuleEntity[],
+    currencyCode?: string,
   ): string;
 }
 

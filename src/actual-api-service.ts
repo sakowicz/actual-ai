@@ -158,6 +158,14 @@ class ActualApiService implements ActualApiServiceI {
     return this.actualApiClient.getPayeeRules(payeeId);
   }
 
+  // The budget's currency from Actual's Settings > Currency, or '' when none is set.
+  public async getCurrencyCode(): Promise<string> {
+    const preferences = await this.actualApiClient.getPreferences() as {
+      defaultCurrencyCode?: string;
+    };
+    return preferences.defaultCurrencyCode ?? '';
+  }
+
   public async updateTransactionNotes(id: string, notes: string): Promise<void> {
     if (this.isDryRun) {
       console.log(`DRY RUN: Would update transaction notes of ${id} to: ${notes}`);

@@ -70,6 +70,7 @@ class TransactionProcessor {
         groupId?: string;
         transactions: TransactionEntity[];
       }>,
+    currencyCode: string,
   ): Promise<void> {
     try {
       const prompt = this.promptGenerator.generate(
@@ -77,6 +78,7 @@ class TransactionProcessor {
         transaction,
         payees,
         rules,
+        currencyCode,
       );
 
       const response = resolveRuleReply(await this.llmService.ask(prompt), rules);

@@ -22,6 +22,8 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
 
   private rules: RuleEntity[] = [];
 
+  private currencyCode = '';
+
   private readonly isDryRun: boolean;
 
   constructor(isDryRun = false) {
@@ -182,5 +184,13 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
 
   setRules(rules: RuleEntity[]): void {
     this.rules = rules;
+  }
+
+  async getCurrencyCode(): Promise<string> {
+    return Promise.resolve(this.currencyCode);
+  }
+
+  setCurrencyCode(currencyCode: string): void {
+    this.currencyCode = currencyCode;
   }
 }

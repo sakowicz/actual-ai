@@ -234,10 +234,14 @@ loops.
         - `conditions`: An array of the rule's conditions, each with `field`, `op`, `type` and `value`. Payee IDs in
           `value` are replaced by payee names.
 11. `hasWebSearchTool`: A boolean that is true when the `webSearch` feature is enabled.
+12. `currencyCode`: The budget's currency from Actual's Settings > Currency (an experimental feature in Actual), such
+    as `USD`, or empty when none is set.
 
 Besides the built-in Handlebars helpers, templates can use `eq` (`{{#if (eq type "Income")}}`), `incIndex`
-(`{{incIndex @index}}` numbers a list from 1) and `currency` (`{{currency amount}}` shows cents as money, so `1234`
-becomes `12.34`; an amount condition's "is between" range shows as `-20.00 and -10.00`).
+(`{{incIndex @index}}` numbers a list from 1) and `currency`. `{{currency amount}}` shows an amount as money in the
+budget's currency: `1234` becomes `$12.34` in a USD budget and `12.34` when the budget has no currency. Actual stores
+amounts in hundredths whatever the currency, so `123400` becomes `¥1,234` in a JPY budget. An amount condition's
+"is between" range shows as `-$20.00 and -$10.00`.
 
 ## New Category Suggestions
 

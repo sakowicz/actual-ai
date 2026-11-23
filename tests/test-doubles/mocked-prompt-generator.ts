@@ -8,6 +8,7 @@ export default class MockedPromptGenerator implements PromptGeneratorI {
     _transaction: TransactionEntity,
     _payees: APIPayeeEntity[],
     _rules?: RuleEntity[],
+    _currencyCode?: string,
   ): string {
     return 'mocked prompt';
   }

@@ -22,6 +22,7 @@ class PromptGenerator implements PromptGeneratorI {
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
     rules: RuleEntity[],
+    currencyCode = '',
   ): string {
     let template;
     try {
@@ -59,6 +60,7 @@ class PromptGenerator implements PromptGeneratorI {
         cleared: transaction.cleared,
         reconciled: transaction.reconciled,
         hasWebSearchTool: webSearchEnabled,
+        currencyCode,
       });
     } catch {
       console.error('Error generating prompt. Check syntax of your template.');

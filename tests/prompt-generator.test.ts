@@ -235,6 +235,40 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
 
     expect(prompt).toContain('* Amount: 12.34');
     expect(prompt).toContain('Conditions: amount is -12.34, amount isbetween -20.00 and -10.00');
+
+    // With the budget's currency, the amounts carry its symbol.
+    const usdPrompt = promptGenerator.generate(
+      GivenActualData.createSampleCategoryGroups(),
+      transaction,
+      GivenActualData.createSamplePayees(),
+      rules,
+      'USD',
+    );
+
+    expect(usdPrompt).toContain('* Amount: $12.34');
+    expect(usdPrompt).toContain('Conditions: amount is -$12.34, amount isbetween -$20.00 and -$10.00');
+  });
+
+  it.each([
+    { currencyCode: 'USD', amount: -1234, shown: '$12.34' },
+    { currencyCode: 'EUR', amount: -1234, shown: '€12.34' },
+    // Actual stores hundredths for every currency, also for one without decimals.
+    { currencyCode: 'JPY', amount: -123400, shown: '¥1,234' },
+    { currencyCode: '', amount: -1234, shown: '12.34' },
+    { currencyCode: 'not a code', amount: -1234, shown: '12.34' },
+  ])('should show $amount in the budget currency "$currencyCode" as $shown', ({ currencyCode, amount, shown }) => {
+    const transaction = GivenActualData.createTransaction('1', amount, 'Carrefour 2137');
+
+    const prompt = new PromptGenerator(promptTemplate).generate(
+      GivenActualData.createSampleCategoryGroups(),
+      transaction,
+      GivenActualData.createSamplePayees(),
+      [],
+      currencyCode,
+    );
+
+    const amountLine = prompt.split(/\r?\n/).find((line) => line.startsWith('* Amount:'));
+    expect(amountLine).toBe(`* Amount: ${shown}`);
   });
 
   describe('web search tool', () => {
