@@ -535,6 +535,52 @@ describe('ActualAiService', () => {
     createCategorySpy.mockRestore();
   });
 
+  it('should mark a new-category reply as not guessed when suggestNewCategories is off', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      'new-cat-txn',
+      -50,
+      'New Service Inc.',
+      'Payment for new service',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+
+    const newCategorySuggestion: CategorySuggestion = {
+      name: 'Digital Services',
+      groupName: 'Tech Expenses',
+      groupIsNew: true,
+    };
+    mockedLlmService.setUnifiedResponse({
+      type: 'new',
+      newCategory: newCategorySuggestion,
+    });
+
+    mockIsFeatureEnabled.mockImplementation((feature: string) => {
+      if (feature === 'suggestNewCategories') return false;
+      if (feature === 'rerunMissedTransactions') return false;
+      return originalIsFeatureEnabled(feature);
+    });
+
+    const askSpy = jest.spyOn(mockedLlmService, 'ask');
+    const createCategorySpy = jest.spyOn(inMemoryApiService, 'createCategory');
+
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+    );
+
+    // Act: two scheduled runs
+    await sut.classify();
+    await sut.classify();
+
+    // Assert: the first run marks it, so the second run does not ask the model again
+    const updatedTransactions = await inMemoryApiService.getTransactions();
+    expect(updatedTransactions[0].category).toBe(undefined);
+    expect(updatedTransactions[0].notes).toBe('Payment for new service #actual-ai-miss');
+    expect(askSpy).toHaveBeenCalledTimes(1);
+    expect(createCategorySpy).not.toHaveBeenCalled();
+  });
+
   describe('dry run mode', () => {
     let dryRunApiService: InMemoryActualApiService;
     let dryRunTransactionService: TransactionService;
