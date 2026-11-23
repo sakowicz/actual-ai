@@ -41,4 +41,23 @@ describe('TagService', () => {
       expect(service.clearPreviousTags(`${note} #actual-ai-miss`)).toBe(note);
     });
   });
+
+  describe('with short custom tags', () => {
+    const custom = new TagService('#ai-miss', '#ai');
+
+    it('leaves the note\'s own tags that start with a tag alone', () => {
+      expect(custom.addGuessedTag('Trip #airport')).toBe('Trip #airport #ai');
+      expect(custom.clearPreviousTags('Trip #airport #ai-miss')).toBe('Trip #airport');
+    });
+
+    it('treats only the whole not-guessed tag as not guessed', () => {
+      expect(custom.isNotGuessed('Lunch #ai-missing-receipt')).toBe(false);
+      expect(custom.isNotGuessed('Lunch #ai-miss')).toBe(true);
+    });
+
+    it('matches tags with regex characters literally', () => {
+      const paren = new TagService('#ai(miss)', '#ai(ok)');
+      expect(paren.addNotGuessedTag('note #ai(miss)')).toBe('note #ai(miss)');
+    });
+  });
 });
