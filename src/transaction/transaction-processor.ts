@@ -8,6 +8,7 @@ import {
   LlmServiceI, ProcessingStrategyI,
   PromptGeneratorI, UnifiedResponse,
 } from '../types';
+import { isFeatureEnabled } from '../config';
 import { transformRulesToDescriptions } from '../utils/rule-utils';
 import TagService from './tag-service';
 
@@ -80,6 +81,17 @@ class TransactionProcessor {
       );
 
       const response = resolveRuleReply(await this.llmService.ask(prompt), rules);
+
+      // Without suggestNewCategories a suggested category is never created, so the
+      // transaction would stay as it is and be sent to the model again on every run.
+      if (response.type === 'new' && !isFeatureEnabled('suggestNewCategories')) {
+        console.log(`Transaction ${transaction.id}: the model suggests a new category, but suggestNewCategories is off`);
+        await this.actualApiService.updateTransactionNotes(
+          transaction.id,
+          this.tagService.addNotGuessedTag(transaction.notes ?? ''),
+        );
+        return;
+      }
 
       const strategy = this.processingStrategies.find((s) => s.isSatisfiedBy(response));
       if (strategy) {

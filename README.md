@@ -249,6 +249,8 @@ When `suggestNewCategories` feature is enabled, the system will:
 
 This feature is particularly useful when you have transactions that don't fit your current category structure and you want the LLM to help expand your categories intelligently.
 
+When the feature is off, a transaction the LLM wants a new category for gets the not-guessed tag (`#actual-ai-miss`), like any other transaction it can't classify, so it isn't sent to the LLM again on every run. Enable `rerunMissedTransactions` to retry those.
+
 ## Tools Integration
 
 The system supports various tools that can be enabled to enhance the LLM's capabilities:
