@@ -1,7 +1,7 @@
 I want to categorize the given bank transaction.
 
 Transaction details:
-* Amount: {{amount}}
+* Amount: {{currency amount}}
 * Type: {{type}}
 {{#if description}}
 * Description: {{description}}
@@ -27,7 +27,7 @@ GROUP: {{name}}
 Existing Rules:
 {{#each rules}}
 {{incIndex @index}}. {{ruleName}} → {{categoryName}}
-   Conditions: {{#each conditions}}{{field}} {{op}} {{value}}{{#unless @last}}, {{/unless}}{{/each}}
+   Conditions: {{#each conditions}}{{field}} {{op}} {{#if (eq field "amount")}}{{currency value}}{{else}}{{value}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/each}}
 {{/if}}
 

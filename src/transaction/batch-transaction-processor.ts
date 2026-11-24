@@ -4,7 +4,7 @@ import {
 } from '@actual-app/core/src/types/models';
 import { APIPayeeEntity } from '@actual-app/core/src/server/api-models';
 import {
-  APICategoryEntity, APICategoryGroupEntity,
+  APICategoryEntity, APICategoryGroupEntity, MoneyFormat,
 } from '../types';
 import TransactionProcessor from './transaction-processor';
 
@@ -34,6 +34,7 @@ class BatchTransactionProcessor {
         groupId?: string;
         transactions: TransactionEntity[];
       }>,
+    moneyFormat: MoneyFormat,
   ): Promise<void> {
     for (
       let batchStart = 0;
@@ -59,6 +60,7 @@ class BatchTransactionProcessor {
           rules,
           categories,
           suggestedCategories,
+          moneyFormat,
         );
       }, Promise.resolve());
 

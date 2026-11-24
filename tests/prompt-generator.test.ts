@@ -162,7 +162,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
 
     // Check for transaction details
     expect(prompt).toContain('Transaction details:');
-    expect(prompt).toContain('* Amount: 1000');
+    expect(prompt).toContain('* Amount: 10.00');
     expect(prompt).toContain('* Type: Outcome');
     expect(prompt).toContain('* Date: 2021-01-01');
   });
@@ -182,6 +182,115 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
         expect(prompt).toContain(`* ${category.name} (ID: "${category.id}")`);
       });
     });
+  });
+
+  it('should show amounts as money, also in amount rule conditions', () => {
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -1234,
+      'Carrefour 2137',
+      '',
+      GivenActualData.PAYEE_CARREFOUR,
+      undefined,
+      '2021-01-01',
+    );
+
+    // Actual stores amounts in cents, and an "is between" range as { num1, num2 },
+    // which the shim's string type does not cover.
+    const rules: RuleEntity[] = [
+      {
+        id: '879da987-9879-8798-7987-987987987989',
+        stage: null,
+        conditionsOp: 'and',
+        conditions: [
+          {
+            field: 'amount',
+            op: 'is',
+            value: '-1234',
+            type: 'number',
+          },
+          {
+            field: 'amount',
+            op: 'isbetween',
+            value: { num1: -2000, num2: -1000 } as unknown as string,
+            type: 'number',
+          },
+        ],
+        actions: [{
+          op: 'set',
+          field: 'category',
+          value: GivenActualData.CATEGORY_GROCERIES,
+          type: 'id',
+        }],
+      },
+    ];
+
+    const promptGenerator = new PromptGenerator(promptTemplate);
+    const prompt = promptGenerator.generate(
+      GivenActualData.createSampleCategoryGroups(),
+      transaction,
+      GivenActualData.createSamplePayees(),
+      rules,
+    );
+
+    expect(prompt).toContain('* Amount: 12.34');
+    expect(prompt).toContain('Conditions: amount is -12.34, amount isbetween -20.00 and -10.00');
+
+    // With the budget's currency, the amounts carry its symbol.
+    const usdPrompt = promptGenerator.generate(
+      GivenActualData.createSampleCategoryGroups(),
+      transaction,
+      GivenActualData.createSamplePayees(),
+      rules,
+      { currencyCode: 'USD', locale: 'en-US' },
+    );
+
+    expect(usdPrompt).toContain('* Amount: $12.34');
+    expect(usdPrompt).toContain('Conditions: amount is -$12.34, amount isbetween -$20.00 and -$10.00');
+  });
+
+  it.each([
+    {
+      currencyCode: 'USD', locale: 'en-US', amount: -1234, shown: '$12.34',
+    },
+    {
+      currencyCode: 'EUR', locale: 'en-US', amount: -1234, shown: '€12.34',
+    },
+    // Actual stores hundredths for every currency, also for one without decimals.
+    {
+      currencyCode: 'JPY', locale: 'en-US', amount: -123400, shown: '¥1,234',
+    },
+    {
+      currencyCode: '', locale: 'en-US', amount: -123456, shown: '1,234.56',
+    },
+    {
+      currencyCode: 'not a code', locale: 'en-US', amount: -1234, shown: '12.34',
+    },
+    // The locale of the budget's number format sets the separators and the symbol's place.
+    {
+      currencyCode: 'EUR', locale: 'de-DE', amount: -123450, shown: '1.234,50 €',
+    },
+    {
+      currencyCode: '', locale: 'de-DE', amount: -123450, shown: '1.234,50',
+    },
+    {
+      currencyCode: 'INR', locale: 'en-IN', amount: -12345678, shown: '₹1,23,456.78',
+    },
+  ])('should show $amount in the budget currency "$currencyCode" and locale $locale as $shown', ({
+    currencyCode, locale, amount, shown,
+  }) => {
+    const transaction = GivenActualData.createTransaction('1', amount, 'Carrefour 2137');
+
+    const prompt = new PromptGenerator(promptTemplate).generate(
+      GivenActualData.createSampleCategoryGroups(),
+      transaction,
+      GivenActualData.createSamplePayees(),
+      [],
+      { currencyCode, locale },
+    );
+
+    const amountLine = prompt.split(/\r?\n/).find((line) => line.startsWith('* Amount:'));
+    expect(amountLine).toBe(`* Amount: ${shown}`);
   });
 
   describe('web search tool', () => {

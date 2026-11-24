@@ -16,6 +16,13 @@ export interface LlmModelI {
   ask(prompt: string, possibleAnswers: string[]): Promise<string>;
 }
 
+// How the budget shows money: its currency code ('' when none is set) and the locale of its
+// number format.
+export interface MoneyFormat {
+  currencyCode: string;
+  locale: string;
+}
+
 export interface LlmModelFactoryI {
   create(): LanguageModel;
   getProvider(): string;
@@ -40,6 +47,8 @@ export interface ActualApiServiceI {
   getRules(): Promise<RuleEntity[]>
 
   getPayeeRules(payeeId: string): Promise<RuleEntity[]>
+
+  getMoneyFormat(): Promise<MoneyFormat>
 
   updateTransactionNotes(id: string, notes: string): Promise<void>
 
@@ -110,6 +119,7 @@ export interface PromptGeneratorI {
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
     rules: RuleEntity[],
+    moneyFormat?: MoneyFormat,
   ): string;
 }
 

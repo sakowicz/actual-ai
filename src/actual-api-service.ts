@@ -5,9 +5,19 @@ import {
   APIPayeeEntity,
 } from '@actual-app/core/src/server/api-models';
 import { TransactionEntity, RuleEntity } from '@actual-app/core/src/types/models';
-import { ActualApiServiceI } from './types';
+import { ActualApiServiceI, MoneyFormat } from './types';
 import DataDirLock from './utils/data-dir-lock';
 import suppressConsoleLogsAsync from './utils';
+
+// The locale Actual formats amounts with for each Settings > Formatting > Number format,
+// as in getNumberFormat in Actual's shared util. en-US is Actual's default.
+const NUMBER_FORMAT_LOCALES: Record<string, string> = {
+  'comma-dot': 'en-US',
+  'dot-comma': 'de-DE',
+  'space-comma': 'fr-FR',
+  'apostrophe-dot': 'de-CH',
+  'comma-dot-in': 'en-IN',
+};
 
 class ActualApiService implements ActualApiServiceI {
   private actualApiClient: typeof import('@actual-app/api');
@@ -156,6 +166,19 @@ class ActualApiService implements ActualApiServiceI {
   public async getPayeeRules(payeeId: string): Promise<RuleEntity[]> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.actualApiClient.getPayeeRules(payeeId);
+  }
+
+  // The budget's currency from Actual's Settings > Currency ('' when none is set), and the
+  // locale of its number format from Settings > Formatting.
+  public async getMoneyFormat(): Promise<MoneyFormat> {
+    const preferences = await this.actualApiClient.getPreferences() as {
+      defaultCurrencyCode?: string;
+      numberFormat?: string;
+    };
+    return {
+      currencyCode: preferences.defaultCurrencyCode ?? '',
+      locale: NUMBER_FORMAT_LOCALES[preferences.numberFormat ?? ''] ?? 'en-US',
+    };
   }
 
   public async updateTransactionNotes(id: string, notes: string): Promise<void> {

@@ -2,7 +2,7 @@ import { APIPayeeEntity, APICategoryGroupEntity } from '@actual-app/core/src/ser
 import { RuleEntity, TransactionEntity } from '@actual-app/core/src/types/models';
 import handlebars from './handlebars-helpers';
 import {
-  PromptGeneratorI,
+  MoneyFormat, PromptGeneratorI,
 } from './types';
 import PromptTemplateException from './exceptions/prompt-template-exception';
 import { isToolEnabled } from './config';
@@ -22,6 +22,7 @@ class PromptGenerator implements PromptGeneratorI {
     transaction: TransactionEntity,
     payees: APIPayeeEntity[],
     rules: RuleEntity[],
+    moneyFormat: MoneyFormat = { currencyCode: '', locale: 'en-US' },
   ): string {
     let template;
     try {
@@ -59,6 +60,8 @@ class PromptGenerator implements PromptGeneratorI {
         cleared: transaction.cleared,
         reconciled: transaction.reconciled,
         hasWebSearchTool: webSearchEnabled,
+        currencyCode: moneyFormat.currencyCode,
+        locale: moneyFormat.locale,
       });
     } catch {
       console.error('Error generating prompt. Check syntax of your template.');

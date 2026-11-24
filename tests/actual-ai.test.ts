@@ -118,6 +118,30 @@ describe('ActualAiService', () => {
     expect(updatedTransactions[0].category).toBe(GivenActualData.CATEGORY_GROCERIES);
   });
 
+  it('It should give the prompt the budget currency and number format', async () => {
+    // Arrange
+    const transaction = GivenActualData.createTransaction(
+      '1',
+      -123,
+      'Carrefour 1234',
+      'Carrefour XXXX1234567 822-307-2000',
+    );
+    inMemoryApiService.setTransactions([transaction]);
+    inMemoryApiService.setMoneyFormat({ currencyCode: 'EUR', locale: 'de-DE' });
+    const generate = jest.spyOn(mockedPromptGenerator, 'generate');
+
+    // Act
+    sut = new ActualAiService(
+      transactionService,
+      inMemoryApiService,
+    );
+    await sut.classify();
+
+    // Assert
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate.mock.calls[0][4]).toEqual({ currencyCode: 'EUR', locale: 'de-DE' });
+  });
+
   it('It should assign a category to transaction when guess contain category id', async () => {
     // Arrange
     const transaction = GivenActualData.createTransaction(
