@@ -242,7 +242,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
       transaction,
       GivenActualData.createSamplePayees(),
       rules,
-      'USD',
+      { currencyCode: 'USD', locale: 'en-US' },
     );
 
     expect(usdPrompt).toContain('* Amount: $12.34');
@@ -250,13 +250,35 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
   });
 
   it.each([
-    { currencyCode: 'USD', amount: -1234, shown: '$12.34' },
-    { currencyCode: 'EUR', amount: -1234, shown: '€12.34' },
+    {
+      currencyCode: 'USD', locale: 'en-US', amount: -1234, shown: '$12.34',
+    },
+    {
+      currencyCode: 'EUR', locale: 'en-US', amount: -1234, shown: '€12.34',
+    },
     // Actual stores hundredths for every currency, also for one without decimals.
-    { currencyCode: 'JPY', amount: -123400, shown: '¥1,234' },
-    { currencyCode: '', amount: -1234, shown: '12.34' },
-    { currencyCode: 'not a code', amount: -1234, shown: '12.34' },
-  ])('should show $amount in the budget currency "$currencyCode" as $shown', ({ currencyCode, amount, shown }) => {
+    {
+      currencyCode: 'JPY', locale: 'en-US', amount: -123400, shown: '¥1,234',
+    },
+    {
+      currencyCode: '', locale: 'en-US', amount: -123456, shown: '1,234.56',
+    },
+    {
+      currencyCode: 'not a code', locale: 'en-US', amount: -1234, shown: '12.34',
+    },
+    // The locale of the budget's number format sets the separators and the symbol's place.
+    {
+      currencyCode: 'EUR', locale: 'de-DE', amount: -123450, shown: '1.234,50 €',
+    },
+    {
+      currencyCode: '', locale: 'de-DE', amount: -123450, shown: '1.234,50',
+    },
+    {
+      currencyCode: 'INR', locale: 'en-IN', amount: -12345678, shown: '₹1,23,456.78',
+    },
+  ])('should show $amount in the budget currency "$currencyCode" and locale $locale as $shown', ({
+    currencyCode, locale, amount, shown,
+  }) => {
     const transaction = GivenActualData.createTransaction('1', amount, 'Carrefour 2137');
 
     const prompt = new PromptGenerator(promptTemplate).generate(
@@ -264,7 +286,7 @@ ANSWER BY A CATEGORY ID - DO NOT CREATE ENTIRE SENTENCE - DO NOT WRITE CATEGORY 
       transaction,
       GivenActualData.createSamplePayees(),
       [],
-      currencyCode,
+      { currencyCode, locale },
     );
 
     const amountLine = prompt.split(/\r?\n/).find((line) => line.startsWith('* Amount:'));

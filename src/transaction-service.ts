@@ -43,7 +43,7 @@ class TransactionService implements TransactionServiceI {
     }
 
     const [
-      categoryGroups, categories, payees, transactions, accounts, rules, currencyCode,
+      categoryGroups, categories, payees, transactions, accounts, rules, moneyFormat,
     ] = await Promise.all([
       this.actualApiService.getCategoryGroups(),
       this.actualApiService.getCategories(),
@@ -51,7 +51,7 @@ class TransactionService implements TransactionServiceI {
       this.actualApiService.getTransactions(),
       this.actualApiService.getAccounts(),
       this.actualApiService.getRules(),
-      this.actualApiService.getCurrencyCode(),
+      this.actualApiService.getMoneyFormat(),
     ]);
     console.log(`Found ${rules.length} transaction categorization rules`);
     console.log('rerunMissedTransactions', isFeatureEnabled('rerunMissedTransactions'));
@@ -82,7 +82,7 @@ class TransactionService implements TransactionServiceI {
       rules,
       categories,
       suggestedCategories,
-      currencyCode,
+      moneyFormat,
     );
 
     // Create new categories if not in dry run mode

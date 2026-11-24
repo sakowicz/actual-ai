@@ -5,7 +5,7 @@ import {
 import { APIPayeeEntity } from '@actual-app/core/src/server/api-models';
 import {
   ActualApiServiceI, APICategoryEntity, APICategoryGroupEntity,
-  LlmServiceI, ProcessingStrategyI,
+  LlmServiceI, MoneyFormat, ProcessingStrategyI,
   PromptGeneratorI, UnifiedResponse,
 } from '../types';
 import { transformRulesToDescriptions } from '../utils/rule-utils';
@@ -70,7 +70,7 @@ class TransactionProcessor {
         groupId?: string;
         transactions: TransactionEntity[];
       }>,
-    currencyCode: string,
+    moneyFormat: MoneyFormat,
   ): Promise<void> {
     try {
       const prompt = this.promptGenerator.generate(
@@ -78,7 +78,7 @@ class TransactionProcessor {
         transaction,
         payees,
         rules,
-        currencyCode,
+        moneyFormat,
       );
 
       const response = resolveRuleReply(await this.llmService.ask(prompt), rules);

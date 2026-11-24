@@ -5,7 +5,7 @@ import {
   APIPayeeEntity,
 } from '@actual-app/core/src/server/api-models';
 import { RuleEntity, TransactionEntity } from '@actual-app/core/src/types/models';
-import { ActualApiServiceI } from '../../src/types';
+import { ActualApiServiceI, MoneyFormat } from '../../src/types';
 
 export default class InMemoryActualApiService implements ActualApiServiceI {
   private categoryGroups: APICategoryGroupEntity[] = [];
@@ -22,7 +22,7 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
 
   private rules: RuleEntity[] = [];
 
-  private currencyCode = '';
+  private moneyFormat: MoneyFormat = { currencyCode: '', locale: 'en-US' };
 
   private readonly isDryRun: boolean;
 
@@ -186,11 +186,11 @@ export default class InMemoryActualApiService implements ActualApiServiceI {
     this.rules = rules;
   }
 
-  async getCurrencyCode(): Promise<string> {
-    return Promise.resolve(this.currencyCode);
+  async getMoneyFormat(): Promise<MoneyFormat> {
+    return Promise.resolve(this.moneyFormat);
   }
 
-  setCurrencyCode(currencyCode: string): void {
-    this.currencyCode = currencyCode;
+  setMoneyFormat(moneyFormat: MoneyFormat): void {
+    this.moneyFormat = moneyFormat;
   }
 }

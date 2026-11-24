@@ -236,12 +236,15 @@ loops.
 11. `hasWebSearchTool`: A boolean that is true when the `webSearch` feature is enabled.
 12. `currencyCode`: The budget's currency from Actual's Settings > Currency (an experimental feature in Actual), such
     as `USD`, or empty when none is set.
+13. `locale`: The locale Actual uses for the budget's number format from Settings > Formatting, such as `de-DE` for
+    1.000,33, or `en-US` by default.
 
 Besides the built-in Handlebars helpers, templates can use `eq` (`{{#if (eq type "Income")}}`), `incIndex`
 (`{{incIndex @index}}` numbers a list from 1) and `currency`. `{{currency amount}}` shows an amount as money in the
-budget's currency: `1234` becomes `$12.34` in a USD budget and `12.34` when the budget has no currency. Actual stores
-amounts in hundredths whatever the currency, so `123400` becomes `¥1,234` in a JPY budget. An amount condition's
-"is between" range shows as `-$20.00 and -$10.00`.
+budget's currency and number format: `1234` becomes `$12.34` in a USD budget and `12.34` when the budget has no
+currency, and `123450` becomes `1.234,50 €` in a EUR budget with the 1.000,33 format. Actual stores amounts in
+hundredths whatever the currency, so `123400` becomes `¥1,234` in a JPY budget. An amount condition's "is between"
+range shows as `-$20.00 and -$10.00`.
 
 ## New Category Suggestions
 
