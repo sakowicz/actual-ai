@@ -22,6 +22,11 @@ describe('LlmModelFactory', () => {
       'https://api.uberllm.dev/v1',
       'https://example.com',
       'actual-ai-tests',
+      'atlascloud-api-key',
+      'atlascloud-model',
+      'https://api.atlascloud.ai/v1',
+      'https://example.com',
+      'actual-ai-tests',
       'https://api.anthropic.com',
       'anthropic-api-key',
       'anthropic-model',
@@ -67,6 +72,13 @@ describe('LlmModelFactory', () => {
     const model = sut.create();
     expect(model).toBeDefined();
     expect(model.provider).toEqual('uberllm.chat');
+  });
+
+  it('should create an Atlas Cloud model (OpenAI-compatible)', () => {
+    const sut = createSut('atlascloud');
+    const model = sut.create();
+    expect(model).toBeDefined();
+    expect(model.provider).toEqual('atlascloud.chat');
   });
 
   it('should create a Google Generative AI model', () => {

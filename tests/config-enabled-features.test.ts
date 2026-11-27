@@ -60,4 +60,14 @@ describe('config feature env parsing', () => {
     const config = await import('../src/config');
     expect(config.uberllmEnableToolCalling).toBe(true);
   });
+
+  test('parses Atlas Cloud tool-calling env value', async () => {
+    process.env = {
+      ...ORIGINAL_ENV,
+      ATLASCLOUD_ENABLE_TOOL_CALLING: 'true',
+    };
+
+    const config = await import('../src/config');
+    expect(config.atlascloudEnableToolCalling).toBe(true);
+  });
 });
