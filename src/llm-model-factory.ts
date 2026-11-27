@@ -45,6 +45,16 @@ class LlmModelFactory implements LlmModelFactoryI {
 
   private readonly uberllmTitle: string;
 
+  private readonly atlascloudApiKey: string;
+
+  private readonly atlascloudModel: string;
+
+  private readonly atlascloudBaseURL: string;
+
+  private readonly atlascloudReferrer: string;
+
+  private readonly atlascloudTitle: string;
+
   private readonly anthropicBaseURL: string;
 
   private readonly anthropicApiKey: string;
@@ -87,6 +97,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     uberllmBaseURL: string,
     uberllmReferrer: string,
     uberllmTitle: string,
+    atlascloudApiKey: string,
+    atlascloudModel: string,
+    atlascloudBaseURL: string,
+    atlascloudReferrer: string,
+    atlascloudTitle: string,
     anthropicBaseURL: string,
     anthropicApiKey: string,
     anthropicModel: string,
@@ -118,6 +133,11 @@ class LlmModelFactory implements LlmModelFactoryI {
     this.uberllmBaseURL = uberllmBaseURL;
     this.uberllmReferrer = uberllmReferrer;
     this.uberllmTitle = uberllmTitle;
+    this.atlascloudApiKey = atlascloudApiKey;
+    this.atlascloudModel = atlascloudModel;
+    this.atlascloudBaseURL = atlascloudBaseURL;
+    this.atlascloudReferrer = atlascloudReferrer;
+    this.atlascloudTitle = atlascloudTitle;
     this.anthropicBaseURL = anthropicBaseURL;
     this.anthropicApiKey = anthropicApiKey;
     this.anthropicModel = anthropicModel;
@@ -179,6 +199,19 @@ class LlmModelFactory implements LlmModelFactoryI {
           headers,
         });
         return uberllm(this.uberllmModel);
+      }
+      case 'atlascloud': {
+        const headers: Record<string, string> = {};
+        if (this.atlascloudReferrer) headers['HTTP-Referer'] = this.atlascloudReferrer;
+        if (this.atlascloudTitle) headers['X-Title'] = this.atlascloudTitle;
+
+        const atlascloud = createOpenAI({
+          name: 'atlascloud',
+          baseURL: this.atlascloudBaseURL,
+          apiKey: this.atlascloudApiKey,
+          headers,
+        });
+        return atlascloud(this.atlascloudModel);
       }
       case 'anthropic': {
         const anthropic = createAnthropic({

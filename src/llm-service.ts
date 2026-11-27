@@ -34,6 +34,8 @@ export default class LlmService implements LlmServiceI {
 
   private readonly uberllmEnableToolCalling: boolean;
 
+  private readonly atlascloudEnableToolCalling: boolean;
+
   /** `undefined` only with LLM_TEMPERATURE=none, where the model is wrapped to omit it. */
   private readonly temperature: number | undefined;
 
@@ -47,6 +49,7 @@ export default class LlmService implements LlmServiceI {
       openrouterEnableToolCalling?: boolean;
       requestyEnableToolCalling?: boolean;
       uberllmEnableToolCalling?: boolean;
+      atlascloudEnableToolCalling?: boolean;
       temperature?: number | null;
       requestsPerMinuteOverride?: number | null;
       tokensPerMinuteOverride?: number | null;
@@ -65,6 +68,7 @@ export default class LlmService implements LlmServiceI {
     this.openrouterEnableToolCalling = options?.openrouterEnableToolCalling ?? false;
     this.requestyEnableToolCalling = options?.requestyEnableToolCalling ?? false;
     this.uberllmEnableToolCalling = options?.uberllmEnableToolCalling ?? false;
+    this.atlascloudEnableToolCalling = options?.atlascloudEnableToolCalling ?? false;
     this.temperature = options?.temperature === null ? undefined : (options?.temperature ?? 0.2);
 
     // Resolve effective rate limits per axis with trichotomy:
@@ -153,8 +157,8 @@ export default class LlmService implements LlmServiceI {
 
   /**
    * Ollama models cannot call tools at all, and OpenAI-compatible gateways (notably OpenRouter,
-   * Requesty and UberLLM) do it unreliably enough to produce malformed output. ToolService stays
-   * available either way for searches run before the prompt is built.
+   * Requesty, UberLLM and Atlas Cloud) do it unreliably enough to produce malformed output.
+   * ToolService stays available either way for searches run before the prompt is built.
    */
   private supportsToolCalling(): boolean {
     if (this.provider === 'ollama') {
@@ -168,6 +172,9 @@ export default class LlmService implements LlmServiceI {
     }
     if (this.provider === 'uberllm') {
       return this.uberllmEnableToolCalling;
+    }
+    if (this.provider === 'atlascloud') {
+      return this.atlascloudEnableToolCalling;
     }
     return true;
   }
